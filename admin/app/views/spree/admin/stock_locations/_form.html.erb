@@ -7,6 +7,7 @@
   <div class="card-body" >
     <%= f.spree_text_field :name, required: true, autofocus: f.object.new_record? %>
     <%= f.spree_text_field :admin_name, label: Spree.t(:internal_name) %>
+    <%= f.spree_text_field :delivery_time, label: Spree.t('admin.stock_locations.delivery_time'), placeholder: 'e.g. 1-5 working days' %>
     <% unless f.object.default? %>
       <%= f.spree_check_box :active %>
     <% end %>

@@ -254,7 +254,7 @@ module Spree
     @@stock_location_attributes = [
       :name, :active, :address1, :address2, :city, :zipcode, :company,
       :backorderable_default, :state_name, :state_id, :country_id, :phone,
-      :propagate_all_variants
+      :propagate_all_variants, :delivery_time, :admin_name
     ]
 
     @@stock_movement_attributes = [
