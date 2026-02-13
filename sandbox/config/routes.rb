@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
   Spree::Core::Engine.add_routes do
+    # Saferpay payment callbacks
+    get 'saferpay/success', to: 'saferpay#success', as: :saferpay_success
+    get 'saferpay/fail', to: 'saferpay#fail', as: :saferpay_fail
+    post 'saferpay/notify', to: 'saferpay#notify', as: :saferpay_notify
+
     # Admin authentication
     devise_for(
       Spree.admin_user_class.model_name.singular_route_key,
