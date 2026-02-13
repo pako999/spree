@@ -67,5 +67,3 @@ module Spree
     end
   end
 end
-
-Spree::CheckoutController.prepend(Spree::CheckoutControllerSaferpayDecorator)
