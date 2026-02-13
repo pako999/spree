@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../../lib/saferpay_client'
+require Rails.root.join('lib', 'saferpay_client')
 
 module Spree
   class Gateway::Saferpay < Spree::PaymentMethod
