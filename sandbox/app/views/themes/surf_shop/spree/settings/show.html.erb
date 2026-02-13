@@ -1,0 +1,111 @@
+<%= turbo_frame_tag :settings_modal do %>
+  <div
+    data-modal-target="container"
+    data-action="click->modal#closeBackground keyup@window->modal#closeWithKeyboard"
+    class="currency-and-locale-modal hidden fixed inset-0 overflow-y-auto flex items-end md:items-start justify-center z-[9999] w-full"
+    style="animation-duration: 150ms;">
+    <div style="width: 92%; max-width: 480px; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); margin-top: 60px; overflow: hidden;">
+
+      <%# Header %>
+      <div style="padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="font-size: 1.125rem; font-weight: 700; color: #111;">Localization Settings</h3>
+        <button type="button" data-action="modal#close"
+          style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af; background: transparent; border: none; cursor: pointer; transition: all 0.15s;"
+          onmouseover="this.style.background='#f3f4f6';this.style.color='#374151'"
+          onmouseout="this.style.background='transparent';this.style.color='#9ca3af'">
+          <%= render 'spree/shared/icons/close' %>
+        </button>
+      </div>
+
+      <div style="padding: 16px 24px 24px;">
+        <%# === COUNTRY SELECTOR === %>
+        <%
+          selected_country = cookies[:preferred_country] || "SI"
+
+          eu_countries = [
+            ["SI", "🇸🇮", "Slovenia"],  ["DE", "🇩🇪", "Germany"],   ["AT", "🇦🇹", "Austria"],
+            ["IT", "🇮🇹", "Italy"],     ["FR", "🇫🇷", "France"],    ["ES", "🇪🇸", "Spain"],
+            ["HR", "🇭🇷", "Croatia"],   ["NL", "🇳🇱", "Netherlands"], ["BE", "🇧🇪", "Belgium"],
+            ["PL", "🇵🇱", "Poland"],    ["CZ", "🇨🇿", "Czech Republic"], ["PT", "🇵🇹", "Portugal"],
+            ["SE", "🇸🇪", "Sweden"],    ["DK", "🇩🇰", "Denmark"],   ["FI", "🇫🇮", "Finland"],
+            ["IE", "🇮🇪", "Ireland"],   ["GR", "🇬🇷", "Greece"],    ["HU", "🇭🇺", "Hungary"],
+            ["RO", "🇷🇴", "Romania"],   ["BG", "🇧🇬", "Bulgaria"],  ["SK", "🇸🇰", "Slovakia"],
+            ["LT", "🇱🇹", "Lithuania"], ["LV", "🇱🇻", "Latvia"],    ["EE", "🇪🇪", "Estonia"],
+            ["LU", "🇱🇺", "Luxembourg"],["MT", "🇲🇹", "Malta"],     ["CY", "🇨🇾", "Cyprus"]
+          ]
+
+          other_countries = [
+            ["GB", "🇬🇧", "United Kingdom"], ["US", "🇺🇸", "United States"],
+            ["CH", "🇨🇭", "Switzerland"],    ["NO", "🇳🇴", "Norway"],
+            ["AU", "🇦🇺", "Australia"],      ["CA", "🇨🇦", "Canada"],
+            ["JP", "🇯🇵", "Japan"]
+          ]
+        %>
+
+        <label style="display: block; font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Shipping Country</label>
+
+        <div id="country-list" style="max-height: 320px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
+          <%# EU Countries Section %>
+          <div style="padding: 6px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1;">
+            <span style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em;">🇪🇺 European Union</span>
+          </div>
+          <% eu_countries.each do |code, flag, name| %>
+            <button type="button" class="country-option" data-country="<%= code %>"
+              onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='<%= code == 'SI' ? 'sl-SI' : 'en' %>';}f.requestSubmit();}else{window.location.reload();}"
+              style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: none; background: <%= code == selected_country ? '#eef2ff' : 'transparent' %>; cursor: pointer; font-size: 0.875rem; color: #111; transition: background 0.1s; text-align: left;"
+              onmouseover="this.style.background='<%= code == selected_country ? '#eef2ff' : '#f3f4f6' %>'"
+              onmouseout="this.style.background='<%= code == selected_country ? '#eef2ff' : 'transparent' %>'">
+              <span style="font-size: 1.25rem; line-height: 1;"><%= flag %></span>
+              <span style="flex: 1; font-weight: <%= code == selected_country ? '600' : '400' %>;"><%= name %></span>
+              <% if code == selected_country %>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <% end %>
+            </button>
+          <% end %>
+
+          <%# Other Countries Section %>
+          <div style="padding: 6px 12px; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1;">
+            <span style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em;">🌍 Other Countries</span>
+          </div>
+          <% other_countries.each do |code, flag, name| %>
+            <button type="button" class="country-option" data-country="<%= code %>"
+              onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='en';}f.requestSubmit();}else{window.location.reload();}"
+              style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: none; background: <%= code == selected_country ? '#eef2ff' : 'transparent' %>; cursor: pointer; font-size: 0.875rem; color: #111; transition: background 0.1s; text-align: left;"
+              onmouseover="this.style.background='<%= code == selected_country ? '#eef2ff' : '#f3f4f6' %>'"
+              onmouseout="this.style.background='<%= code == selected_country ? '#eef2ff' : 'transparent' %>'">
+              <span style="font-size: 1.25rem; line-height: 1;"><%= flag %></span>
+              <span style="flex: 1; font-weight: <%= code == selected_country ? '600' : '400' %>;"><%= name %></span>
+              <% if code == selected_country %>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <% end %>
+            </button>
+          <% end %>
+        </div>
+
+        <%# Currency / Locale form %>
+        <% if should_render_currency_dropdown? || should_render_locale_dropdown? %>
+          <%= form_with url: spree.settings_path, method: :put, class: 'flex flex-col', style: 'gap: 12px;', data: {turbo: false}, html: {id: 'settings-form'} do |f| %>
+            <% if should_render_currency_dropdown? %>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">
+                  <%= Spree.t(:currency) %>
+                </label>
+                <%= f.select :switch_to_currency, options_for_select(supported_currency_options, current_currency), {}, style: "border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 14px; font-size: 0.875rem;" %>
+              </div>
+            <% end %>
+            <% if should_render_locale_dropdown? %>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">
+                  <%= Spree.t("i18n.language") %>
+                </label>
+                <%= f.select :switch_to_locale, options_for_select(supported_locales_options, current_locale), {}, style: "border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 14px; font-size: 0.875rem;" %>
+              </div>
+            <% end %>
+            <%= f.submit Spree.t("actions.save"), style: "width: 100%; height: 44px; background: #111; color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; margin-top: 4px;" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+

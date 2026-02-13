@@ -1,0 +1,190 @@
+<% options_param_name ||= :options %>
+<% if product.has_variants? %>
+  <%# Build all-variants data %>
+  <% all_variants_data = product.variants.includes(:images).map do |v|
+    opts = {}
+    v.options.each { |o| opts[o[:name]] = { value: o[:value], presentation: o[:presentation] } }
+    price_obj = v.price_in(current_currency)
+    {
+      variant: v,
+      options: opts,
+      purchasable: v.purchasable? && price_obj&.amount.present?,
+      price: price_obj&.amount,
+      compare_at: price_obj&.compare_at_amount,
+      on_sale: price_obj&.discounted?
+    }
+  end %>
+
+  <% size_ot = product.option_types.find { |ot| !ot.color? } %>
+  <% color_ot = product.option_types.find { |ot| ot.color? } %>
+
+  <%# Build color-to-image map: for each color value, grab the first variant's image %>
+  <% color_image_map = {} %>
+  <% if color_ot %>
+    <% all_variants_data.each do |vd| %>
+      <% color_val = vd[:options][color_ot.name]&.dig(:value) %>
+      <% next unless color_val && !color_image_map.key?(color_val) %>
+      <% img = vd[:variant].images.first || product.images.first %>
+      <% color_image_map[color_val] = { image: img, presentation: vd[:options][color_ot.name][:presentation] } if img %>
+    <% end %>
+  <% end %>
+
+  <div id='product-variant-picker' class="flex flex-col gap-y-4 mb-4 mt-2">
+
+    <%# === DESKTOP: Color image thumbnails + Size boxes === %>
+    <div class="hidden lg:block">
+      <%# Hidden fieldsets for Stimulus radio buttons %>
+      <% product.option_types.each_with_index do |option_type, index| %>
+        <% selected_option = product_selected_option_for_option(option_type, product: product, selected_variant: selected_variant, options_param_name: options_param_name) %>
+        <% if option_type.color? %>
+          <%# Color picker with image thumbnails %>
+          <%= option_type_colors_preview_styles(option_type).html_safe %>
+          <fieldset data-option-id="<%= option_type.id %>" class="flex flex-col gap-y-2">
+            <span class="text-sm leading-4 uppercase tracking-widest"><%= option_type.presentation %>: <%= selected_option&.presentation %></span>
+            <div class="pdp-color-thumbnails">
+              <% product_option_values_for_option(option_type, product: product).each_with_index do |value, vi| %>
+                <% color_data = color_image_map[value.name] %>
+                <% is_selected = selected_option == value %>
+                <label class="pdp-color-thumb <%= 'selected' if is_selected %>" title="<%= value.presentation %>">
+                  <%= radio_button_tag option_type.presentation, value.name, is_selected,
+                    class: 'hidden peer',
+                    data: {
+                      action: 'change->product-form#updateVariant',
+                      product_form_target: 'option',
+                      option_id: option_type.id
+                    },
+                    name: option_type.presentation,
+                    id: "product-option-#{product.id}-#{index}-#{vi}"
+                  %>
+                  <% if color_data && color_data[:image] %>
+                    <%= spree_image_tag(color_data[:image], variant: :small, alt: value.presentation, class: 'pdp-color-thumb-img') %>
+                  <% else %>
+                    <span class="pdp-color-thumb-fallback" style="background: <%= value.name %>;"></span>
+                  <% end %>
+                </label>
+              <% end %>
+            </div>
+          </fieldset>
+        <% else %>
+          <%# Size picker with box-style variant options %>
+          <fieldset data-option-id="<%= option_type.id %>">
+            <p class="pdp-variant-label"><%= option_type.presentation %></p>
+            <div class="pdp-variant-boxes">
+              <%= render 'spree/products/variant_options', product: product, option_type: option_type, position: index, selected_variant: selected_variant, options_param_name: options_param_name %>
+            </div>
+          </fieldset>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# === MOBILE: Combined variant bottom sheet (all color/size combos) === %>
+    <div class="lg:hidden">
+      <%# Hidden radio buttons for each option type — Stimulus needs these %>
+      <% product.option_types.each_with_index do |option_type, index| %>
+        <% selected_option = product_selected_option_for_option(option_type, product: product, selected_variant: selected_variant, options_param_name: options_param_name) %>
+        <%= option_type_colors_preview_styles(option_type).html_safe if option_type.color? %>
+        <fieldset data-option-id="<%= option_type.id %>" class="hidden">
+          <% product_option_values_for_option(option_type, product: product).each_with_index do |value, vi| %>
+            <%= radio_button_tag option_type.presentation, value.name, selected_option == value,
+              class: 'hidden peer',
+              data: {
+                action: 'change->product-form#updateVariant',
+                product_form_target: 'option',
+                option_id: option_type.id
+              },
+              name: option_type.presentation,
+              id: "product-option-mobile-#{product.id}-#{index}-#{vi}"
+            %>
+          <% end %>
+        </fieldset>
+      <% end %>
+
+      <% selected_variant_data = all_variants_data.find { |vd|
+        product.option_types.all? do |ot|
+          sel = product_selected_option_for_option(ot, product: product, selected_variant: selected_variant, options_param_name: options_param_name)
+          sel ? vd[:options][ot.name]&.dig(:value) == sel.name : true
+        end
+      } %>
+
+      <button type="button" class="pdp-size-trigger" onclick="document.getElementById('combined-variant-sheet-<%= product.id %>').classList.add('active'); document.getElementById('combined-variant-overlay-<%= product.id %>').classList.add('active');">
+        <span>
+          <% if selected_variant_data %>
+            <% sel_parts = [] %>
+            <% sel_parts << selected_variant_data[:options][size_ot.name][:presentation] if size_ot && selected_variant_data[:options][size_ot.name] %>
+            <% sel_parts << selected_variant_data[:options][color_ot.name][:presentation] if color_ot && selected_variant_data[:options][color_ot.name] %>
+            <strong><%= sel_parts.join(' — ') %></strong>
+          <% else %>
+            PLEASE CHOOSE VARIANT
+          <% end %>
+        </span>
+        <%= render 'spree/shared/icons/chevron_down' %>
+      </button>
+
+      <%# Bottom sheet overlay %>
+      <div id="combined-variant-overlay-<%= product.id %>" class="pdp-size-sheet-overlay" onclick="this.classList.remove('active'); document.getElementById('combined-variant-sheet-<%= product.id %>').classList.remove('active');"></div>
+
+      <%# Bottom sheet %>
+      <div id="combined-variant-sheet-<%= product.id %>" class="pdp-size-sheet">
+        <div class="pdp-size-sheet-header">
+          <span>Choose Variant</span>
+          <button type="button" class="pdp-size-sheet-close" onclick="this.closest('.pdp-size-sheet').classList.remove('active'); document.getElementById('combined-variant-overlay-<%= product.id %>').classList.remove('active');">✕</button>
+        </div>
+        <% all_variants_data.each_with_index do |vd, vi| %>
+          <% size_pres = size_ot ? vd[:options][size_ot.name]&.dig(:presentation) : nil %>
+          <% color_pres = color_ot ? vd[:options][color_ot.name]&.dig(:presentation) : nil %>
+          <% color_val = color_ot ? vd[:options][color_ot.name]&.dig(:value) : nil %>
+          <label
+            class="pdp-size-sheet-item <%= 'disabled' unless vd[:purchasable] %>"
+            onclick="<%= vd[:purchasable] ? "selectCombinedVariant(this, #{product.option_types.map { |ot| { id: ot.id, name: ot.name, presentation: ot.presentation, value: vd[:options][ot.name]&.dig(:value) } }.to_json}, true); this.closest('.pdp-size-sheet').classList.remove('active'); document.getElementById('combined-variant-overlay-#{product.id}').classList.remove('active');" : '' %>"
+          >
+            <div class="sheet-item-left">
+              <span class="size-name"><%= size_pres || '—' %></span>
+              <% if color_val.present? %>
+                <span class="sheet-color-badge" style="background: <%= color_val %>;" title="<%= color_pres %>"></span>
+                <span class="sheet-color-name"><%= color_pres %></span>
+              <% end %>
+            </div>
+            <div class="sheet-item-right">
+              <% if vd[:price] %>
+                <div class="sheet-price-block">
+                  <% if vd[:on_sale] %>
+                    <span class="sheet-price-sale"><%= number_to_currency(vd[:price], unit: "€") %></span>
+                    <span class="sheet-price-original"><%= number_to_currency(vd[:compare_at], unit: "€") %></span>
+                  <% else %>
+                    <span class="sheet-price"><%= number_to_currency(vd[:price], unit: "€") %></span>
+                  <% end %>
+                </div>
+              <% end %>
+              <% unless vd[:purchasable] %>
+                <span class="size-unavailable">Unavailable</span>
+              <% else %>
+                <span class="size-available">Available</span>
+              <% end %>
+              <span class="size-chevron">›</span>
+            </div>
+          </label>
+        <% end %>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function selectCombinedVariant(el, optionTypes, isMobile) {
+      optionTypes.forEach(function(ot) {
+        if (!ot.value) return;
+        var prefix = isMobile ? 'product-option-mobile-' : 'product-option-';
+        var fieldsets = document.querySelectorAll('fieldset[data-option-id="' + ot.id + '"]');
+        fieldsets.forEach(function(fieldset) {
+          var radios = fieldset.querySelectorAll('input[type="radio"]');
+          radios.forEach(function(radio) {
+            if (radio.value === ot.value) {
+              radio.checked = true;
+              radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+        });
+      });
+    }
+  </script>
+<% end %>

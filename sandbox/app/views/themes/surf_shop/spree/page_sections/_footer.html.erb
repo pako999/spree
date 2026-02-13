@@ -1,0 +1,113 @@
+<% cache_unless page_builder_enabled?, [*spree_storefront_base_cache_scope.call(section), current_store] do %>
+  <footer id='footer' class="mt-footer"
+    <% unless current_theme_preview %>
+    data-turbo-permanent
+    <% end %>>
+
+    <%# === Value Propositions Strip === %>
+    <div class="mt-footer-value-props">
+      <div class="page-container">
+        <div class="mt-value-props-grid">
+          <div class="mt-value-prop">
+            <span class="mt-value-icon">🚚</span>
+            <div>
+              <strong>Free Shipping</strong>
+              <span>Starting from €149</span>
+            </div>
+          </div>
+          <div class="mt-value-prop">
+            <span class="mt-value-icon">↩️</span>
+            <div>
+              <strong>Free Returns</strong>
+              <span>14 days to reconsider</span>
+            </div>
+          </div>
+          <div class="mt-value-prop">
+            <span class="mt-value-icon">🛡️</span>
+            <div>
+              <strong>Secure Payments</strong>
+              <span>100% secure checkout</span>
+            </div>
+          </div>
+          <div class="mt-value-prop">
+            <span class="mt-value-icon">⭐</span>
+            <div>
+              <strong>Expert Advice</strong>
+              <span>Water sports specialists</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# === Main Footer Columns === %>
+    <div class="mt-footer-main">
+      <div class="page-container">
+        <div class="mt-footer-grid">
+          <%# Column 1: Company / Logo %>
+          <div class="mt-footer-col">
+            <div class="mt-footer-logo">
+              <%= render 'spree/shared/logo', logo: section.logo.attached? ? section.logo : current_header_logo %>
+            </div>
+            <p class="mt-footer-company-text"><%= current_store.name %></p>
+            <p class="mt-footer-company-text mt-footer-company-address">Your trusted water sports shop</p>
+          </div>
+
+          <%# Dynamic columns from Page Builder blocks %>
+          <% section.blocks.includes(:links).each do |block| %>
+            <nav class="mt-footer-col" aria-label="<%= block.preferred_label %>">
+              <h4 class="mt-footer-heading"><%= block.preferred_label %></h4>
+              <ul class="mt-footer-links">
+                <% block.links.each do |link| %>
+                  <li>
+                    <%= page_builder_link_to link, target: ('_blank' if link.open_in_new_tab), rel: ('noopener noreferrer' if link.open_in_new_tab), class: 'mt-footer-link' do %>
+                      <%= link.label %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </nav>
+          <% end %>
+
+          <%# Community / Social column %>
+          <div class="mt-footer-col">
+            <h4 class="mt-footer-heading"><%= Spree.t(:follow_us) %></h4>
+            <div class="mt-social-icons">
+              <% cache spree_storefront_base_cache_scope.call(current_store) do %>
+                <% Spree::Store::SUPPORTED_SOCIAL_NETWORKS.each do |media| %>
+                  <% if current_store.send(media).present? %>
+                    <%= link_to current_store.send("#{media}_link"), class: 'mt-social-icon' do %>
+                      <%= render "spree/shared/icons/#{media.gsub('_', '-')}" %>
+                    <% end %>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
+            <h4 class="mt-footer-heading mt-4">Payment Methods</h4>
+            <div class="mt-payment-icons">
+              <span class="mt-payment-badge">Visa</span>
+              <span class="mt-payment-badge">MC</span>
+              <span class="mt-payment-badge">PayPal</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# === Copyright Bar === %>
+    <div class="mt-footer-copyright">
+      <div class='page-container'>
+        <div class="mt-copyright-inner">
+          <span>© <%= Time.now.year %> <a href='/'><%= current_store.name %></a>. <%= Spree.t(:all_rights_reserved) %>.</span>
+          <span class="mt-copyright-links">
+            <a href="/terms">Terms & Conditions</a>
+            <span>·</span>
+            <a href="/privacy">Privacy Policy</a>
+            <span>·</span>
+            Powered by <a href='https://spreecommerce.org' target="_blank" rel="follow">Spree Commerce</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </footer>
+<% end %>

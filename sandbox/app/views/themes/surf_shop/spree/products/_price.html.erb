@@ -1,0 +1,130 @@
+<% use_variant ||= false %>
+<% sold_out ||= !product.available? %>
+<% price_class ||= ''%>
+<% price_container_class ||= '' %>
+<% selected_variant ||= nil %>
+<%
+  if use_variant
+    target = selected_variant
+    sold_out = selected_variant.nil?
+    if sold_out
+      target = @variant_from_options
+      sold_out = @variant_from_options.nil?
+    end
+  else
+    target = product
+    sold_out = !product.available?
+  end
+
+  target ||= product
+
+  variant_for_context = target.is_a?(Spree::Product) ? target.default_variant : target
+  pricing_context = pricing_context_for_variant(variant_for_context)
+  price = variant_for_context.price_for(pricing_context)
+  money_price = price.display_amount
+
+  if target.is_a?(Spree::Product) && !use_variant && product.price_varies?(current_currency)
+    price = target.lowest_price(current_currency)
+    money_price = price.display_amount
+    money_price = "#{Spree.t(:from)}: #{money_price}"
+  end
+
+  # Country from cookie or default to SI
+  selected_country = cookies[:preferred_country] || "SI"
+
+  # EU country codes
+  eu_countries = %w[AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE]
+  is_eu = eu_countries.include?(selected_country)
+
+  # Dynamic VAT rate based on shop location
+  shop_country = current_store&.default_country&.iso || "SI"
+  vat_rates = { "SI" => 0.22, "HR" => 0.25, "DE" => 0.19, "AT" => 0.20, "IT" => 0.22, "FR" => 0.20, "ES" => 0.21, "NL" => 0.21, "BE" => 0.21, "PL" => 0.23, "CZ" => 0.21, "PT" => 0.23, "SE" => 0.25, "DK" => 0.25, "FI" => 0.255, "IE" => 0.23, "GR" => 0.24, "HU" => 0.27, "RO" => 0.19, "BG" => 0.20, "SK" => 0.20, "LT" => 0.21, "LV" => 0.21, "EE" => 0.22, "LU" => 0.17, "MT" => 0.18, "CY" => 0.19 }
+  vat_rate = vat_rates[shop_country] || 0.22
+
+  # Country display info
+  country_flags = {
+    "SI" => "🇸🇮", "DE" => "🇩🇪", "AT" => "🇦🇹", "IT" => "🇮🇹",
+    "FR" => "🇫🇷", "ES" => "🇪🇸", "HR" => "🇭🇷", "GB" => "🇬🇧",
+    "US" => "🇺🇸", "BE" => "🇧🇪", "NL" => "🇳🇱", "PL" => "🇵🇱",
+    "CZ" => "🇨🇿", "PT" => "🇵🇹", "SE" => "🇸🇪", "DK" => "🇩🇰",
+    "FI" => "🇫🇮", "IE" => "🇮🇪", "GR" => "🇬🇷", "HU" => "🇭🇺",
+    "RO" => "🇷🇴", "BG" => "🇧🇬", "SK" => "🇸🇰", "LT" => "🇱🇹",
+    "LV" => "🇱🇻", "EE" => "🇪🇪", "LU" => "🇱🇺", "MT" => "🇲🇹",
+    "CY" => "🇨🇾"
+  }
+  country_names = {
+    "SI" => "Slovenia", "DE" => "Germany", "AT" => "Austria", "IT" => "Italy",
+    "FR" => "France", "ES" => "Spain", "HR" => "Croatia", "GB" => "United Kingdom",
+    "US" => "United States", "BE" => "Belgium", "NL" => "Netherlands", "PL" => "Poland",
+    "CZ" => "Czech Republic", "PT" => "Portugal", "SE" => "Sweden", "DK" => "Denmark",
+    "FI" => "Finland", "IE" => "Ireland", "GR" => "Greece", "HU" => "Hungary",
+    "RO" => "Romania", "BG" => "Bulgaria", "SK" => "Slovakia", "LT" => "Lithuania",
+    "LV" => "Latvia", "EE" => "Estonia", "LU" => "Luxembourg", "MT" => "Malta",
+    "CY" => "Cyprus"
+  }
+  country_flag = country_flags[selected_country] || "🏳️"
+  country_name = country_names[selected_country] || selected_country
+
+  # Delivery time calculation
+  if is_eu
+    delivery_min = 3
+    delivery_max = 5
+  else
+    delivery_min = 7
+    delivery_max = 12
+  end
+
+  # Calculate estimated delivery date (skip weekends)
+  delivery_date = Date.today
+  business_days_added = 0
+  while business_days_added < delivery_max
+    delivery_date += 1
+    unless delivery_date.saturday? || delivery_date.sunday?
+      business_days_added += 1
+    end
+  end
+%>
+<div class="pdp-price-row" style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+  <% if price.compare_at_amount.present? && price.compare_at_amount > price.amount %>
+    <%# Sale price %>
+    <% if is_eu %>
+      <span class="pdp-price-current"><%= money_price %></span>
+      <span style="font-size: 0.75rem; color: #6b7280;">VAT Included</span>
+      <span class="pdp-price-divider">|</span>
+      <span class="pdp-price-original">Originally <%= price.display_compare_at_amount %></span>
+      <span class="pdp-price-divider">|</span>
+      <% discount_pct = ((1 - (price.amount.to_f / price.compare_at_amount.to_f)) * 100).round %>
+      <span class="pdp-discount-badge">-<%= discount_pct %>%</span>
+    <% else %>
+      <% ex_vat_amount = (price.amount / (1 + vat_rate)).round(2) %>
+      <% ex_vat_compare = (price.compare_at_amount / (1 + vat_rate)).round(2) %>
+      <% ex_vat_display = Spree::Money.new(ex_vat_amount, currency: current_currency) %>
+      <% ex_vat_compare_display = Spree::Money.new(ex_vat_compare, currency: current_currency) %>
+      <span class="pdp-price-current"><%= ex_vat_display %></span>
+      <span style="font-size: 0.75rem; color: #6b7280;">excl. VAT</span>
+      <span class="pdp-price-divider">|</span>
+      <span class="pdp-price-original">Originally <%= ex_vat_compare_display %></span>
+      <span class="pdp-price-divider">|</span>
+      <% discount_pct = ((1 - (price.amount.to_f / price.compare_at_amount.to_f)) * 100).round %>
+      <span class="pdp-discount-badge">-<%= discount_pct %>%</span>
+    <% end %>
+  <% else %>
+    <% if price&.amount.nil? %>
+      <span class="pdp-price-current regular uppercase"><%= Spree.t(:not_available) %></span>
+    <% else %>
+      <% if is_eu %>
+        <span class="pdp-price-current regular"><%= money_price %></span>
+        <% unless controller_name == 'taxons' %>
+          <span style="font-size: 0.75rem; color: #6b7280;">VAT Included</span>
+        <% end %>
+      <% else %>
+        <% ex_vat_amount = (price.amount / (1 + vat_rate)).round(2) %>
+        <% ex_vat_display = Spree::Money.new(ex_vat_amount, currency: current_currency) %>
+        <span class="pdp-price-current regular"><%= ex_vat_display %></span>
+        <% unless controller_name == 'taxons' %>
+          <span style="font-size: 0.75rem; color: #6b7280;">excl. VAT</span>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

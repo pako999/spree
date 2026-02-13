@@ -1,0 +1,166 @@
+<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_scope.call(section), request.path] do %>
+  <% layout = section.preferred_layout %>
+  <header
+    class='header-<%= layout %> mt-header'
+    data-controller='header toggle-menu slideover <%= "slideover-account" if show_account_pane? %>'
+    data-toggle-menu-class='hamburger-visible'
+    data-slideover-invisible-class='translate-x-full,opacity-0'
+    data-slideover-visible-class='translate-x-0,opacity-100'
+    data-slideover-active-target='#slideover-cart'
+    data-slideover-account-invisible-class='translate-x-full,opacity-0'
+    data-slideover-account-visible-class='translate-x-0,opacity-100'
+    data-slideover-account-active-target='#slideover-account'
+  >
+    <%# === TIER 1: Dark utility bar with trust badges === %>
+    <div class="mt-utility-bar">
+      <div class="page-container">
+        <div class="mt-utility-bar-inner">
+          <div class="mt-utility-badge">&#10003; Customer Support</div>
+          <div class="mt-utility-badge">&#9733; Worldwide Delivery</div>
+          <div class="mt-utility-badge hidden sm:flex">&#128737; Secure Payments</div>
+          <div class="mt-utility-badge hidden md:flex">&#8617; 30-Day Returns</div>
+        </div>
+      </div>
+    </div>
+
+    <%# === TIER 2: Main bar === %>
+    <nav
+      aria-label='Top'
+      style="<%= section_styles(section) %>"
+      class="relative transition-transform duration-300 mt-main-bar">
+      <div class='page-container'>
+        <div class='mt-main-bar-inner' style="position: relative;">
+          <%# Mobile hamburger %>
+          <button
+            type='button'
+            data-action='click->toggle-menu#toggle touch->toggle-menu#toggle'
+            class='relative w-6 lg:hidden'
+            data-toggle-menu-target='button'
+          >
+            <span class='sr-only'><%= Spree.t(:toggle_menu) %></span>
+            <div class='absolute top-0'>
+              <%= render 'spree/shared/icons/menu', color: section.preferred_text_color %>
+            </div>
+            <div class='absolute top-0 opacity-0'>
+              <%= render 'spree/shared/icons/close', color: section.preferred_text_color %>
+            </div>
+          </button>
+
+          <%# Logo %>
+          <div class="mt-logo" id='header-logo'>
+            <%= render 'spree/shared/logo', logo: section.logo, height: section.preferred_desktop_logo_height %>
+          </div>
+
+          <%# Search bar — desktop only %>
+          <div class="mt-search-wrapper">
+            <button
+              class='mt-search-bar'
+              id='open-search'
+              data-action='click->toggle-menu#hide touch->toggle-menu#hide'
+            >
+              <span class="mt-search-placeholder">Click here to search through products...</span>
+              <span class="mt-search-icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <%# Right icons %>
+          <div class='mt-header-icons'>
+            <% if should_render_locale_dropdown? || should_render_currency_dropdown? %>
+              <div data-controller="modal" data-modal-disable-backdrop="true" class="hidden lg:flex">
+                <%= button_tag class: 'mt-icon-btn', data: {action: 'modal#open'} do %>
+                  <% country_code = cookies[:preferred_country] || current_locale.to_s.split("-").last %>
+                  <%= svg_country_icon(country_code) %>
+                  <span class="mt-icon-label"><%= current_currency %></span>
+                <% end %>
+                <%= turbo_frame_tag :settings_modal, src: spree.settings_path, loading: :lazy %>
+              </div>
+            <% end %>
+
+            <% if show_account_pane? %>
+              <button
+                data-action='click->slideover-account#toggle click@window->slideover-account#hide click->toggle-menu#hide touch->toggle-menu#hide'
+                aria-label='Sign in'
+                class="mt-icon-btn"
+              >
+                <%= render 'spree/shared/icons/account', color: section.preferred_text_color, section: section %>
+              </button>
+            <% else %>
+              <%= link_to spree.account_path, 'aria-label': 'Sign in', class: 'mt-icon-btn' do %>
+                <%= render 'spree/shared/icons/account', color: section.preferred_text_color, section: section %>
+              <% end %>
+            <% end %>
+
+            <div data-action='click->toggle-menu#hide touch->toggle-menu#hide'>
+              <%= render 'spree/shared/cart_icon' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <%# === MOBILE SEARCH BAR === %>
+    <div class="mt-mobile-search">
+      <button
+        class='mt-search-bar'
+        id='open-search-mobile'
+        data-action='click->toggle-menu#hide touch->toggle-menu#hide'
+      >
+        <span class="mt-search-placeholder">Search products...</span>
+        <span class="mt-search-icon-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+      </button>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var mobileBtn = document.getElementById('open-search-mobile');
+        if (mobileBtn) {
+          mobileBtn.addEventListener('click', function() {
+            var searchSuggestions = document.getElementById('search-suggestions');
+            if (searchSuggestions) {
+              searchSuggestions.style.display = 'block';
+              var input = searchSuggestions.querySelector('#q');
+              if (input) input.focus();
+            }
+          });
+        }
+      });
+    </script>
+
+    <%# === TIER 3: Desktop-only Mega Navigation Bar === %>
+    <div class="mt-nav-bar hidden lg:block" style="background-color: #1a2332;">
+      <div class="page-container">
+        <div class='flex'>
+          <div class='flex flex-wrap items-center h-full w-full'>
+            <%= render 'spree/page_sections/nav/desktop', section: section %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Mobile slide-out menu %>
+    <div
+      class='h-0 opacity-0 pointer-events-none hide-on-load'
+      data-toggle-menu-target='toggleable'
+      role='dialog'
+      aria-modal='true'
+      aria-label='Mobile menu'
+    >
+      <div
+        class='flex justify-between flex-col lg:hidden w-full transition-transform has-[.currency-and-locale-modal:not(.hidden)]:transform-none body header--mobile-menu'
+        data-toggle-menu-target='content'
+        style='background-color: <%= section.preferred_background_color %>;'
+        >
+        <%= render 'spree/page_sections/nav/mobile', section: section %>
+      </div>
+    </div>
+
+    <%= render 'spree/shared/cart_pane', section: section %>
+    <% if show_account_pane? %>
+      <%= render 'spree/shared/account_pane', section: section %>
+    <% end %>
+    <%= render 'spree/shared/search', section: section, logo: section.logo, logo_height: section.preferred_desktop_logo_height %>
+  </header>
+<% end %>

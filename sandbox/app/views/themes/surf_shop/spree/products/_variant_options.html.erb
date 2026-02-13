@@ -1,0 +1,146 @@
+<% mobile_sheet ||= false %>
+<% selected_option =
+  product_selected_option_for_option(
+    option_type,
+    product: product,
+    selected_variant: selected_variant,
+    options_param_name: options_param_name,
+  ) %>
+<% variants_available_arr =
+  product.variants.map do |v|
+    v.purchasable? && v.price_in(current_currency).amount.present?
+  end %>
+<%# Build per-option_type value arrays keyed by option_type name (NOT array position) %>
+<% option_type_names = product.option_types.map(&:name) %>
+<% variant_opts_by_type = product.option_types.each_with_object({}) do |ot, hash|
+    hash[ot.name] = product.variants.map { |v|
+      v.options.find { |o| o[:name] == ot.name }&.dig(:value)
+    }
+  end %>
+<% product_option_values_for_option(option_type, product: product).each_with_index do |value, index| %>
+  <% option_disabled = true %>
+  <%# Check each variant: does it have this option value AND is it purchasable? %>
+  <% current_ot_values = variant_opts_by_type[option_type.name] || [] %>
+  <% product.variants.each_with_index do |variant, vi| %>
+    <% next unless current_ot_values[vi] == value.name && variants_available_arr[vi] %>
+    <%# For position > 0 options, also check that previously-selected options match %>
+    <% match = true %>
+    <% product.option_types.each_with_index do |prev_ot, prev_i| %>
+      <% break if prev_i >= position %>
+      <% selected_prev = product_selected_option_for_option(prev_ot, product: product, options_param_name: options_param_name) %>
+      <% if selected_prev %>
+        <% prev_values = variant_opts_by_type[prev_ot.name] || [] %>
+        <% match = false unless prev_values[vi] == selected_prev.name %>
+      <% end %>
+    <% end %>
+    <% option_disabled = false if match %>
+  <% end %>
+  <% if option_type.color? %>
+    <li role="option" aria-label="<%= value.presentation %>">
+      <label class="cursor-pointer"  aria-label="<%= value.presentation %>">
+        <%= radio_button_tag option_type.presentation, value.name, selected_option == value,
+          name: option_type.presentation,
+          id: "product-option-#{product.id}-#{position}-#{index}",
+          class: "sr-only peer color-input",
+          data: {
+            action: 'change->product-form#updateVariant',
+            product_form_target: 'option',
+            option_id: option_type.id
+          }
+        %>
+        <%= render 'spree/products/color_picker', disabled: option_disabled %>
+      </label>
+    </li>
+  <% elsif mobile_sheet %>
+    <%# Mobile bottom sheet item — enhanced with color + price %>
+    <% sheet_onclick = option_disabled ? "" : "this.querySelector('input').click(); this.closest('.pdp-size-sheet').classList.remove('active'); document.getElementById('size-sheet-overlay-#{option_type.id}').classList.remove('active');" %>
+    <%# Find matching variant for this option value (respecting previously selected options) %>
+    <% matching_variant = nil %>
+    <% product.variants.each_with_index do |variant, vi| %>
+      <% next unless (variant_opts_by_type[option_type.name] || [])[vi] == value.name %>
+      <% next unless variants_available_arr[vi] || option_disabled %>
+      <% match = true %>
+      <% product.option_types.each_with_index do |prev_ot, prev_i| %>
+        <% break if prev_i >= position %>
+        <% selected_prev = product_selected_option_for_option(prev_ot, product: product, options_param_name: options_param_name) %>
+        <% if selected_prev %>
+          <% prev_values = variant_opts_by_type[prev_ot.name] || [] %>
+          <% match = false unless prev_values[vi] == selected_prev.name %>
+        <% end %>
+      <% end %>
+      <% if match %>
+        <% matching_variant = variant %>
+        <% break %>
+      <% end %>
+    <% end %>
+    <% variant_price = matching_variant&.price_in(current_currency) %>
+    <% variant_color = matching_variant&.options&.find { |o| o[:name] == 'color' }&.dig(:presentation) %>
+    <% variant_color_value = matching_variant&.options&.find { |o| o[:name] == 'color' }&.dig(:value) %>
+    <% is_on_sale = variant_price&.discounted? %>
+    <label
+      for='product-option-sheet-<%= product.id %>-<%= position %>-<%= index %>'
+      class="pdp-size-sheet-item <%= 'disabled' if option_disabled %>"
+      onclick="<%= sheet_onclick %>"
+    >
+      <%= radio_button_tag option_type.presentation, value.name, selected_option == value,
+        class: 'hidden',
+        data: {
+          action: 'change->product-form#updateVariant',
+          product_form_target: 'option',
+          option_id: option_type.id
+        },
+        name: option_type.presentation,
+        role: 'menuitemradio',
+        aria: { label: value.presentation },
+        id: "product-option-sheet-#{product.id}-#{position}-#{index}"
+      %>
+      <div class="sheet-item-left">
+        <span class="size-name"><%=h value.presentation %></span>
+        <% if variant_color.present? %>
+          <span class="sheet-color-badge" style="background: <%= variant_color_value %>;" title="<%= variant_color %>"></span>
+          <span class="sheet-color-name"><%= variant_color %></span>
+        <% end %>
+      </div>
+      <div class="sheet-item-right">
+        <% if variant_price&.amount %>
+          <div class="sheet-price-block">
+            <% if is_on_sale %>
+              <span class="sheet-price-sale"><%= number_to_currency(variant_price.amount, unit: "€") %></span>
+              <span class="sheet-price-original"><%= number_to_currency(variant_price.compare_at_amount, unit: "€") %></span>
+            <% else %>
+              <span class="sheet-price"><%= number_to_currency(variant_price.amount, unit: "€") %></span>
+            <% end %>
+          </div>
+        <% end %>
+        <% if option_disabled %>
+          <span class="size-unavailable">Unavailable</span>
+        <% else %>
+          <span class="size-available">Available</span>
+        <% end %>
+        <span class="size-chevron">›</span>
+      </div>
+    </label>
+  <% else %>
+    <%# Desktop box-style variant %>
+    <%= radio_button_tag option_type.presentation, value.name, selected_option == value,
+      class: 'hidden peer',
+      data: {
+        action: 'change->product-form#updateVariant',
+        product_form_target: 'option',
+        option_id: option_type.id
+      },
+      name: option_type.presentation,
+      role: 'menuitemradio',
+      aria: { label: value.presentation },
+      id: "product-option-#{product.id}-#{position}-#{index}"
+    %>
+    <label
+      for='product-option-<%= product.id %>-<%= position %>-<%= index %>'
+      role="menuitem"
+      aria-label="<%= value.presentation %>"
+      class='pdp-variant-box <%= "selected" if selected_option == value %> <%= "disabled" if option_disabled %>'
+    >
+      <%=h value.presentation %>
+    </label>
+  <% end %>
+<% end %>

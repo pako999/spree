@@ -1,0 +1,280 @@
+<turbo-frame id="main-product-<%= product.id %>" target="_top">
+  <% current_variant = @selected_variant || @variant_from_options || product.first_or_default_variant(current_currency) %>
+  <div class="main-product-container" style="<%= section_styles(section) %>">
+    <div
+      class="page-container lg:mb-16"
+      <%= 'data-controller=product-form' %>
+      data-product-form-required-options-value='<%= product.option_type_ids.map(&:to_s).to_json %>'
+      data-product-form-selected-variant-disabled-value='<%= !@selected_variant&.in_stock? %>'
+      data-product-form-variant-from-options-disabled-value='<%= !@variant_from_options&.in_stock? %>'
+      data-product-form-frame-name-value="main-product-<%= product.id %>"
+      data-product-form-url-value="<%= spree.product_url(product) %>">
+      <template data-product-form-target="spinnerTemplate">
+        <%= render "spree/shared/icons/spinner" %>
+      </template>
+
+      <div id="product-details-page" class="grid grid-cols-1 lg:grid-cols-12 gap-x-14">
+        <% images = product_media_gallery_images(product, selected_variant: @selected_variant, variant_from_options: @variant_from_options) %>
+
+        <div class="lg:col-span-7 relative">
+          <div class="lg:hidden mb-6">
+            <%= render 'spree/products/media_gallery', images: images, product: product %>
+          </div>
+          <div class="hidden lg:block" data-product-form-target="desktopMediaGallery">
+            <%= render 'spree/products/media_gallery', images: images, desktop: true, product: product %>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 lg:col-start-8">
+          <div
+            data-controller="modal"
+            data-modal-allow-background-close="true"
+            class="h-full w-full waitlist-modal"
+            data-modal-backdrop-color-value="rgba(0,0,0,0.32)">
+            <%= form_with(url: spree.line_items_path, method: :post, data: { controller: "turbo-stream-form", product_form_target: "form" }) do |f| %>
+              <%= hidden_field_tag :variant_id, current_variant&.id %>
+
+              <div data-product-form-target="productDetails">
+                <% section.blocks.each do |block| %>
+                  <% next if block.class.name == 'Spree::PageBlocks::Products::Description' %>
+                  <div <%= block_attributes(block) %>>
+                    <% case block.class.name %>
+                    <% when 'Spree::PageBlocks::Products::Title' %>
+                      <% if product.sku.present? %>
+                        <p class="text-xs text-gray-500 tracking-wider uppercase mb-1">SKU: <%= product.sku %></p>
+                      <% end %>
+                      <h1 class="text-2xl uppercase tracking-tight font-medium">
+                        <%= product.name %>
+                      </h1>
+                    <% when 'Spree::PageBlocks::Products::Brand' %>
+                      <% if product.brand_taxon %>
+                        <% brand_slug = product.brand_taxon.name.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
+                        <% brand_logo_svg = "brand-logos/#{brand_slug}.svg" %>
+                        <% brand_logo_png = "brand-logos/#{brand_slug}.png" %>
+                        <% brand_logo_webp = "brand-logos/#{brand_slug}.webp" %>
+                        <%= link_to spree.nested_taxons_path(product.brand_taxon), title: product.brand_taxon.name, class: "inline-block mb-1" do %>
+                          <% if File.exist?(Rails.root.join("public", brand_logo_svg)) %>
+                            <img src="/<%= brand_logo_svg %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
+                          <% elsif File.exist?(Rails.root.join("public", brand_logo_png)) %>
+                            <img src="/<%= brand_logo_png %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
+                          <% elsif File.exist?(Rails.root.join("public", brand_logo_webp)) %>
+                            <img src="/<%= brand_logo_webp %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
+                          <% else %>
+                            <h3 class="text-sm lg:mt-0 inline-block">
+                              <%= product.brand_taxon.name %>
+                            </h3>
+                          <% end %>
+                        <% end %>
+                      <% end %>
+                    <% when 'Spree::PageBlocks::Products::Price' %>
+                      <%= render 'spree/products/price', product: product, use_variant: true, selected_variant: @selected_variant, price_class: "lg:text-lg lg:font-medium", price_container_class: "w-full" %>
+                    <% when 'Spree::PageBlocks::Products::VariantPicker' %>
+                      <%= render 'spree/products/variant_picker', product: product, selected_variant: @selected_variant %>
+                    <% when 'Spree::PageBlocks::Products::QuantitySelector' %>
+                      <%= render 'spree/products/quantity_selector', product: product, selected_variant: @selected_variant %>
+                    <% when 'Spree::PageBlocks::Products::BuyButtons' %>
+                      <%# === DELIVERY INFO (before buy button, like misterpadel.com) === %>
+                      <%
+                        selected_country = cookies[:preferred_country] || "SI"
+                        eu_countries = %w[AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE]
+                        is_eu_country = eu_countries.include?(selected_country)
+                        country_flags = {
+                          "SI" => "🇸🇮", "DE" => "🇩🇪", "AT" => "🇦🇹", "IT" => "🇮🇹",
+                          "FR" => "🇫🇷", "ES" => "🇪🇸", "HR" => "🇭🇷", "GB" => "🇬🇧",
+                          "US" => "🇺🇸", "BE" => "🇧🇪", "NL" => "🇳🇱", "PL" => "🇵🇱",
+                          "CZ" => "🇨🇿", "PT" => "🇵🇹", "SE" => "🇸🇪", "DK" => "🇩🇰",
+                          "FI" => "🇫🇮", "IE" => "🇮🇪", "GR" => "🇬🇷", "HU" => "🇭🇺",
+                          "RO" => "🇷🇴", "BG" => "🇧🇬", "SK" => "🇸🇰", "LT" => "🇱🇹",
+                          "LV" => "🇱🇻", "EE" => "🇪🇪", "LU" => "🇱🇺", "MT" => "🇲🇹",
+                          "CY" => "🇨🇾"
+                        }
+                        country_names = {
+                          "SI" => "Slovenia", "DE" => "Germany", "AT" => "Austria", "IT" => "Italy",
+                          "FR" => "France", "ES" => "Spain", "HR" => "Croatia", "GB" => "United Kingdom",
+                          "US" => "United States", "BE" => "Belgium", "NL" => "Netherlands", "PL" => "Poland",
+                          "CZ" => "Czech Republic", "PT" => "Portugal", "SE" => "Sweden", "DK" => "Denmark",
+                          "FI" => "Finland", "IE" => "Ireland", "GR" => "Greece", "HU" => "Hungary",
+                          "RO" => "Romania", "BG" => "Bulgaria", "SK" => "Slovakia", "LT" => "Lithuania",
+                          "LV" => "Latvia", "EE" => "Estonia", "LU" => "Luxembourg", "MT" => "Malta",
+                          "CY" => "Cyprus"
+                        }
+                        d_flag = country_flags[selected_country] || "🏳️"
+                        d_country = country_names[selected_country] || selected_country
+                        d_min = is_eu_country ? 3 : 7
+                        d_max = is_eu_country ? 5 : 12
+                        d_date = Date.today
+                        d_bdays = 0
+                        while d_bdays < d_max
+                          d_date += 1
+                          d_bdays += 1 unless d_date.saturday? || d_date.sunday?
+                        end
+                        product_available = product.variants.any? { |v| v.in_stock? || v.backorderable? } || product.available?
+                      %>
+                      <div style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background-color: #f3f4f6; border-radius: 6px;">
+                        <% if product_available %>
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #16a34a; font-size: 1.2rem;">✓</span>
+                            <span style="color: #16a34a; font-weight: 600; font-size: 0.875rem;">Immediate Availability</span>
+                          </div>
+                        <% end %>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="font-size: 1.1rem;">🚚</span>
+                          <div>
+                            <span style="font-weight: 600; font-size: 0.875rem;">Estimated delivery </span>
+                            <span style="color: #16a34a; font-weight: 600; font-size: 0.875rem;">
+                              <%= d_date.strftime("%A %-d %B") %> - <%= d_country %>
+                            </span>
+                            <span style="font-size: 0.875rem;"><%= d_flag %></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex w-full" data-controller='sticky-button'>
+                        <%= render 'spree/products/add_to_cart_button', product: product, selected_variant: @selected_variant, sticky_button_classes: "w-full" %>
+                        <%= render 'spree/products/add_to_wishlist', variant: current_variant, css_classes: 'btn-secondary ml-5 h-12 !py-0 !px-3 border-default', icon_size: 24 %>
+                      </div>
+                      <%# === FREE RETURN SECTION === %>
+                      <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background-color: #f3f4f6; border-radius: 6px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10" stroke="#16a34a" stroke-width="2"></polyline></svg>
+                          <div>
+                            <span style="font-weight: 700; font-size: 0.875rem;">Free return</span>
+                            <span style="font-size: 0.875rem;"> — you have 30 days to rethink!</span>
+                          </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                          <div>
+                            <span style="font-size: 0.8rem; color: #6b7280;">(*) Products on sale, outlet or promotion have a return fee.</span>
+                          </div>
+                        </div>
+                      </div>
+                    <% when 'Spree::PageBlocks::Metafields' %>
+                      <%= render 'spree/products/metafields', product: product, block: block, section: section %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <%# Custom waitlist modal %>
+            <div
+              data-modal-target="container"
+              data-action="click->modal#closeBackground keyup@window->modal#closeWithKeyboard"
+              class="hidden animate-fadeIn fixed inset-0 overflow-y-auto flex items-end md:items-center justify-center z-[9999] h-dvh w-full"
+              style="animation-duration: 150ms;">
+              <div class="w-[92%] max-w-[420px] relative h-auto flex flex-col bg-background rounded-xl shadow-2xl overflow-hidden" style="margin: auto;">
+                <%# Header %>
+                <div style="padding: 24px 24px 0 24px; display: flex; align-items: flex-start; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    </div>
+                    <div>
+                      <h4 style="font-size: 1rem; font-weight: 700; letter-spacing: 0.01em; color: #111; margin: 0;">Notify me when available</h4>
+                      <p style="font-size: 0.8rem; color: #6b7280; margin-top: 2px; line-height: 1.4;">
+                        <%= product.name %><% if current_variant&.options_text.present? %> — <%= current_variant.options_text %><% end %>
+                      </p>
+                    </div>
+                  </div>
+                  <button type="button" data-action="modal#close" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af; transition: all 0.15s; background: transparent; border: none; cursor: pointer;" onmouseover="this.style.background='#f3f4f6';this.style.color='#374151'" onmouseout="this.style.background='transparent';this.style.color='#9ca3af'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <%# Form %>
+                <div style="padding: 20px 24px 24px 24px;">
+                  <form id="waitlist-form" class="flex w-full flex-col" style="gap: 12px;" onsubmit="return handleWaitlistSubmit(event)">
+                    <input type="hidden" name="variant_id" id="waitlist-variant-id" value="<%= current_variant&.id %>" />
+                    <div>
+                      <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Email address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="your@email.com"
+                        style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; color: #111; outline: none; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;"
+                        onfocus="this.style.borderColor='#111';this.style.boxShadow='0 0 0 1px #111'"
+                        onblur="this.style.borderColor='#d1d5db';this.style.boxShadow='none'"
+                        autofocus />
+                    </div>
+                    <button type="submit" id="waitlist-submit-btn" style="width: 100%; height: 44px; background: #111; color: #fff; border: none; border-radius: 8px; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">
+                      Notify Me
+                    </button>
+                    <div id="waitlist-error" class="hidden" style="font-size: 0.75rem; color: #dc2626; text-align: center; padding-top: 4px;"></div>
+                  </form>
+                  <div id="waitlist-success" class="hidden" style="text-align: center; padding: 16px 0 8px 0;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #f0fdf4; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <h4 style="font-size: 0.9375rem; font-weight: 700; color: #111; margin: 0 0 4px 0;">You're on the list!</h4>
+                    <p style="font-size: 0.8125rem; color: #6b7280; margin: 0;">We'll email you when it's back in stock.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script>
+              function handleWaitlistSubmit(e) {
+                e.preventDefault();
+                var form = e.target;
+                var btn = document.getElementById('waitlist-submit-btn');
+                var errorDiv = document.getElementById('waitlist-error');
+                var email = form.querySelector('input[name="email"]').value;
+                var variantId = document.getElementById('waitlist-variant-id').value;
+
+                // Disable button while submitting
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+                errorDiv.classList.add('hidden');
+
+                fetch('/waitlist', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                  body: JSON.stringify({ email: email, variant_id: variantId })
+                })
+                .then(function(response) { return response.json().then(function(data) { return { ok: response.ok, data: data }; }); })
+                .then(function(result) {
+                  if (result.ok) {
+                    form.classList.add('hidden');
+                    document.getElementById('waitlist-success').classList.remove('hidden');
+                    setTimeout(function() {
+                      var closeBtn = form.closest('[data-modal-target="container"]').querySelector('[data-action="modal#close"]');
+                      if (closeBtn) closeBtn.click();
+                      setTimeout(function() {
+                        form.classList.remove('hidden');
+                        document.getElementById('waitlist-success').classList.add('hidden');
+                        btn.disabled = false;
+                        btn.textContent = 'NOTIFY ME';
+                        form.reset();
+                      }, 300);
+                    }, 2500);
+                  } else {
+                    errorDiv.textContent = result.data.error || 'Something went wrong. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = 'NOTIFY ME';
+                  }
+                })
+                .catch(function() {
+                  errorDiv.textContent = 'Connection error. Please try again.';
+                  errorDiv.classList.remove('hidden');
+                  btn.disabled = false;
+                  btn.textContent = 'NOTIFY ME';
+                });
+
+                return false;
+              }
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <%# Description rendered full-width below product grid %>
+      <% section.blocks.each do |block| %>
+        <% next unless block.class.name == 'Spree::PageBlocks::Products::Description' %>
+        <div class="mt-10" <%= block_attributes(block) %>>
+          <%= render 'spree/products/description', product: product, block: block, section: section %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <%= render 'spree/products/json_ld', product: product, selected_variant: @selected_variant %>
+</turbo-frame>

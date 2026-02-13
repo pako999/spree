@@ -1,0 +1,33 @@
+<% loaded ||= false %>
+<% products ||= [] %>
+<% product ||= @product %>
+
+<%
+  # When the default Spree multi_search returns empty results,
+  # fetch products from the same category/taxon as the current product
+  if products.blank? && product.present?
+    primary_taxon = product.taxons.order(:depth).last
+    if primary_taxon.present?
+      products = current_store.products.active(current_currency)
+                   .in_taxon(primary_taxon)
+                   .where.not(id: product.id)
+                   .includes(master: [:prices, { images: { attachment_attachment: :blob } }])
+                   .distinct
+                   .limit(section&.preferred_max_products_to_show || 10)
+    end
+    loaded = true
+  end
+%>
+
+<% if section && loaded && products.present? %>
+  <div style="<%= section_styles(section) %>" class="animate-fadeIn">
+    <div class="page-container">
+      <%= render partial: 'spree/products/swiper', locals: {
+        section: section,
+        products: products,
+        heading: section.preferred_heading,
+        arrows_on_top: true
+      } %>
+    </div>
+  </div>
+<% end %>
