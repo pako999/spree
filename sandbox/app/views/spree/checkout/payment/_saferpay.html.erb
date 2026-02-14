@@ -1,0 +1,10 @@
+<p class="text-sm text-neutral-600">
+  You will be redirected to Saferpay to complete your payment securely.
+</p>
+<script>
+  // Disable Turbo on the checkout form so the external Saferpay redirect works
+  (function() {
+    var form = document.querySelector('form');
+    if (form) { form.setAttribute('data-turbo', 'false'); }
+  })();
+</script>

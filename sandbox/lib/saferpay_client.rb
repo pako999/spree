@@ -5,7 +5,7 @@ require 'json'
 require 'securerandom'
 
 class SaferpayClient
-  SPEC_VERSION = '1.50'
+  SPEC_VERSION = '1.20'
 
   URLS = {
     test: 'https://test.saferpay.com/api',
@@ -34,10 +34,11 @@ class SaferpayClient
         OrderId: order_id.to_s,
         Description: description
       },
-      ReturnUrl: {
-        Url: return_url
-      },
-      Notification: notify_url ? { NotifyUrl: notify_url } : nil
+      ReturnUrls: {
+        Success: return_url,
+        Fail: fail_url,
+        Abort: fail_url
+      }
     }.compact
 
     response = post('/Payment/v1/PaymentPage/Initialize', body)
