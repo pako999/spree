@@ -5,6 +5,7 @@ module Spree
       include Spree::Admin::BulkOperationsConcern
       include Spree::Admin::AssetsHelper
       include Spree::Admin::ProductsBreadcrumbConcern
+      include Spree::ImagesHelper
 
       helper 'spree/admin/products'
       helper 'spree/admin/taxons'
@@ -170,10 +171,14 @@ module Spree
 
         @product_variant_ids = {}
         @product_variant_prefix_ids = {}
+        @product_variant_images = {}
 
-        @product.variants.includes(:option_values).each do |variant|
+        @product.variants.includes(:option_values, thumbnail: { attachment_attachment: :blob }).each do |variant|
           @product_variant_ids[variant.human_name] = variant.id.to_s
           @product_variant_prefix_ids[variant.human_name] = variant.to_param
+          if variant.default_image&.attached? && variant.default_image&.variable?
+            @product_variant_images[variant.human_name] = spree_image_url(variant.default_image, variant: :mini)
+          end
         end
       end
 

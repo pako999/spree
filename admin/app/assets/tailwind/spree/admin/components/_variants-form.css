@@ -147,4 +147,22 @@
   .variants-form .variants-table__body__cell {
     @apply py-2 block;
   }
+
+  .variants-form .variants-table .column-variant {
+    @apply flex items-center gap-3;
+  }
+
+  .variants-form .variant-image-container {
+    @apply flex-shrink-0;
+    width: 40px;
+    height: 40px;
+  }
+
+  .variants-form .variant-image {
+    @apply w-full h-full object-cover rounded-md border border-gray-200;
+  }
+
+  .variants-form .variant-image-placeholder {
+    @apply w-full h-full rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400;
+  }
 }

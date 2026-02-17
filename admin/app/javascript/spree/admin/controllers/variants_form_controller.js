@@ -36,6 +36,7 @@ export default class extends CheckboxSelectAll {
     currencyFormats: Object,
     variantIds: Object,
     variantPrefixIds: Object,
+    variantImages: Object,
     currentStockLocationId: String,
     stockLocations: Array,
     optionValuesSelectOptions: Array,
@@ -580,6 +581,18 @@ export default class extends CheckboxSelectAll {
           }
 
           variantNameContainer.textContent = name
+
+          // Set variant image if available
+          const variantImageUrl = this.variantImagesValue?.[internalName]
+          const variantImage = variantTarget.querySelector('[data-slot="variantImage"]')
+          const variantImagePlaceholder = variantTarget.querySelector('[data-slot="variantImagePlaceholder"]')
+          if (variantImageUrl && variantImage) {
+            variantImage.src = variantImageUrl
+            variantImage.alt = name
+            variantImage.classList.remove('hidden')
+            if (variantImagePlaceholder) variantImagePlaceholder.classList.add('hidden')
+          }
+
           if (previousVariant) {
             previousVariant.after(template)
           } else {
