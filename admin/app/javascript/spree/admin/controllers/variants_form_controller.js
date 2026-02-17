@@ -530,11 +530,18 @@ export default class extends CheckboxSelectAll {
 
           const variantPrefixId = this.variantPrefixIdsValue?.[internalName] || this.variantIdsValue[internalName]
           if (variantPrefixId) {
+            const variantEditUrl = `${Spree.adminPath}/products/${this.productIdValue}/variants/${variantPrefixId}/edit`
             const variantEditButton = variantTarget.querySelector('[data-slot="variantEditButton"]')
 
             if (variantEditButton) {
-              variantEditButton.href = `${Spree.adminPath}/products/${this.productIdValue}/variants/${variantPrefixId}/edit`
+              variantEditButton.href = variantEditUrl
               variantEditButton.classList.remove('invisible')
+            }
+
+            const variantImageLink = variantTarget.querySelector('[data-slot="variantImageLink"]')
+            if (variantImageLink) {
+              variantImageLink.href = variantEditUrl
+              variantImageLink.classList.remove('invisible')
             }
           }
 
