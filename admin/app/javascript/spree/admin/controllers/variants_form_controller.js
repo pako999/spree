@@ -1341,17 +1341,18 @@ export default class extends CheckboxSelectAll {
     modal.querySelectorAll('.image-picker-item').forEach(item => {
       item.addEventListener('click', () => {
         const imageId = item.dataset.imageId
-        this.assignImageToVariant(imageId, variantId, variantName, variantTarget, modal)
+        const variantPrefixId = this.variantPrefixIdsValue?.[variantName] || variantId
+        this.assignImageToVariant(imageId, variantId, variantPrefixId, variantName, variantTarget, modal)
       })
     })
   }
 
   /**
-   * Assigns a product image to a variant via AJAX
+   * Assigns a product image to a variant via the assign_image endpoint
    */
-  async assignImageToVariant(imageId, variantId, variantName, variantTarget, modal) {
+  async assignImageToVariant(imageId, variantId, variantPrefixId, variantName, variantTarget, modal) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-    const assetsPath = this.assetsPathValue
+    const adminPath = this.adminPathValue || Spree.adminPath
 
     // Show loading on the clicked image
     const clickedItem = modal.querySelector(`[data-image-id="${imageId}"]`)
@@ -1361,19 +1362,15 @@ export default class extends CheckboxSelectAll {
     }
 
     try {
-      const response = await fetch(`${assetsPath}/${imageId}`, {
-        method: 'PATCH',
+      const url = `${adminPath}/products/${this.productIdValue}/variants/${variantPrefixId}/assign_image`
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'X-CSRF-Token': csrfToken
         },
-        body: JSON.stringify({
-          asset: {
-            viewable_id: variantId,
-            viewable_type: 'Spree::Variant'
-          }
-        })
+        body: JSON.stringify({ image_id: imageId })
       })
 
       if (response.ok) {
@@ -1388,19 +1385,11 @@ export default class extends CheckboxSelectAll {
           if (variantImagePlaceholder) variantImagePlaceholder.classList.add('hidden')
         }
 
-        // Update the allProductImages data to reflect the new assignment
-        const images = this.allProductImagesValue || []
-        const updatedImages = images.map(img => {
-          if (img.id == imageId) {
-            return { ...img, viewable_id: parseInt(variantId) }
-          }
-          return img
-        })
-        this.allProductImagesValue = updatedImages
-
         modal.remove()
       } else {
-        console.error('Failed to assign image:', response.status)
+        const data = await response.json().catch(() => ({}))
+        console.error('Failed to assign image:', response.status, data)
+        alert('Failed to assign image. Please try again.')
         if (clickedItem) {
           clickedItem.style.opacity = '1'
           clickedItem.style.pointerEvents = 'auto'
@@ -1408,6 +1397,7 @@ export default class extends CheckboxSelectAll {
       }
     } catch (e) {
       console.error('Error assigning image:', e)
+      alert('Error assigning image. Please try again.')
       if (clickedItem) {
         clickedItem.style.opacity = '1'
         clickedItem.style.pointerEvents = 'auto'

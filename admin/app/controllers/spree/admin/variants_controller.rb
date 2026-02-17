@@ -62,6 +62,27 @@ module Spree
         end
       end
 
+      def assign_image
+        @product = Spree::Product.friendly.find(params[:product_id])
+        @variant = @product.variants.find(params[:id])
+        source_image = Spree::Image.find(params[:image_id])
+
+        # Remove existing images from this variant (keep it to one image per variant)
+        @variant.images.destroy_all
+
+        # Create a new image for the variant by attaching the same blob
+        new_image = @variant.images.new(alt: source_image.alt, position: 1)
+        new_image.attachment.attach(source_image.attachment.blob)
+
+        if new_image.save
+          render json: { success: true, image_id: new_image.id, source_image_id: source_image.id }
+        else
+          render json: { success: false, errors: new_image.errors.full_messages }, status: :unprocessable_entity
+        end
+      rescue => e
+        render json: { success: false, error: e.message }, status: :unprocessable_entity
+      end
+
       private
 
       def load_data

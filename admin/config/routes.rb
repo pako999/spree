@@ -22,7 +22,11 @@ Spree::Core::Engine.add_routes do
       member do
         post :clone
       end
-      resources :variants, only: [:edit, :update, :destroy]
+      resources :variants, only: [:edit, :update, :destroy] do
+        member do
+          post :assign_image
+        end
+      end
       resources :digital_assets, except: [:show]
     end
     # variant search
