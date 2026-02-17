@@ -1,0 +1,126 @@
+<div class="card mb-6">
+  <div class="card-body">
+    <%= f.spree_text_field :name, required: true, autofocus: f.object.new_record?, data: { seo_form_target: 'sourceTitleInput', slug_form_target: :name, action: 'slug-form#updateUrlFromName' } %>
+
+    <div class="form-group mb-0">
+      <div class="flex items-center justify-between mb-2">
+        <%= f.label :description, Spree.t(:description), class: "mb-0" %>
+        <% if f.object.persisted? %>
+          <button type="button"
+                  id="ai-generate-btn"
+                  class="btn btn-light btn-sm flex items-center gap-1"
+                  data-product-id="<%= f.object.id %>"
+                  onclick="generateAiDescription(this)"
+                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-size: 13px; padding: 4px 12px; border-radius: 6px;">
+            <span id="ai-btn-icon">✨</span>
+            <span id="ai-btn-text">Generate with AI</span>
+          </button>
+        <% end %>
+      </div>
+      <div class="trix-container mb-0">
+        <%= f.text_area :description, { rows: 10, class: "form-input spree-rte", data: { seo_form_target: 'sourceDescriptionInput' } } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if f.object.persisted? %>
+<script>
+async function generateAiDescription(btn) {
+  const productId = btn.dataset.productId;
+  const icon = document.getElementById('ai-btn-icon');
+  const text = document.getElementById('ai-btn-text');
+
+  // Loading state
+  btn.disabled = true;
+  icon.textContent = '';
+  text.textContent = 'Generating...';
+  btn.style.opacity = '0.7';
+
+  // Add spinner
+  const spinner = document.createElement('span');
+  spinner.className = 'ai-spinner';
+  spinner.style.cssText = 'display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:ai-spin 0.6s linear infinite;';
+  icon.parentNode.insertBefore(spinner, icon);
+  icon.style.display = 'none';
+
+  // Add keyframe if not already present
+  if (!document.getElementById('ai-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'ai-spin-style';
+    style.textContent = '@keyframes ai-spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const response = await fetch(`/admin/products/${productId}/ai_description`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-Token': csrfToken
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to generate description');
+    }
+
+    // Set description in TinyMCE
+    if (typeof tinymce !== 'undefined' && tinymce.activeEditor) {
+      tinymce.activeEditor.setContent(data.description);
+      tinymce.activeEditor.save();
+    } else {
+      // Fallback to textarea
+      const textarea = document.querySelector('textarea[name$="[description]"]');
+      if (textarea) textarea.value = data.description;
+    }
+
+    // Set meta title
+    const metaTitleInput = document.querySelector('input[name$="[meta_title]"]');
+    if (metaTitleInput) {
+      metaTitleInput.value = data.meta_title;
+      metaTitleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Set meta description
+    const metaDescInput = document.querySelector('textarea[name$="[meta_description]"]');
+    if (metaDescInput) {
+      metaDescInput.value = data.meta_description;
+      metaDescInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Show SEO inputs (they are hidden by default)
+    const seoInputs = document.querySelector('.seo__inputs');
+    if (seoInputs) seoInputs.classList.remove('hidden');
+
+    // Success state
+    text.textContent = '✓ Generated!';
+    btn.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+
+    setTimeout(() => {
+      text.textContent = 'Generate with AI';
+      btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }, 3000);
+
+  } catch (error) {
+    text.textContent = `Error: ${error.message}`;
+    btn.style.background = '#e74c3c';
+
+    setTimeout(() => {
+      text.textContent = 'Generate with AI';
+      btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    spinner.remove();
+    icon.style.display = '';
+    icon.textContent = '✨';
+  }
+}
+</script>
+<% end %>

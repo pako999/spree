@@ -1,0 +1,225 @@
+<% content_for :page_title do %>
+  ✨ Bulk AI Description Generator
+<% end %>
+
+<div class="card mb-6">
+  <div class="card-header">
+    <h5 class="card-title">Filter Products</h5>
+  </div>
+  <div class="card-body">
+    <%= form_tag spree.admin_ai_descriptions_bulk_path, method: :get, class: "flex flex-wrap gap-3 items-end" do %>
+      <div class="form-group mb-0">
+        <label class="form-label">Quick Filters</label>
+        <div class="flex gap-2">
+          <label class="btn btn-sm <%= params[:no_description] == '1' ? 'btn-primary' : 'btn-light' %>" style="cursor: pointer">
+            <%= check_box_tag :no_description, '1', params[:no_description] == '1', onchange: 'this.form.submit()', style: 'display:none' %>
+            📝 No Description
+          </label>
+          <label class="btn btn-sm <%= params[:no_meta] == '1' ? 'btn-primary' : 'btn-light' %>" style="cursor: pointer">
+            <%= check_box_tag :no_meta, '1', params[:no_meta] == '1', onchange: 'this.form.submit()', style: 'display:none' %>
+            🔍 No Meta Description
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Status</label>
+        <%= select_tag :status, options_for_select([['All Statuses', ''], ['Active', 'active'], ['Draft', 'draft'], ['Archived', 'archived']], params[:status]), class: 'form-select form-select-sm', onchange: 'this.form.submit()' %>
+      </div>
+
+      <div class="form-group mb-0" style="min-width: 200px">
+        <label class="form-label">Category</label>
+        <%= select_tag :taxon_id, options_for_select([['All Categories', '']] + @taxons.map { |t| [t.pretty_name, t.id] }, params[:taxon_id]), class: 'form-select form-select-sm', onchange: 'this.form.submit()' %>
+      </div>
+
+      <div class="form-group mb-0" style="min-width: 200px">
+        <label class="form-label">Search</label>
+        <div class="flex gap-1">
+          <%= text_field_tag :search, params[:search], class: 'form-input form-input-sm', placeholder: 'Search by name...' %>
+          <button type="submit" class="btn btn-sm btn-light">🔎</button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div class="card mb-6">
+  <div class="card-header flex justify-between items-center">
+    <h5 class="card-title mb-0"><%= @total_count %> Products Found</h5>
+    <div class="flex gap-2 items-center">
+      <span id="bulk-status" class="text-sm text-gray-500"></span>
+      <button type="button" id="select-all-btn" class="btn btn-sm btn-light" onclick="toggleSelectAll()">Select All on Page</button>
+      <button type="button" id="bulk-generate-btn" class="btn btn-sm btn-primary" onclick="startBulkGeneration()" disabled
+              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+        ✨ Generate Selected (<span id="selected-count">0</span>)
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table" id="bulk-products-table">
+        <thead>
+          <tr>
+            <th scope="col" class="w-5 pr-0">
+              <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()" class="form-check-input">
+            </th>
+            <th scope="col">Product</th>
+            <th scope="col" class="text-center">Status</th>
+            <th scope="col" class="text-center">Has Description</th>
+            <th scope="col" class="text-center">Has Meta</th>
+            <th scope="col" class="text-center">AI Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @products.each do |product| %>
+            <tr id="product-row-<%= product.id %>" data-product-id="<%= product.id %>">
+              <td class="pr-0">
+                <input type="checkbox" class="form-check-input product-checkbox" value="<%= product.id %>" onchange="updateSelectedCount()">
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <% img = product.images.first rescue nil %>
+                  <% if img %>
+                    <img src="<%= img.url(:small) rescue '' %>" class="rounded" style="width:40px;height:40px;object-fit:cover" loading="lazy">
+                  <% else %>
+                    <div style="width:40px;height:40px;background:#f0f0f0;border-radius:4px" class="flex items-center justify-center text-gray-400">📷</div>
+                  <% end %>
+                  <div>
+                    <a href="<%= spree.edit_admin_product_path(product) %>" class="font-medium text-dark" target="_blank"><%= product.name %></a>
+                    <div class="text-xs text-gray-500"><%= product.slug %></div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">
+                <span class="badge badge-<%= product.status == 'active' ? 'success' : (product.status == 'draft' ? 'warning' : 'secondary') %>">
+                  <%= product.status %>
+                </span>
+              </td>
+              <td class="text-center">
+                <% if product.description.present? %>
+                  <span class="text-success" title="<%= ActionController::Base.helpers.strip_tags(product.description).truncate(100) %>">✅</span>
+                <% else %>
+                  <span class="text-danger">❌</span>
+                <% end %>
+              </td>
+              <td class="text-center">
+                <% if product.meta_description.present? %>
+                  <span class="text-success" title="<%= product.meta_description %>">✅</span>
+                <% else %>
+                  <span class="text-danger">❌</span>
+                <% end %>
+              </td>
+              <td class="text-center" id="ai-status-<%= product.id %>">
+                <span class="text-gray-400">—</span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<% if @total_pages > 1 %>
+  <nav class="mt-4 flex justify-center gap-1">
+    <% (1..@total_pages).each do |p| %>
+      <% if p == @page %>
+        <span class="btn btn-sm btn-primary"><%= p %></span>
+      <% else %>
+        <%= link_to p, url_for(params.to_unsafe_h.merge(page: p)), class: 'btn btn-sm btn-light' %>
+      <% end %>
+    <% end %>
+  </nav>
+<% end %>
+
+<style>
+  @keyframes ai-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .ai-processing { animation: ai-pulse 1.5s ease-in-out infinite; }
+  #bulk-progress { transition: width 0.3s ease; }
+</style>
+
+<script>
+function updateSelectedCount() {
+  const checked = document.querySelectorAll('.product-checkbox:checked').length;
+  document.getElementById('selected-count').textContent = checked;
+  document.getElementById('bulk-generate-btn').disabled = checked === 0;
+}
+
+function toggleSelectAll() {
+  const checkboxes = document.querySelectorAll('.product-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  checkboxes.forEach(cb => cb.checked = !allChecked);
+  document.getElementById('select-all-checkbox').checked = !allChecked;
+  updateSelectedCount();
+}
+
+async function startBulkGeneration() {
+  const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+  const productIds = Array.from(checkboxes).map(cb => cb.value);
+
+  if (productIds.length === 0) return;
+
+  const btn = document.getElementById('bulk-generate-btn');
+  const status = document.getElementById('bulk-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing...';
+
+  const total = productIds.length;
+  let completed = 0;
+  let errors = 0;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  for (const productId of productIds) {
+    const statusCell = document.getElementById(`ai-status-${productId}`);
+    const row = document.getElementById(`product-row-${productId}`);
+    statusCell.innerHTML = '<span class="ai-processing">⏳ Generating...</span>';
+    row.style.backgroundColor = '#f8f9ff';
+
+    try {
+      const response = await fetch('/admin/ai_descriptions/generate_bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ product_ids: [productId] })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        statusCell.innerHTML = '<span class="text-success">✅ Done</span>';
+        row.style.backgroundColor = '#f0fff4';
+        // Update the has-description and has-meta columns
+        row.querySelectorAll('td')[3].innerHTML = '<span class="text-success">✅</span>';
+        row.querySelectorAll('td')[4].innerHTML = '<span class="text-success">✅</span>';
+        completed++;
+      } else {
+        statusCell.innerHTML = `<span class="text-danger" title="${data.error}">❌ Error</span>`;
+        row.style.backgroundColor = '#fff5f5';
+        errors++;
+      }
+    } catch (e) {
+      statusCell.innerHTML = `<span class="text-danger" title="${e.message}">❌ Error</span>`;
+      row.style.backgroundColor = '#fff5f5';
+      errors++;
+    }
+
+    status.textContent = `${completed + errors}/${total} processed (${completed} ✅, ${errors} ❌)`;
+
+    // Small delay between requests to be nice to the API
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `✨ Generate Selected (<span id="selected-count">0</span>)`;
+  status.textContent = `Done! ${completed} generated, ${errors} errors`;
+  status.style.color = errors > 0 ? '#e74c3c' : '#27ae60';
+
+  // Uncheck all after processing
+  document.querySelectorAll('.product-checkbox:checked').forEach(cb => cb.checked = false);
+  document.getElementById('select-all-checkbox').checked = false;
+  updateSelectedCount();
+}
+</script>
