@@ -181,16 +181,27 @@ module Spree
           end
         end
 
-        # All product images for the image picker modal
         @all_product_images = []
-        @product.variant_images.distinct.each do |image|
-          if image.attachment.attached? && image.attachment.variable?
-            @all_product_images << {
-              id: image.id,
-              url: spree_image_url(image.attachment, variant: :small),
-              viewable_id: image.viewable_id
-            }
+        begin
+          # Collect images from master + all variants
+          all_image_variants = [@product.master] + @product.variants.to_a
+          seen_image_ids = Set.new
+          all_image_variants.each do |v|
+            v.images.each do |image|
+              next if seen_image_ids.include?(image.id)
+              seen_image_ids.add(image.id)
+              if image.attachment.attached? && image.attachment.variable?
+                @all_product_images << {
+                  id: image.id,
+                  url: spree_image_url(image.attachment, variant: :small),
+                  viewable_id: image.viewable_id
+                }
+              end
+            end
           end
+        rescue => e
+          Rails.logger.error "Error loading product images for picker: #{e.message}"
+          @all_product_images = []
         end
       end
 
