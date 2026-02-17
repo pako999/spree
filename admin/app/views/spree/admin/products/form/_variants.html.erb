@@ -33,6 +33,9 @@
         <% if @product_variant_ids.present? %> data-variants-form-variant-ids-value="<%= @product_variant_ids.to_json %>" <% end %>
         <% if @product_variant_prefix_ids.present? %> data-variants-form-variant-prefix-ids-value="<%= @product_variant_prefix_ids.to_json %>" <% end %>
         <% if @product_variant_images.present? %> data-variants-form-variant-images-value="<%= @product_variant_images.to_json %>" <% end %>
+        <% if @all_product_images.present? %> data-variants-form-all-product-images-value="<%= @all_product_images.to_json %>" <% end %>
+        data-variants-form-assets-path-value="<%= spree.admin_assets_path %>"
+        data-variants-form-master-id-value="<%= @product.master.id %>"
         >
         <div class="options-creator">
           <%= render 'spree/admin/products/form/variants/option_template', option_types_for_select: option_types_for_select %>

@@ -37,6 +37,9 @@ export default class extends CheckboxSelectAll {
     variantIds: Object,
     variantPrefixIds: Object,
     variantImages: Object,
+    allProductImages: Array,
+    assetsPath: String,
+    masterId: Number,
     currentStockLocationId: String,
     stockLocations: Array,
     optionValuesSelectOptions: Array,
@@ -540,8 +543,16 @@ export default class extends CheckboxSelectAll {
 
             const variantImageLink = variantTarget.querySelector('[data-slot="variantImageLink"]')
             if (variantImageLink) {
-              variantImageLink.href = variantEditUrl
               variantImageLink.classList.remove('invisible')
+              variantImageLink.addEventListener('click', (e) => {
+                e.preventDefault()
+                const variantId = this.variantIdsValue?.[internalName]
+                if (variantId && this.hasAllProductImagesValue) {
+                  this.openImagePickerModal(variantId, internalName, variantTarget)
+                } else if (variantEditUrl) {
+                  window.location.href = variantEditUrl
+                }
+              })
             }
           }
 
@@ -1258,5 +1269,149 @@ export default class extends CheckboxSelectAll {
         input.value = this.normalizeNumber(input.value)
       }
     })
+  }
+
+  /**
+   * Opens a modal showing all product images for assigning to a variant
+   */
+  openImagePickerModal(variantId, variantName, variantTarget) {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('variant-image-picker-modal')
+    if (existingModal) existingModal.remove()
+
+    const images = this.allProductImagesValue || []
+
+    const modal = document.createElement('div')
+    modal.id = 'variant-image-picker-modal'
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;'
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove()
+    })
+
+    const displayName = variantName.replace(/\//g, ' / ')
+
+    let imagesHTML = ''
+    if (images.length > 0) {
+      imagesHTML = images.map(img => `
+        <div class="image-picker-item" data-image-id="${img.id}"
+             style="cursor:pointer;border:2px solid ${img.viewable_id == variantId ? '#3b82f6' : '#e5e7eb'};border-radius:8px;overflow:hidden;aspect-ratio:1;position:relative;transition:all 0.15s;"
+             onmouseover="this.style.borderColor='#3b82f6';this.style.transform='scale(1.03)'"
+             onmouseout="this.style.borderColor='${img.viewable_id == variantId ? '#3b82f6' : '#e5e7eb'}';this.style.transform='scale(1)'"
+        >
+          <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />
+          ${img.viewable_id == variantId ? '<div style="position:absolute;top:4px;right:4px;background:#3b82f6;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;">✓</div>' : ''}
+        </div>
+      `).join('')
+    } else {
+      imagesHTML = '<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:40px 0;">No product images available. Upload images on the product page first.</p>'
+    }
+
+    modal.innerHTML = `
+      <div style="background:white;border-radius:12px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:600;">Select image for ${displayName}</h3>
+            <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">Click an image to assign it to this variant</p>
+          </div>
+          <button id="image-picker-close" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px 8px;">&times;</button>
+        </div>
+        <div style="padding:16px 20px;overflow-y:auto;flex:1;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${imagesHTML}
+          </div>
+        </div>
+      </div>
+    `
+
+    document.body.appendChild(modal)
+
+    // Close button
+    modal.querySelector('#image-picker-close').addEventListener('click', () => modal.remove())
+
+    // ESC key to close
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        modal.remove()
+        document.removeEventListener('keydown', escHandler)
+      }
+    }
+    document.addEventListener('keydown', escHandler)
+
+    // Image click handlers
+    modal.querySelectorAll('.image-picker-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const imageId = item.dataset.imageId
+        this.assignImageToVariant(imageId, variantId, variantName, variantTarget, modal)
+      })
+    })
+  }
+
+  /**
+   * Assigns a product image to a variant via AJAX
+   */
+  async assignImageToVariant(imageId, variantId, variantName, variantTarget, modal) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+    const assetsPath = this.assetsPathValue
+
+    // Show loading on the clicked image
+    const clickedItem = modal.querySelector(`[data-image-id="${imageId}"]`)
+    if (clickedItem) {
+      clickedItem.style.opacity = '0.5'
+      clickedItem.style.pointerEvents = 'none'
+    }
+
+    try {
+      const response = await fetch(`${assetsPath}/${imageId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({
+          asset: {
+            viewable_id: variantId,
+            viewable_type: 'Spree::Variant'
+          }
+        })
+      })
+
+      if (response.ok) {
+        // Update the variant thumbnail in the product form
+        const variantImage = variantTarget.querySelector('[data-slot="variantImage"]')
+        const variantImagePlaceholder = variantTarget.querySelector('[data-slot="variantImagePlaceholder"]')
+        const clickedImg = clickedItem?.querySelector('img')
+
+        if (variantImage && clickedImg) {
+          variantImage.src = clickedImg.src
+          variantImage.classList.remove('hidden')
+          if (variantImagePlaceholder) variantImagePlaceholder.classList.add('hidden')
+        }
+
+        // Update the allProductImages data to reflect the new assignment
+        const images = this.allProductImagesValue || []
+        const updatedImages = images.map(img => {
+          if (img.id == imageId) {
+            return { ...img, viewable_id: parseInt(variantId) }
+          }
+          return img
+        })
+        this.allProductImagesValue = updatedImages
+
+        modal.remove()
+      } else {
+        console.error('Failed to assign image:', response.status)
+        if (clickedItem) {
+          clickedItem.style.opacity = '1'
+          clickedItem.style.pointerEvents = 'auto'
+        }
+      }
+    } catch (e) {
+      console.error('Error assigning image:', e)
+      if (clickedItem) {
+        clickedItem.style.opacity = '1'
+        clickedItem.style.pointerEvents = 'auto'
+      }
+    }
   }
 }

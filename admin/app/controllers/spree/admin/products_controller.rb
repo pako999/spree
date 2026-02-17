@@ -180,6 +180,18 @@ module Spree
             @product_variant_images[variant.human_name] = spree_image_url(variant.default_image, variant: :mini)
           end
         end
+
+        # All product images for the image picker modal
+        @all_product_images = []
+        @product.variant_images.distinct.each do |image|
+          if image.attachment.attached? && image.attachment.variable?
+            @all_product_images << {
+              id: image.id,
+              url: spree_image_url(image.attachment, variant: :small),
+              viewable_id: image.viewable_id
+            }
+          end
+        end
       end
 
       def set_product_defaults
