@@ -1,0 +1,89 @@
+<% product_images = @product.variant_images.distinct %>
+<% if product_images.any? %>
+<div class="card mb-6">
+  <div class="card-header">
+    <h5 class="card-title"><%= Spree.t(:media) %> — Product Images</h5>
+    <p class="text-sm text-gray-500 mb-0">Select an image to assign it to this variant, or upload a new one below.</p>
+  </div>
+  <div class="card-body">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="product-images-gallery">
+      <% product_images.each do |image| %>
+        <% is_assigned = image.viewable_id == @variant.id %>
+        <div class="product-image-card relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all
+                    <%= is_assigned ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-400' %>"
+             data-image-id="<%= image.id %>"
+             data-assigned="<%= is_assigned %>"
+             onclick="toggleVariantImage(this, <%= image.id %>, <%= @variant.id %>)"
+             style="aspect-ratio: 1;"
+             title="<%= is_assigned ? 'Click to unassign from this variant' : 'Click to assign to this variant' %>">
+          <%= spree_image_tag(image.attachment, width: 200, height: 200, alt: image.alt, class: 'w-full h-full object-cover') %>
+          <% if is_assigned %>
+            <div class="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" id="check-<%= image.id %>">✓</div>
+          <% else %>
+            <div class="absolute top-1 right-1 bg-gray-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity" id="check-<%= image.id %>"></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+async function toggleVariantImage(card, imageId, variantId) {
+  const isAssigned = card.dataset.assigned === 'true';
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  card.style.opacity = '0.5';
+  card.style.pointerEvents = 'none';
+
+  try {
+    if (isAssigned) {
+      // Unassign: set viewable back to null/master
+      const response = await fetch(`<%= spree.admin_asset_path(':id') %>`.replace(':id', imageId), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ asset: { viewable_id: <%= @product.master.id %>, viewable_type: 'Spree::Variant' } })
+      });
+
+      if (response.ok) {
+        card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+        card.classList.add('border-gray-200');
+        card.dataset.assigned = 'false';
+        card.title = 'Click to assign to this variant';
+        const check = card.querySelector('[id^="check-"]');
+        if (check) { check.className = 'absolute top-1 right-1 bg-gray-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0'; check.textContent = ''; }
+      }
+    } else {
+      // Assign: set viewable to this variant
+      const response = await fetch(`<%= spree.admin_asset_path(':id') %>`.replace(':id', imageId), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ asset: { viewable_id: variantId, viewable_type: 'Spree::Variant' } })
+      });
+
+      if (response.ok) {
+        card.classList.remove('border-gray-200');
+        card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+        card.dataset.assigned = 'true';
+        card.title = 'Click to unassign from this variant';
+        const check = card.querySelector('[id^="check-"]');
+        if (check) { check.className = 'absolute top-1 right-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs'; check.textContent = '✓'; }
+      }
+    }
+  } catch (e) {
+    console.error('Error toggling variant image:', e);
+  } finally {
+    card.style.opacity = '1';
+    card.style.pointerEvents = 'auto';
+  }
+}
+</script>
+<% end %>
