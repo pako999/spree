@@ -40,6 +40,7 @@ export default class extends CheckboxSelectAll {
     allProductImages: Array,
     assetsPath: String,
     masterId: Number,
+    productId: String,
     currentStockLocationId: String,
     stockLocations: Array,
     optionValuesSelectOptions: Array,
@@ -1352,7 +1353,13 @@ export default class extends CheckboxSelectAll {
    */
   async assignImageToVariant(imageId, variantId, variantPrefixId, variantName, variantTarget, modal) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-    const adminPath = this.adminPathValue || Spree.adminPath
+    // Build the admin path from the current URL if not set
+    let adminPath = this.adminPathValue
+    if (!adminPath) {
+      // Extract admin path from current URL (e.g. /admin)
+      const match = window.location.pathname.match(/(\/[^\/]+)\/products/)
+      adminPath = match ? match[1] : '/admin'
+    }
 
     // Show loading on the clicked image
     const clickedItem = modal.querySelector(`[data-image-id="${imageId}"]`)
