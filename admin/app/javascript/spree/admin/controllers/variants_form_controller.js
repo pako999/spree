@@ -1398,9 +1398,9 @@ export default class extends CheckboxSelectAll {
 
         modal.remove()
       } else {
-        const data = await response.json().catch(() => ({}))
-        console.error('Failed to assign image:', response.status, data)
-        alert('Failed to assign image. Please try again.')
+        const responseText = await response.text().catch(() => 'no body')
+        console.error('Failed to assign image:', response.status, responseText)
+        alert(`Failed to assign image (${response.status}): ${responseText.substring(0, 200)}`)
         if (clickedItem) {
           clickedItem.style.opacity = '1'
           clickedItem.style.pointerEvents = 'auto'
@@ -1408,7 +1408,7 @@ export default class extends CheckboxSelectAll {
       }
     } catch (e) {
       console.error('Error assigning image:', e)
-      alert('Error assigning image. Please try again.')
+      alert(`Error assigning image: ${e.message}`)
       if (clickedItem) {
         clickedItem.style.opacity = '1'
         clickedItem.style.pointerEvents = 'auto'
