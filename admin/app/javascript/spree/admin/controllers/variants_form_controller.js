@@ -1353,13 +1353,16 @@ export default class extends CheckboxSelectAll {
    */
   async assignImageToVariant(imageId, variantId, variantPrefixId, variantName, variantTarget, modal) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-    // Build the admin path from the current URL if not set
-    let adminPath = this.adminPathValue
-    if (!adminPath) {
-      // Extract admin path from current URL (e.g. /admin)
-      const match = window.location.pathname.match(/(\/[^\/]+)\/products/)
-      adminPath = match ? match[1] : '/admin'
+
+    // Extract admin path and product slug from current URL
+    // URL is like: /admin/products/nobile-2026-nhp-split/edit
+    const pathMatch = window.location.pathname.match(/^(\/[^/]+)\/products\/([^/]+)/)
+    if (!pathMatch) {
+      alert('Could not determine product path. Please try again.')
+      return
     }
+    const adminPath = pathMatch[1]  // e.g. "/admin"
+    const productSlug = pathMatch[2]  // e.g. "nobile-2026-nhp-split"
 
     // Show loading on the clicked image
     const clickedItem = modal.querySelector(`[data-image-id="${imageId}"]`)
@@ -1369,7 +1372,8 @@ export default class extends CheckboxSelectAll {
     }
 
     try {
-      const url = `${adminPath}/products/${this.productIdValue}/variants/${variantPrefixId}/assign_image`
+      const url = `${adminPath}/products/${productSlug}/variants/${variantPrefixId}/assign_image`
+      console.log('Assigning image:', { url, imageId, variantId, variantPrefixId })
       const response = await fetch(url, {
         method: 'POST',
         headers: {
