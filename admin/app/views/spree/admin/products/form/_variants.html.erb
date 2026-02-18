@@ -37,7 +37,7 @@
         data-variants-form-assets-path-value="<%= spree.admin_assets_path %>"
         data-variants-form-master-id-value="<%= @product.master.id %>"
         data-variants-form-product-id-value="<%= @product.slug %>"
-        data-variants-form-admin-path-value="<%= spree.admin_path %>"
+        data-variants-form-admin-path-value="<%= Spree.admin_path %>"
         >
         <div class="options-creator">
           <%= render 'spree/admin/products/form/variants/option_template', option_types_for_select: option_types_for_select %>
