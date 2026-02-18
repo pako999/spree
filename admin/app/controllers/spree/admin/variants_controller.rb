@@ -64,7 +64,7 @@ module Spree
 
       def assign_image
         @product = Spree::Product.friendly.find(params[:product_id])
-        @variant = @product.variants.find(params[:id])
+        @variant = @product.variants.find_by!(prefix_id: params[:id])
         source_image = Spree::Image.find(params[:image_id])
 
         # Remove existing images from this variant (keep it to one image per variant)
