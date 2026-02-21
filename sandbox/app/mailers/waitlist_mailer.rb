@@ -11,7 +11,7 @@ class WaitlistMailer < Spree::BaseMailer
     @product = @variant.product
     store = Spree::Store.default
 
-    @product_url = spree.product_url(@product, host: store.url)
+    @product_url = Spree::Core::Engine.routes.url_helpers.product_url(@product, host: store.url)
     
     # Safely get an image
     @image_url = nil
