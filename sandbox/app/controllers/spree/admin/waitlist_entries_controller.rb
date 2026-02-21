@@ -8,7 +8,7 @@ module Spree
       end
 
       def collection_default_sort
-        { created_at: :desc }
+        "created_at desc"
       end
 
       def model_class
