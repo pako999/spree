@@ -132,6 +132,13 @@ Rails.application.config.after_initialize do
                 url: :admin_properties_path,
                 position: 50,
                 if: -> { can?(:manage, Spree::Property) && Spree::Config.product_properties_enabled }
+
+    # Waitlists
+    products.add :waitlists,
+                label: 'Waitlists',
+                url: :admin_waitlist_entries_path,
+                position: 60,
+                active: -> { controller_name == 'waitlist_entries' }
   end
 
   # Customers with submenu
