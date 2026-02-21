@@ -2935,6 +2935,27 @@ body {
   margin-right: 8px;
 }
 
+/* Make logo "fly out" and overlap top bar on desktop */
+@media (min-width: 1024px) {
+  .mt-logo {
+    position: relative;
+    width: 200px;
+    /* Placeholder width so search bar doesn't collapse into it */
+  }
+
+  .mt-logo img {
+    position: absolute;
+    width: 240px !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    top: -30px;
+    left: -10px;
+    z-index: 50;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+  }
+}
+
 /* Search bar — fills available space */
 .mt-search-wrapper {
   flex: 1;
