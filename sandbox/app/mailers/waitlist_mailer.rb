@@ -1,4 +1,4 @@
-class WaitlistMailer < ApplicationMailer
+class WaitlistMailer < Spree::BaseMailer
   default from: 'noreply@surfworld.eu'
 
   def restock_email(entry_id)
