@@ -7,4 +7,13 @@ class WaitlistEntry < ApplicationRecord
 
   # Scopes
   scope :pending, -> { where(notified_at: nil) }
+
+  # Ransack
+  def self.ransackable_attributes(auth_object = nil)
+    ["created_at", "email", "id", "notified_at", "updated_at", "variant_id"]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    ["variant"]
+  end
 end
