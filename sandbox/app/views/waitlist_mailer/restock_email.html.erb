@@ -1,0 +1,101 @@
+<% store_url = @store_url || "https://surfworld.eu" %>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+      }
+      .header {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+      .header img {
+        max-height: 60px;
+      }
+      .content {
+        padding: 30px 20px;
+        text-align: center;
+      }
+      .product-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .product-options {
+        color: #666;
+        margin-bottom: 20px;
+      }
+      .product-image {
+        max-width: 100%;
+        height: auto;
+        max-height: 300px;
+        margin-bottom: 20px;
+      }
+      .cta-button {
+        display: inline-block;
+        padding: 14px 28px;
+        background-color: #111111;
+        color: #ffffff !important;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 10px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #999;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>SURFWORLD</h1>
+      </div>
+      
+      <div class="content">
+        <h2>Great news! It's back in stock.</h2>
+        <p>You asked us to notify you when this item arrived, and it's finally here:</p>
+        
+        <div class="product-title"><%= @product.name %></div>
+        
+        <% if @variant.options_text.present? %>
+          <div class="product-options"><%= @variant.options_text %></div>
+        <% end %>
+
+        <% if @image_url.present? %>
+          <img src="<%= @image_url %>" alt="<%= @product.name %>" class="product-image" />
+        <% end %>
+
+        <p>Stock is limited and moves fast, so we recommend completing your purchase soon.</p>
+        
+        <a href="<%= @product_url %>" class="cta-button">Shop Now</a>
+      </div>
+      
+      <div class="footer">
+        You are receiving this email because you subscribed to the waitlist for this product at <%= store_url %>. <br>
+        If you no longer wish to purchase this item, you can ignore this email.
+      </div>
+    </div>
+  </body>
+</html>

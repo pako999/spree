@@ -1,0 +1,9 @@
+<% content_for :page_title do %>
+  Waitlist Entries
+<% end %>
+
+<% content_for :page_actions do %>
+  <!-- Optional buttons can go here -->
+<% end %>
+
+<%= render_table @collection, :waitlist_entries, bulk_operations: false %>

@@ -16,6 +16,7 @@
     <% if can?(:manage, Spree::Property) && Spree::Config[:product_properties_enabled] %>
       <%= nav_item(Spree.t(:properties), spree.admin_properties_path) %>
     <% end %>
+    <%= nav_item("Waitlists", spree.admin_waitlist_entries_path, active: controller_name == 'waitlist_entries', icon: 'envelope') %>
 
     <%= render_admin_partials(:store_products_nav_partials) %>
   </ul>
@@ -36,6 +37,7 @@
     <% if can?(:manage, Spree::Property) && Spree::Config[:product_properties_enabled] %>
       <%= nav_item(Spree.t(:properties), spree.admin_properties_path) %>
     <% end %>
+    <%= nav_item("Waitlists", spree.admin_waitlist_entries_path, active: controller_name == 'waitlist_entries', icon: 'envelope') %>
 
     <%= render_admin_partials(:store_products_nav_partials) %>
   </ul>

@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   Spree::Core::Engine.add_routes do
     # AI Description routes
     namespace :admin do
+      resources :waitlist_entries, only: [:index]
       post "products/:id/ai_description", to: "ai_descriptions#create", as: :product_ai_description
       get "ai_descriptions/bulk", to: "ai_descriptions#bulk", as: :ai_descriptions_bulk
       post "ai_descriptions/generate_bulk", to: "ai_descriptions#generate_bulk", as: :ai_descriptions_generate_bulk

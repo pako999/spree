@@ -1,0 +1,51 @@
+<% if @collection.any? %>
+  <table class="table" id="listing_waitlist_entries">
+    <thead class="bg-light">
+      <tr>
+        <th class="w-1/4">Email</th>
+        <th class="w-1/3">Product Variant</th>
+        <th class="w-1/6">Date Added</th>
+        <th class="w-1/6">Notified At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @collection.each do |entry| %>
+        <tr id="<%= spree_dom_id entry %>">
+          <td class="align-middle">
+            <%= mail_to entry.email %>
+          </td>
+          <td class="align-middle">
+            <% if entry.variant %>
+              <%= link_to entry.variant.name, spree.edit_admin_product_path(entry.variant.product) %>
+              <% if entry.variant.options_text.present? %>
+                <br><small class="text-muted"><%= entry.variant.options_text %></small>
+              <% end %>
+            <% else %>
+              <span class="text-muted">Deleted Variant</span>
+            <% end %>
+          </td>
+          <td class="align-middle">
+            <%= l entry.created_at.to_date, format: :short %>
+          </td>
+          <td class="align-middle" style="padding: 10px;">
+            <% if entry.notified_at.present? %>
+              <span class="badge badge-success"><%= l entry.notified_at.to_date, format: :short %></span>
+            <% else %>
+              <span class="badge badge-warning text-yellow-700 bg-yellow-100 px-2 py-1 rounded">Pending</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="text-center no-objects-found m-10">
+    <div class="icon bg-light rounded-circle shadow-sm mx-auto mb-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+    </div>
+    <h3 class="h4 mb-2">No waitlist entries found</h3>
+    <p class="text-muted mb-0">Whenever someone joins a product waitlist, they will appear here.</p>
+  </div>
+<% end %>
+
+<%= render 'spree/admin/shared/index_table_options', collection: @collection %>
