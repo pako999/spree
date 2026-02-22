@@ -8,7 +8,7 @@ begin
   require 'typelizer/serializer_plugins/alba'
   module Typelizer
     module SerializerPlugins
-      module Alba
+      class Alba
         unless method_defined?(:original_ts_mapper)
           alias_method :original_ts_mapper, :ts_mapper
           def ts_mapper
