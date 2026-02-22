@@ -27,6 +27,7 @@ export default class extends Controller {
     this.uppy = new Uppy({
       autoProceed: true,
       allowMultipleUploads: false,
+      allowMultipleUploadBatches: false,
       restrictions: {
         allowedFileTypes: this.allowedFileTypesValue.length ? this.allowedFileTypesValue : undefined
       },
@@ -167,10 +168,10 @@ export default class extends Controller {
 
       // Propagate a custom 'active-storage-upload:success' event when upload completes and field updated
       const event = new CustomEvent('active-storage-upload:success', {
-        detail: { 
+        detail: {
           file: file,
           signedId: signedId,
-          controller: this 
+          controller: this
         },
         bubbles: true
       })
