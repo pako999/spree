@@ -22,8 +22,11 @@ module Spree
                    :item_total, :display_item_total, :ship_total, :display_ship_total,
                    :adjustment_total, :display_adjustment_total, :promo_total, :display_promo_total,
                    :tax_total, :display_tax_total, :included_tax_total, :display_included_tax_total,
-                   :additional_tax_total, :display_additional_tax_total, :total, :display_total,
-                   completed_at: :iso8601, created_at: :iso8601, updated_at: :iso8601
+                   :additional_tax_total, :display_additional_tax_total, :total, :display_total
+
+        attribute :completed_at do |order| order.completed_at&.iso8601 end
+        attribute :created_at do |order| order.created_at&.iso8601 end
+        attribute :updated_at do |order| order.updated_at&.iso8601 end
 
         many :order_promotions,
              resource: Spree.api.order_promotion_serializer,
@@ -50,7 +53,11 @@ module Spree
             if: proc { params[:includes]&.include?('ship_address') }
 
         attribute :payment_methods do |order|
-          pms = order.payment_methods rescue []
+          pms = begin
+            order.payment_methods
+          rescue StandardError
+            []
+          end
           (pms || []).compact.select { |pm| pm.respond_to?(:prefix_id) }.map do |pm|
             { id: pm.prefix_id, name: pm.name, description: pm.description, type: pm.type }
           end

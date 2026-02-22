@@ -5,7 +5,6 @@ module Spree
         # Admin API Order Serializer
         # Full order data including admin-only fields
         class OrderSerializer < V3::OrderSerializer
-
           typelize channel: 'string | null', last_ip_address: 'string | null',
                    considered_risky: :boolean, confirmation_delivered: :boolean,
                    store_owner_notification_delivered: :boolean,
@@ -16,8 +15,10 @@ module Spree
           # Admin-only attributes
           attributes :channel, :last_ip_address, :considered_risky,
                      :confirmation_delivered, :store_owner_notification_delivered,
-                     :internal_note, :approver_id,
-                     canceled_at: :iso8601, approved_at: :iso8601
+                     :internal_note, :approver_id
+
+          attribute :canceled_at do |order| order.canceled_at&.iso8601 end
+          attribute :approved_at do |order| order.approved_at&.iso8601 end
 
           attribute :canceler_id do |order|
             order.canceler_id
