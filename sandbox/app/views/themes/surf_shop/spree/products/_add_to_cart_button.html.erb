@@ -41,7 +41,7 @@ end
                   data: {
                     action: [
                       'click->product-form#showNotSelectedOptions',
-                      ('click->modal#open' if variant_not_available)
+                      ('click->modal#open' if all_options_selected && variant_not_available)
                     ].compact.join(' '),
                     product_form_target: 'submit'
                   },
@@ -67,7 +67,7 @@ end
                   data: {
                     action: [
                       'click->product-form#showNotSelectedOptions',
-                      ('click->modal#open' if variant_not_available)
+                      ('click->modal#open' if all_options_selected && variant_not_available)
                     ].compact.join(' '),
                     product_form_target: 'submit'
                   },
