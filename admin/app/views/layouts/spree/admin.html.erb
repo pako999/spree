@@ -23,6 +23,8 @@
       <%= render "spree/admin/shared/footer" %>
       <%= render 'spree/admin/shared/drawer' %>
       <%= render "spree/admin/shared/dialog" %>
+      <%# Fallback dialog target so Stimulus export-dialog controller doesn't throw "Missing target" on non-export pages %>
+      <dialog data-export-dialog-target="dialog"></dialog>
     </main>
     <%= render "spree/admin/shared/alerts" %>
     <%= render "spree/admin/shared/turbo_confirm_dialog" %>

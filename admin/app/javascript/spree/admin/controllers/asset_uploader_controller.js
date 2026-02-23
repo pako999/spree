@@ -18,9 +18,8 @@ export default class extends Controller {
   connect() {
     this.uppy = new Uppy({
       autoProceed: true,
-      allowMultipleUploads: this.multipleValue,
       allowMultipleUploadBatches: false,
-      debug: true,
+      debug: false,
       restrictions: {
         allowedFileTypes: this.allowedFileTypesValue.length ? this.allowedFileTypesValue : undefined
       }
