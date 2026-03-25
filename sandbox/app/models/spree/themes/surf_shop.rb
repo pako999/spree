@@ -103,6 +103,13 @@ module Spree
           Spree::PageSections::Footer
         ]
       end
+
+      # Returns custom page section classes specific to this theme
+      #
+      # @return [Array<Class>]
+      def custom_page_sections
+        [Spree::PageSections::SportCategoryGrid]
+      end
     end
   end
 end

@@ -1,0 +1,86 @@
+<% cache_unless page_builder_enabled?, spree_storefront_base_cache_scope.call(section) do %>
+  <%
+    # Per-category focal point map — slug => Tailwind object-position class
+    FOCAL_POINTS = {
+      'kiteboarding' => 'object-center',
+      'windsurfing'  => 'object-top',
+      'wingfoil'     => 'object-center',
+      'sup'          => 'object-top',
+      'wetsuits'     => 'object-center',
+      'ion-bike'     => 'object-center',
+    }.freeze
+  %>
+  <div class="w-full" style="<%= section_styles(section) %>">
+    <div class="grid grid-cols-1 sm:grid-cols-2">
+      <% section.links.each do |link| %>
+        <%
+          taxon      = link.linkable
+          children   = taxon.respond_to?(:children) ? taxon.children.order(:position) : []
+          has_children = children.any?
+          slug       = taxon.respond_to?(:permalink) ? taxon.permalink.to_s.split('/').last : ''
+          focal      = FOCAL_POINTS.fetch(slug, 'object-center')
+          panel_h    = section.preferred_panel_height
+        %>
+        <div class="sport-category-panel group relative overflow-hidden"
+             style="height: <%= panel_h %>px">
+
+          <%# Background image %>
+          <% if taxon.respond_to?(:page_builder_image) && taxon.page_builder_image&.attached? && taxon.page_builder_image&.variable? %>
+            <picture>
+              <source media="(max-width: 640px)"
+                      srcset="<%= spree_image_url(taxon.page_builder_image, width: 640, height: panel_h) %>">
+              <source media="(max-width: 1280px)"
+                      srcset="<%= spree_image_url(taxon.page_builder_image, width: 760, height: panel_h) %>">
+              <source media="(min-width: 1281px)"
+                      srcset="<%= spree_image_url(taxon.page_builder_image, width: 960, height: panel_h) %>">
+              <%= spree_image_tag(taxon.page_builder_image,
+                    width: 960,
+                    height: panel_h,
+                    class: "absolute inset-0 w-full h-full object-cover #{focal} group-hover:scale-105 transition-transform duration-700 ease-out",
+                    loading: 'lazy',
+                    alt: link.label) %>
+            </picture>
+          <% else %>
+            <div class="absolute inset-0 w-full h-full bg-gray-700"></div>
+          <% end %>
+
+          <%# Subtle gradient above the bar so text is readable even without the bar %>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none"></div>
+
+          <%# Dark bottom content bar — matches the reference design %>
+          <div class="absolute bottom-0 left-0 right-0 z-10"
+               style="background: rgba(0,0,0,0.62); padding: 1.25rem 1.75rem 1.4rem;">
+
+            <%# Category title %>
+            <h3 class="text-white uppercase leading-none mb-3"
+                style="font-family: Impact, 'Arial Black', Arial, sans-serif;
+                       font-size: clamp(1.5rem, 3.2vw, 2.4rem);
+                       letter-spacing: 0.03em;
+                       text-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+              <%= link.label %>
+            </h3>
+
+            <%# Buttons row %>
+            <div class="flex flex-wrap gap-2">
+              <% if has_children %>
+                <% children.each do |child| %>
+                  <%= link_to spree.taxon_path(child),
+                        class: 'inline-block border-2 border-white text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 hover:bg-white hover:text-black transition-colors duration-200' do %>
+                    <%= child.name %>
+                  <% end %>
+                <% end %>
+              <% else %>
+                <%= page_builder_link_to link,
+                      class: 'inline-block border-2 border-white text-white text-xs font-bold uppercase tracking-widest px-5 py-1.5 hover:bg-white hover:text-black transition-colors duration-200',
+                      target: link.open_in_new_tab.presence && '_blank' do %>
+                  <%= Spree.t(:shop_now, scope: 'spree.storefront', default: 'Shop Now') %>
+                <% end %>
+              <% end %>
+            </div>
+
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
