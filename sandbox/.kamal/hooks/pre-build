@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# pre-build hook: copy monorepo path gems into sandbox/vendor/gems/ so Docker can access them
+set -e
+
+# This file is at: sandbox/.kamal/hooks/pre-build
+# So sandbox = 2 levels up, spree root = 3 levels up.
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+SANDBOX_DIR="$(cd "$HOOK_DIR/../.." && pwd)"
+SPREE_ROOT="$(cd "$SANDBOX_DIR/.." && pwd)"
+VENDOR_GEMS_DIR="$SANDBOX_DIR/vendor/gems"
+
+echo "==> Sandbox: $SANDBOX_DIR"
+echo "==> Spree root: $SPREE_ROOT"
+echo "==> Preparing vendor/gems/ for Docker build..."
+
+# Remove symlink if present (local dev uses symlink; Docker needs a real dir)
+if [ -L "$VENDOR_GEMS_DIR" ]; then
+  echo "    Removing vendor/gems symlink..."
+  rm "$VENDOR_GEMS_DIR"
+fi
+
+mkdir -p "$VENDOR_GEMS_DIR"
+
+# Copy root spree gem files (spree.gemspec is at spree root)
+echo "    Copying root spree gem files..."
+for f in spree.gemspec lib Gemfile Rakefile common_spree_dependencies.rb; do
+  SRC="$SPREE_ROOT/$f"
+  [ -e "$SRC" ] && cp -r "$SRC" "$VENDOR_GEMS_DIR/"
+done
+
+# Copy subdirectory gems: emails, admin, sample, core, cli, api
+for gem in emails admin sample core cli api; do
+  SRC="$SPREE_ROOT/$gem"
+  if [ -d "$SRC" ]; then
+    echo "    Copying $gem..."
+    rm -rf "$VENDOR_GEMS_DIR/$gem"
+    cp -r "$SRC" "$VENDOR_GEMS_DIR/$gem"
+  fi
+done
+
+echo "==> Path gems ready."

@@ -65,10 +65,15 @@ group :test do
   gem "selenium-webdriver"
 end
 gem "devise"
-gem "spree", path: "../"
-gem "spree_emails", path: "../"
-gem "spree_sample", path: "../"
-gem "spree_admin", path: "../"
+# Path gems: vendor/gems/ is a symlink to ../.. locally;
+# in Docker it's populated by .kamal/hooks/pre-build with individual gem dirs.
+# Local setup: ln -sfn ../.. vendor/gems (already done)
+gem "spree", path: "vendor/gems"         # gemspec at root
+gem "spree_api", path: "vendor/gems/api"
+gem "spree_cli", path: "vendor/gems/cli"
+gem "spree_emails", path: "vendor/gems/emails"
+gem "spree_sample", path: "vendor/gems/sample"
+gem "spree_admin", path: "vendor/gems/admin"
 gem "spree_i18n"
 
 group :development, :test do
