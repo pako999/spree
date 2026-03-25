@@ -1,4 +1,13 @@
-<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_key, section.cache_key_with_version, loaded.to_b] do %>
+<%
+  # On product pages, use the current product's category instead of the configured taxon
+  # so that "Beloved Products" shows items from the same category
+  if @product.present?
+    display_taxon = @product.taxons.order(:depth).last
+  else
+    display_taxon = section.taxon
+  end
+%>
+<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_key, section.cache_key_with_version, loaded.to_b, @product&.cache_key_with_version] do %>
   <div style='<%= section_styles(section) %>' class='animate-fadeIn'>
     <div class='page-container'>
       <% heading_size = case section.preferred_heading_size
@@ -6,7 +15,7 @@
                         when 'medium' then 'text-lg lg:text-xl font-medium'
                         when 'large' then 'text-xl lg:text-2xl font-medium'
                         end %>
-      <% if section.taxon&.page_builder_image&.attached? && section.preferred_show_taxon_image %>
+      <% if display_taxon&.page_builder_image&.attached? && section.preferred_show_taxon_image %>
         <% desktop_slides_amount = 2.5 %>
         <% section_with_image = true %>
         <% arrows_on_top = false %>
@@ -22,8 +31,8 @@
               class='<%= heading_size %> featured-taxon--title font-medium text-<%= section.preferred_heading_alignment %>'
               data-title="<%= section.preferred_heading.downcase %>"
               style='<%= section_heading_styles(section) %>'>
-              <% if section.taxon.present? %>
-                <%= link_to section.preferred_heading, spree_storefront_resource_url(section.taxon), data: { turbo_frame: "_top" } %>
+              <% if display_taxon.present? %>
+                <%= link_to section.preferred_heading, spree_storefront_resource_url(display_taxon), data: { turbo_frame: "_top" } %>
               <% else %>
                 <%= section.preferred_heading %>
               <% end %>
@@ -35,21 +44,22 @@
               </div>
             <% end %>
           </div>
-          <% if section.taxon.present? %>
-            <%= link_to spree_storefront_resource_url(section.taxon), class: class_names(section.preferred_button_style == "primary" ? "btn-primary" : "btn-secondary", " text-center hidden md:inline-block"), data: { turbo_frame: '_top' } do %>
+          <% if display_taxon.present? %>
+            <%= link_to spree_storefront_resource_url(display_taxon), class: class_names(section.preferred_button_style == "primary" ? "btn-primary" : "btn-secondary", " text-center hidden md:inline-block"), data: { turbo_frame: '_top' } do %>
               <%= section.preferred_button_text %>
             <% end %>
           <% end %>
         </div>
       <% end %>
-      <% if loaded && section.taxon.present? %>
-        <% taxon_products = taxon_products(section.taxon).limit(section.preferred_max_products_to_show) %>
+      <% if loaded && display_taxon.present? %>
+        <% taxon_products = taxon_products(display_taxon).limit(section.preferred_max_products_to_show) %>
+        <% taxon_products = taxon_products.where.not(id: @product.id) if @product.present? %>
         <% if taxon_products.any? %>
           <div class='grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6'>
             <% if section_with_image %>
               <div class='lg:col-span-5'>
-                <%= link_to spree.nested_taxons_path(section.taxon), data: { turbo_frame: "_top" } do %>
-                  <%= spree_image_tag(section.taxon.page_builder_image, height: 500, width: 500, class: 'h-full w-full object-cover object-center', loading: :lazy) %>
+                <%= link_to spree.nested_taxons_path(display_taxon), data: { turbo_frame: "_top" } do %>
+                  <%= spree_image_tag(display_taxon.page_builder_image, height: 500, width: 500, class: 'h-full w-full object-cover object-center', loading: :lazy) %>
                 <% end %>
               </div>
             <% end %>
