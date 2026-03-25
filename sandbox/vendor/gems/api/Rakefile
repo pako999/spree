@@ -1,0 +1,52 @@
+require 'rubygems'
+require 'rake'
+require 'rake/testtask'
+require 'rspec/core/rake_task'
+require 'spree/testing_support/common_rake'
+
+RSpec::Core::RakeTask.new
+
+task default: :spec
+
+desc "Generates a dummy app for testing"
+task :test_app do
+  ENV['LIB_NAME'] = 'spree/api'
+  Rake::Task['common:test_app'].invoke
+end
+
+namespace :rswag do
+  namespace :specs do
+    desc 'Generate Swagger JSON files from integration specs'
+    RSpec::Core::RakeTask.new('swaggerize') do |t|
+      t.pattern = ENV.fetch(
+        'PATTERN',
+        'spec/integration/**/*_spec.rb'
+      )
+
+      t.rspec_opts = ['--format Rswag::Specs::SwaggerFormatter', '--order defined']
+    end
+  end
+end
+
+namespace :typelizer do
+  desc 'Generate TypeScript types from Alba serializers'
+  task :generate do
+    ENV['RAILS_ENV'] ||= 'test'
+    ENV['DISABLE_TYPELIZER'] = 'false'
+
+    require File.expand_path('spec/dummy/config/environment', __dir__)
+
+    # Eager load serializers so typelizer can find them
+    serializers_path = File.expand_path('app/serializers/spree/api/v3', __dir__)
+    Rails.autoloaders.main.eager_load_dir(serializers_path)
+
+    require 'typelizer/generator'
+    serializers = Typelizer::Generator.call(force: true)
+
+    puts "Generated TypeScript types for #{serializers.size} serializers"
+    puts "Output: #{Typelizer.configuration.writer_config.output_dir}"
+  end
+
+  desc 'Clean and regenerate TypeScript types'
+  task refresh: :generate
+end
