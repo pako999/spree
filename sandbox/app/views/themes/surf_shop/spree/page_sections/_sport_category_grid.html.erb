@@ -1,24 +1,24 @@
 <% cache_unless page_builder_enabled?, spree_storefront_base_cache_scope.call(section) do %>
   <%
-    # Per-category focal point map — slug => Tailwind object-position class
-    FOCAL_POINTS = {
+    focal_points = {
       'kiteboarding' => 'object-center',
       'windsurfing'  => 'object-top',
       'wingfoil'     => 'object-center',
       'sup'          => 'object-top',
       'wetsuits'     => 'object-center',
       'ion-bike'     => 'object-center',
-    }.freeze
+    }
   %>
   <div class="w-full" style="<%= section_styles(section) %>">
     <div class="grid grid-cols-1 sm:grid-cols-2">
       <% section.links.each do |link| %>
         <%
-          taxon      = link.linkable
-          children   = taxon.respond_to?(:children) ? taxon.children.order(:position) : []
+          taxon        = link.linkable
+          next unless taxon
+          children     = taxon.respond_to?(:children) ? taxon.children.order(:position) : []
           has_children = children.any?
-          slug       = taxon.respond_to?(:permalink) ? taxon.permalink.to_s.split('/').last : ''
-          focal      = FOCAL_POINTS.fetch(slug, 'object-center')
+          slug         = taxon.respond_to?(:permalink) ? taxon.permalink.to_s.split('/').last : ''
+          focal        = focal_points.fetch(slug, 'object-center')
           panel_h    = section.preferred_panel_height
         %>
         <div class="sport-category-panel group relative overflow-hidden"
