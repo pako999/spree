@@ -100,10 +100,10 @@ module Spree
       void(transaction_id)
     end
 
-    def credit(amount_cents, transaction_id, options = {})
+    def credit(amount_cents, capture_id, options = {})
       currency = options[:currency] || 'EUR'
       response = client.transaction_refund(
-        transaction_id: transaction_id,
+        capture_id: capture_id,
         amount_cents: amount_cents,
         currency: currency
       )
@@ -111,7 +111,7 @@ module Spree
         true,
         'Refund processed successfully',
         response,
-        authorization: response.dig('Transaction', 'Id') || transaction_id
+        authorization: response.dig('Transaction', 'Id') || capture_id
       )
     rescue SaferpayError => e
       ActiveMerchant::Billing::Response.new(false, e.message, {})

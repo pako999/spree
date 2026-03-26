@@ -9,76 +9,29 @@ module Spree
       order = find_order
       return redirect_to_cart('Order not found') unless order
 
-      payment = order.payments.where(
-        payment_method_type: 'Spree::Gateway::Saferpay',
-        state: ['checkout', 'pending', 'processing']
-      ).last
-
+      payment = find_saferpay_payment(order)
       return redirect_to_cart('Payment not found') unless payment
+
+      # Already completed by notify webhook — just redirect
+      if payment.completed?
+        flash[:success] = Spree.t(:payment_success, scope: :saferpay, default: 'Payment successful! Your order has been placed.')
+        return redirect_to spree.order_path(order)
+      end
 
       saferpay_token = payment.transaction_id
       return redirect_to_cart('Saferpay token not found') unless saferpay_token
 
       begin
-        gateway = payment.payment_method
+        process_saferpay_payment(order, payment, saferpay_token)
 
-        # Step 1: Assert the payment
-        assert_response = gateway.assert_payment(token: saferpay_token)
-        transaction = assert_response['Transaction']
-        transaction_id = transaction['Id']
-        transaction_status = transaction['Status']
-
-        Rails.logger.info("[Saferpay] Assert success: Transaction #{transaction_id}, Status: #{transaction_status}")
-
-        payment.update!(
-          response_code: transaction_id,
-          transaction_id: transaction_id
-        )
-
-        # Step 2: Capture if authorized
-        if transaction_status == 'AUTHORIZED'
-          capture_response = gateway.capture(
-            (order.total * 100).to_i,
-            transaction_id
-          )
-
-          if capture_response.success?
-            payment.started_processing! if payment.can_started_processing?
-            payment.complete! if payment.can_complete?
-            payment.capture_events.create!(amount: order.total)
-            Rails.logger.info("[Saferpay] Capture success for order #{order.number}")
-          else
-            Rails.logger.error("[Saferpay] Capture failed: #{capture_response.message}")
-            payment.failure! if payment.can_failure?
-            return redirect_to_checkout(order, 'Payment capture failed. Please try again.')
-          end
-        elsif transaction_status == 'CAPTURED'
-          payment.started_processing! if payment.can_started_processing?
-          payment.complete! if payment.can_complete?
-          payment.capture_events.create!(amount: order.total)
-          Rails.logger.info("[Saferpay] Already captured for order #{order.number}")
-        end
-
-        # Complete the order
-        if order.can_complete?
-          order.complete!
-        elsif order.state != 'complete'
-          until order.state == 'complete' || !order.can_next?
-            order.next!
-          end
-        end
-
-        store_payment_info(payment, assert_response)
-
-        flash[:success] = 'Payment successful! Your order has been placed.'
+        flash[:success] = Spree.t(:payment_success, scope: :saferpay, default: 'Payment successful! Your order has been placed.')
         redirect_to spree.order_path(order)
-
       rescue SaferpayError => e
-        Rails.logger.error("[Saferpay] Assert/Capture error: #{e.message}")
+        Rails.logger.error("[Saferpay] Assert/Capture error for order #{order.number}: #{e.message}")
         payment.failure! if payment.can_failure?
         redirect_to_checkout(order, "Payment verification failed: #{e.error_message}")
       rescue StandardError => e
-        Rails.logger.error("[Saferpay] Unexpected error: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
+        Rails.logger.error("[Saferpay] Unexpected error for order #{order.number}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
         payment.failure! if payment&.can_failure?
         redirect_to_checkout(order, 'An unexpected error occurred. Please try again.')
       end
@@ -98,51 +51,25 @@ module Spree
       end
     end
 
-    # POST /saferpay/notify
+    # POST /saferpay/notify — server-to-server callback
     def notify
       order = find_order
       return head :not_found unless order
 
-      payment = order.payments.where(
-        payment_method_type: 'Spree::Gateway::Saferpay',
-        state: ['checkout', 'pending', 'processing']
-      ).last
+      payment = find_saferpay_payment(order)
       return head :not_found unless payment
 
+      # Already processed by success redirect
+      return head :ok if payment.completed?
+
+      saferpay_token = payment.transaction_id
+      return head :unprocessable_entity unless saferpay_token
+
       begin
-        gateway = payment.payment_method
-        saferpay_token = payment.transaction_id
-
-        assert_response = gateway.assert_payment(token: saferpay_token)
-        transaction = assert_response['Transaction']
-        transaction_id = transaction['Id']
-
-        payment.update!(
-          response_code: transaction_id,
-          transaction_id: transaction_id
-        )
-
-        if transaction['Status'] == 'AUTHORIZED'
-          capture_response = gateway.capture(
-            (order.total * 100).to_i,
-            transaction_id
-          )
-
-          if capture_response.success?
-            payment.started_processing! if payment.can_started_processing?
-            payment.complete! if payment.can_complete?
-            payment.capture_events.create!(amount: order.total)
-          end
-        elsif transaction['Status'] == 'CAPTURED'
-          payment.started_processing! if payment.can_started_processing?
-          payment.complete! if payment.can_complete?
-          payment.capture_events.create!(amount: order.total)
-        end
-
-        order.complete! if order.can_complete?
+        process_saferpay_payment(order, payment, saferpay_token)
         head :ok
       rescue StandardError => e
-        Rails.logger.error("[Saferpay] Notify error: #{e.message}")
+        Rails.logger.error("[Saferpay] Notify error for order #{order.number}: #{e.message}")
         head :internal_server_error
       end
     end
@@ -152,7 +79,83 @@ module Spree
     def find_order
       order_number = params[:order_number]
       return nil unless order_number
+
       Spree::Order.find_by(number: order_number)
+    end
+
+    def find_saferpay_payment(order)
+      order.payments.where(
+        payment_method_type: 'Spree::Gateway::Saferpay',
+        state: %w[checkout pending processing]
+      ).last
+    end
+
+    def process_saferpay_payment(order, payment, saferpay_token)
+      order.with_lock do
+        # Re-check inside lock to avoid race condition between success and notify
+        payment.reload
+        return if payment.completed?
+
+        gateway = payment.payment_method
+
+        # Step 1: Assert the payment
+        assert_response = gateway.assert_payment(token: saferpay_token)
+        transaction = assert_response['Transaction']
+        transaction_id = transaction['Id']
+        transaction_status = transaction['Status']
+
+        Rails.logger.info("[Saferpay] Assert for order #{order.number}: Transaction #{transaction_id}, Status: #{transaction_status}")
+
+        # Store the real Saferpay transaction ID (replacing the token)
+        payment.update!(
+          response_code: transaction_id,
+          transaction_id: transaction_id
+        )
+
+        # Step 2: Capture if authorized
+        if transaction_status == 'AUTHORIZED'
+          capture_response = gateway.capture(
+            (order.total * 100).to_i,
+            transaction_id
+          )
+
+          if capture_response.success?
+            capture_id = capture_response.authorization
+            payment.update!(response_code: capture_id) if capture_id.present?
+            complete_payment(payment, order)
+            Rails.logger.info("[Saferpay] Capture success for order #{order.number}, CaptureId: #{capture_id}")
+          else
+            Rails.logger.error("[Saferpay] Capture failed for order #{order.number}: #{capture_response.message}")
+            payment.failure! if payment.can_failure?
+            raise StandardError, "Payment capture failed: #{capture_response.message}"
+          end
+        elsif transaction_status == 'CAPTURED'
+          complete_payment(payment, order)
+          Rails.logger.info("[Saferpay] Already captured for order #{order.number}")
+        else
+          Rails.logger.error("[Saferpay] Unexpected status for order #{order.number}: #{transaction_status}")
+          payment.failure! if payment.can_failure?
+          raise StandardError, "Unexpected payment status: #{transaction_status}"
+        end
+
+        store_payment_info(payment, assert_response)
+
+        # Advance order to complete
+        complete_order(order)
+      end
+    end
+
+    def complete_payment(payment, order)
+      payment.started_processing! if payment.checkout?
+      payment.pend! if payment.processing?
+      payment.complete! if payment.can_complete?
+      payment.capture_events.create!(amount: order.total)
+    end
+
+    def complete_order(order)
+      until order.state == 'complete' || !order.can_next?
+        order.next!
+      end
     end
 
     def redirect_to_cart(message)

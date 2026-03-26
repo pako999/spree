@@ -5,7 +5,7 @@ require 'json'
 require 'securerandom'
 
 class SaferpayClient
-  SPEC_VERSION = '1.20'
+  SPEC_VERSION = '1.51'
 
   URLS = {
     test: 'https://test.saferpay.com/api',
@@ -34,11 +34,11 @@ class SaferpayClient
         OrderId: order_id.to_s,
         Description: description
       },
-      ReturnUrls: {
-        Success: return_url,
-        Fail: fail_url,
-        Abort: fail_url
-      }
+      ReturnUrl: {
+        Url: return_url
+      },
+      AbortUrl: fail_url,
+      Notification: notify_url ? { NotifyUrl: notify_url } : nil
     }.compact
 
     response = post('/Payment/v1/PaymentPage/Initialize', body)
@@ -52,41 +52,35 @@ class SaferpayClient
 
   # Step 2: Assert the payment after customer returns
   def payment_page_assert(token:)
-    body = {
+    post('/Payment/v1/PaymentPage/Assert', body: {
       RequestHeader: request_header,
       Token: token
-    }
-
-    post('/Payment/v1/PaymentPage/Assert', body)
+    })
   end
 
   # Step 3: Capture an authorized transaction
   def transaction_capture(transaction_id:)
-    body = {
+    post('/Payment/v1/Transaction/Capture', body: {
       RequestHeader: request_header,
       TransactionReference: {
         TransactionId: transaction_id
       }
-    }
-
-    post('/Payment/v1/Transaction/Capture', body)
+    })
   end
 
   # Cancel/void an authorized transaction
   def transaction_cancel(transaction_id:)
-    body = {
+    post('/Payment/v1/Transaction/Cancel', body: {
       RequestHeader: request_header,
       TransactionReference: {
         TransactionId: transaction_id
       }
-    }
-
-    post('/Payment/v1/Transaction/Cancel', body)
+    })
   end
 
-  # Refund a captured transaction
-  def transaction_refund(transaction_id:, amount_cents:, currency:)
-    body = {
+  # Refund a captured transaction — requires the CaptureId, not the TransactionId
+  def transaction_refund(capture_id:, amount_cents:, currency:)
+    post('/Payment/v1/Transaction/Refund', body: {
       RequestHeader: request_header,
       Refund: {
         Amount: {
@@ -95,11 +89,9 @@ class SaferpayClient
         }
       },
       CaptureReference: {
-        TransactionId: transaction_id
+        CaptureId: capture_id
       }
-    }
-
-    post('/Payment/v1/Transaction/Refund', body)
+    })
   end
 
   private
@@ -113,7 +105,8 @@ class SaferpayClient
     }
   end
 
-  def post(path, body)
+  def post(path, body: nil)
+    body ||= {}
     uri = URI("#{@base_url}#{path}")
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
@@ -127,16 +120,16 @@ class SaferpayClient
     request.body = body.to_json
 
     Rails.logger.info("[Saferpay] POST #{path}")
-    Rails.logger.debug("[Saferpay] Request: #{body.to_json}")
+    Rails.logger.debug { "[Saferpay] Request: #{body.to_json}" }
 
     response = http.request(request)
     parsed = JSON.parse(response.body)
 
-    Rails.logger.debug("[Saferpay] Response (#{response.code}): #{response.body}")
+    Rails.logger.debug { "[Saferpay] Response (#{response.code}): #{response.body}" }
 
     unless response.is_a?(Net::HTTPSuccess)
-      error_name = parsed.dig('ErrorName') || 'UNKNOWN_ERROR'
-      error_message = parsed.dig('ErrorMessage') || 'Unknown error'
+      error_name = parsed['ErrorName'] || 'UNKNOWN_ERROR'
+      error_message = parsed['ErrorMessage'] || 'Unknown error'
       raise SaferpayError.new(
         "Saferpay error: #{error_name} - #{error_message}",
         error_name: error_name,

@@ -31,7 +31,7 @@ Rails.application.config.to_prepare do
           return unless payment_method.is_a?(Spree::Gateway::Saferpay)
 
           # Invalidate any existing checkout/pending payments
-          @order.payments.where(state: ['checkout', 'pending']).each(&:invalidate!)
+          @order.payments.where(state: %w[checkout pending]).each(&:invalidate!)
 
           begin
             base_url = request.base_url
@@ -53,16 +53,16 @@ Rails.application.config.to_prepare do
               transaction_id: result[:token]
             )
 
-            Rails.logger.info("[Saferpay] Initialized payment for order #{@order.number}")
+            Rails.logger.info("[Saferpay] Initialized payment for order #{@order.number}, token: #{result[:token]}")
             redirect_to result[:redirect_url], allow_other_host: true
           rescue SaferpayError => e
             Rails.logger.error("[Saferpay] Initialize error: #{e.message}")
             flash[:error] = "Payment initialization failed: #{e.error_message}"
-            redirect_to spree.checkout_state_path(@order.token, :payment)
+            redirect_to spree.checkout_state_path(state: :payment)
           rescue StandardError => e
             Rails.logger.error("[Saferpay] Unexpected error: #{e.message}")
             flash[:error] = 'An error occurred while initializing payment. Please try again.'
-            redirect_to spree.checkout_state_path(@order.token, :payment)
+            redirect_to spree.checkout_state_path(state: :payment)
           end
         end
       end
