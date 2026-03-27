@@ -22,7 +22,7 @@ servers:
 #
 # proxy:
 #   ssl: true
-#   host: surfworld.eu
+#   host: surf-store.com
 
 # Where you keep your container images.
 registry:

@@ -53,7 +53,7 @@ module Spree
       end
 
       system_prompt = <<~PROMPT
-        You are an expert e-commerce copywriter for Surfworld, a premium water sports equipment shop.
+        You are an expert e-commerce copywriter for surf-store.com, a premium water sports equipment shop.
         Write compelling, SEO-optimized product content for water sports gear (kitesurfing, windsurfing, wingfoil, SUP, wetsuits, etc.).
 
         Your writing style:
@@ -62,8 +62,8 @@ module Spree
         - Use HTML formatting: <h2>, <h3>, <p>, <ul>, <li>, <strong>
         - Include relevant keywords naturally for SEO
         - Never mention competitors by name
-        - Never mention "Surf-Store" or "surf-store.com"
-        - Reference "Surfworld" as the shop name where appropriate
+        - Never mention competitors by name
+        - Reference "surf-store.com" as the shop name where appropriate
         - Write in English
 
         Given the following product information, return a valid JSON object with exactly these keys:

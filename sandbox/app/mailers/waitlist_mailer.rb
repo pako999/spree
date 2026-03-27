@@ -1,5 +1,5 @@
 class WaitlistMailer < Spree::BaseMailer
-  default from: 'noreply@surfworld.eu'
+  default from: 'noreply@surf-store.com'
 
   def restock_email(entry_id)
     @entry = WaitlistEntry.find_by(id: entry_id)
@@ -23,7 +23,7 @@ class WaitlistMailer < Spree::BaseMailer
 
     mail(
       to: @entry.email, 
-      subject: "Good news! #{@product.name} is back in stock at Surfworld",
+      subject: "Good news! #{@product.name} is back in stock at surf-store.com",
       store_url: store.url
     )
   end
