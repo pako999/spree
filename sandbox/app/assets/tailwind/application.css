@@ -2919,8 +2919,9 @@ body {
 
 /* --- Tier 2: Main header bar --- */
 .mt-main-bar {
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  background: #1a2332;
+  border-bottom: 1px solid #2a3a4e;
+  color: #fff;
 }
 
 .mt-main-bar-inner {
@@ -2952,7 +2953,7 @@ body {
     top: -30px;
     left: -10px;
     z-index: 50;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
 }
 
@@ -2968,10 +2969,10 @@ body {
   justify-content: space-between;
   width: 100%;
   padding: 0;
-  background: #f0f2f5;
-  border: 2px solid #d1d5db;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
   border-radius: 6px;
-  color: #6b7280;
+  color: rgba(255,255,255,0.7);
   font-size: 0.875rem;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -2979,7 +2980,7 @@ body {
 }
 
 .mt-search-bar:hover {
-  border-color: #1a2332;
+  border-color: rgba(255,255,255,0.5);
 }
 
 .mt-search-placeholder {
@@ -2991,7 +2992,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a2332;
+  background: rgba(255,255,255,0.15);
   color: #fff;
   width: 42px;
   height: 42px;
@@ -3023,8 +3024,20 @@ body {
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #4a5568;
+  color: rgba(255,255,255,0.8);
   font-weight: 500;
+}
+
+/* Main bar icons and text white on dark */
+.mt-main-bar svg,
+.mt-main-bar .mt-icon-btn svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+.mt-main-bar a,
+.mt-main-bar button {
+  color: #fff;
 }
 
 /* --- Tier 3: Dark mega-navigation bar --- */

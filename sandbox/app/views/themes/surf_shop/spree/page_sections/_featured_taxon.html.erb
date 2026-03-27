@@ -2,7 +2,11 @@
   # On product pages, use the current product's category instead of the configured taxon
   # so that "Beloved Products" shows items from the same category
   if @product.present?
-    display_taxon = @product.taxons.order(:depth).last
+    display_taxon = @product.taxons
+                            .joins(:taxonomy)
+                            .where(spree_taxonomies: { name: 'Categories' })
+                            .order(:depth)
+                            .last || section.taxon
   else
     display_taxon = section.taxon
   end

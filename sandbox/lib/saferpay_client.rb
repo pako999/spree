@@ -41,7 +41,7 @@ class SaferpayClient
       Notification: notify_url ? { NotifyUrl: notify_url } : nil
     }.compact
 
-    response = post('/Payment/v1/PaymentPage/Initialize', body)
+    response = post('/Payment/v1/PaymentPage/Initialize', body: body)
 
     {
       token: response['Token'],

@@ -1,0 +1,48 @@
+<style>
+.brands-section{max-width:1440px;margin:40px auto;padding:0 20px}
+.brands-title{text-align:center;text-transform:uppercase;font-size:15px;font-weight:700;letter-spacing:3px;color:#333;margin-bottom:30px;font-family:Arial,Helvetica,sans-serif;position:relative}
+.brands-title::before,.brands-title::after{content:'';position:absolute;top:50%;height:1px;background:#ddd;width:calc(50% - 100px)}
+.brands-title::before{left:0}
+.brands-title::after{right:0}
+.brands-track{display:flex;align-items:center;gap:40px;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:10px 0}
+.brands-track::-webkit-scrollbar{display:none}
+.brands-track a{flex:0 0 auto;display:flex;align-items:center;justify-content:center;height:50px;min-width:120px;filter:grayscale(100%);opacity:.6;transition:all .3s ease}
+.brands-track a:hover{filter:grayscale(0%);opacity:1}
+.brands-track a img{max-height:45px;max-width:160px;object-fit:contain}
+@media(max-width:640px){.brands-track{gap:24px}.brands-track a img{max-height:35px;max-width:120px}}
+</style>
+
+<div class="brands-section">
+  <div class="brands-title">Manufacturers</div>
+  <div class="brands-track" id="brandsTrack">
+    <a href="/t/brands/duotone-kiteboarding"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Duotone_logo.svg/320px-Duotone_logo.svg.png" alt="Duotone" loading="lazy"></a>
+    <a href="/t/brands/cabrinha"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Cabrinha_logo.svg/320px-Cabrinha_logo.svg.png" alt="Cabrinha" loading="lazy"></a>
+    <a href="/t/brands/neilpryde"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/NeilPryde_logo.svg/320px-NeilPryde_logo.svg.png" alt="Neilpryde" loading="lazy"></a>
+    <a href="/t/brands/ion-water"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/ION_logo.svg/240px-ION_logo.svg.png" alt="ION" loading="lazy"></a>
+    <a href="/t/brands/fanatic-sup"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Fanatic_logo.svg/320px-Fanatic_logo.svg.png" alt="Fanatic" loading="lazy"></a>
+    <a href="/t/brands/nobile"><img src="https://nobilekiteboarding.com/img/nobile-logo.svg" alt="Nobile" loading="lazy"></a>
+    <a href="/t/brands/jp-australia"><img src="https://jp-australia.com/wp-content/themes/jpa/img/logo.svg" alt="JP Australia" loading="lazy"></a>
+    <a href="/t/brands/tabou"><img src="https://tabou-boards.com/wp-content/uploads/2020/01/tabou-logo.png" alt="Tabou" loading="lazy"></a>
+    <a href="/t/brands/gaastra"><img src="https://gaastrasails.com/wp-content/uploads/2023/01/gaastra-logo.png" alt="Gaastra" loading="lazy"></a>
+    <a href="/t/brands/point7"><img src="https://point-7.com/wp-content/uploads/2020/09/point7-logo.png" alt="Point7" loading="lazy"></a>
+  </div>
+</div>
+
+<script>
+(function(){
+  var track=document.getElementById('brandsTrack');
+  if(!track)return;
+  var speed=1,paused=false;
+  // Clone items for infinite scroll
+  track.innerHTML+=track.innerHTML;
+  function scroll(){
+    if(!paused){track.scrollLeft+=speed;if(track.scrollLeft>=track.scrollWidth/2){track.scrollLeft=0;}}
+    requestAnimationFrame(scroll);
+  }
+  track.addEventListener('mouseenter',function(){paused=true;});
+  track.addEventListener('mouseleave',function(){paused=false;});
+  track.addEventListener('touchstart',function(){paused=true;},{passive:true});
+  track.addEventListener('touchend',function(){paused=false;});
+  requestAnimationFrame(scroll);
+})();
+</script>

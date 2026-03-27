@@ -54,7 +54,8 @@ Rails.application.config.to_prepare do
             )
 
             Rails.logger.info("[Saferpay] Initialized payment for order #{@order.number}, token: #{result[:token]}")
-            redirect_to result[:redirect_url], allow_other_host: true
+            # Use JS redirect to avoid Turbo/fetch CORS issues with external Saferpay URL
+            render html: "<html><body><script>window.location.href='#{ERB::Util.html_escape(result[:redirect_url])}';</script><p>Redirecting to payment...</p></body></html>".html_safe, layout: false, content_type: 'text/html'
           rescue SaferpayError => e
             Rails.logger.error("[Saferpay] Initialize error: #{e.message}")
             flash[:error] = "Payment initialization failed: #{e.error_message}"

@@ -46,9 +46,10 @@
             </div>
           </button>
 
-          <%# Logo %>
+          <%# Logo — fall back to store logo if header section logo not set %>
+          <% header_logo = section.logo&.attached? ? section.logo : current_store.logo %>
           <div class="mt-logo" id='header-logo'>
-            <%= render 'spree/shared/logo', logo: section.logo, height: section.preferred_desktop_logo_height %>
+            <%= render 'spree/shared/logo', logo: header_logo, height: section.preferred_desktop_logo_height %>
           </div>
 
           <%# Search bar — desktop only %>

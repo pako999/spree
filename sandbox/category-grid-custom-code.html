@@ -1,0 +1,112 @@
+<style>
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:1440px;margin:0 auto;padding:0}
+.cat-panel{position:relative;overflow:hidden;height:460px;display:block;text-decoration:none}
+.cat-panel img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+.cat-panel:hover img{transform:scale(1.06)}
+.cat-panel .overlay{position:absolute;bottom:0;left:0;right:0;z-index:2;background:rgba(0,0,0,.62);padding:22px 28px 24px}
+.cat-panel h3{color:#fff;text-transform:uppercase;font-family:Impact,'Arial Black',Arial,sans-serif;font-size:clamp(1.4rem,3vw,2.3rem);letter-spacing:2px;line-height:1.1;margin:0 0 14px;text-shadow:1px 1px 4px rgba(0,0,0,.4)}
+.cat-panel .btns{display:flex;flex-wrap:wrap;gap:10px}
+.cat-panel .btns a{display:inline-block;color:#fff;border:2px solid #fff;padding:9px 24px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;font-family:Arial,Helvetica,sans-serif;transition:all .25s ease;white-space:nowrap}
+.cat-panel .btns a:hover{background:#fff;color:#111}
+@media(max-width:640px){.cat-grid{grid-template-columns:1fr;gap:6px}.cat-panel{height:340px}.cat-panel h3{font-size:1.4rem}.cat-panel .btns a{padding:7px 16px;font-size:12px}}
+</style>
+
+<div class="cat-grid">
+
+  <!-- 1. Kitesurfing -->
+  <div class="cat-panel">
+    <picture>
+      <source type="image/webp" srcset="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODUsInB1ciI6ImJsb2JfaWQifX0=--5a3b524734581b54e8c9ab5dc79081ac2fff2667/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/kitesurfing-category.jpg">
+      <img src="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODUsInB1ciI6ImJsb2JfaWQifX0=--5a3b524734581b54e8c9ab5dc79081ac2fff2667/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/kitesurfing-category.jpg" alt="Kitesurfing equipment - kites, boards, harnesses" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>Find Your Perfect Kite!</h3>
+      <div class="btns">
+        <a href="/t/categories/kitesurfing/kites">Kites</a>
+        <a href="/t/categories/kitesurfing/kiteboards">Kiteboards</a>
+        <a href="/t/categories/kitesurfing/kite-foil">Kite Foil</a>
+        <a href="/t/categories/kitesurfing/kite-harnesses">Harnesses</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Wing Foil -->
+  <div class="cat-panel">
+    <picture>
+      <source type="image/webp" srcset="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4OTYsInB1ciI6ImJsb2JfaWQifX0=--987c1293db92285c1300a2b8ab76163858895c2f/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/wing-foil-category.jpg">
+      <img src="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4OTYsInB1ciI6ImJsb2JfaWQifX0=--987c1293db92285c1300a2b8ab76163858895c2f/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/wing-foil-category.jpg" alt="Wing foil equipment - wings, boards, foils" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>It's Wing Foil Time!</h3>
+      <div class="btns">
+        <a href="/t/categories/wingfoil/wings">Wings</a>
+        <a href="/t/categories/wingfoil/wing-boards">Boards</a>
+        <a href="/t/categories/wingfoil/wing-foils">Foils</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Windsurf -->
+  <div class="cat-panel">
+    <picture>
+      <source type="image/webp" srcset="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODYsInB1ciI6ImJsb2JfaWQifX0=--b113056c1943697f2cddcf13fdcd035710652790/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/windsurf-category.jpg">
+      <img src="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODYsInB1ciI6ImJsb2JfaWQifX0=--b113056c1943697f2cddcf13fdcd035710652790/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/windsurf-category.jpg" alt="Windsurf equipment - boards, sails, foils, harnesses" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>Windsurf Gear</h3>
+      <div class="btns">
+        <a href="/t/categories/windsurf/windsurf-boards">Boards</a>
+        <a href="/t/categories/windsurf/windsurf-sails">Sails</a>
+        <a href="/t/categories/windsurf/windsurf-foils">Foils</a>
+        <a href="/t/categories/windsurf/windsurf-harnesses">Harnesses</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Wetsuits -->
+  <div class="cat-panel">
+    <picture>
+      <img src="https://images.unsplash.com/photo-1530870110042-98b2cb110834?w=720&q=75&fm=webp" alt="Wetsuits for men, women and kids" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>Top Quality Wetsuits!</h3>
+      <div class="btns">
+        <a href="/t/categories/wetsuits/men-wetsuits">Men</a>
+        <a href="/t/categories/wetsuits/women-wetsuits">Women</a>
+        <a href="/t/categories/wetsuits/kids-wetsuits">Kids</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SUP -->
+  <div class="cat-panel">
+    <picture>
+      <source type="image/webp" srcset="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4OTcsInB1ciI6ImJsb2JfaWQifX0=--bb8b146fcc610188652caf34772838ad298855fe/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/sup-category.jpg">
+      <img src="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4OTcsInB1ciI6ImJsb2JfaWQifX0=--bb8b146fcc610188652caf34772838ad298855fe/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/sup-category.jpg" alt="Stand up paddle boards and accessories" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>Stand Up Paddle</h3>
+      <div class="btns">
+        <a href="/t/categories/sup-board/sup-boards">Boards</a>
+        <a href="/t/categories/sup-board/sup-paddles">Paddles</a>
+        <a href="/t/categories/sup-board/sup-accessories">Accessories</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. E-Foil -->
+  <div class="cat-panel">
+    <picture>
+      <source type="image/webp" srcset="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODksInB1ciI6ImJsb2JfaWQifX0=--e9cf6bf08b2c1688fbdfc8173d567f27b3175b6c/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/ion-bike-category.jpg">
+      <img src="https://surfworld.eu/rails/active_storage/representations/redirect/eyJfcmFpbHMiOnsiZGF0YSI6Mjc4ODksInB1ciI6ImJsb2JfaWQifX0=--e9cf6bf08b2c1688fbdfc8173d567f27b3175b6c/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbNzIwLDQ4MF0sInNhdmVyIjp7InF1YWxpdHkiOjgwfX0sInB1ciI6InZhcmlhdGlvbiJ9fQ==--6bbd9083fcb9fb5b7c34d714ad2ab292fac82e0d/ion-bike-category.jpg" alt="Electric foil sets and spare parts" width="720" height="480" loading="lazy">
+    </picture>
+    <div class="overlay">
+      <h3>Electric Foil</h3>
+      <div class="btns">
+        <a href="/t/categories/e-foil/e-foil-sets">E-Foil Sets</a>
+        <a href="/t/categories/e-foil/e-foil-spare-parts">Spare Parts</a>
+      </div>
+    </div>
+  </div>
+
+</div>
