@@ -26,8 +26,8 @@ Rails.application.configure do
                         'https://test.saferpay.com',
                         'https://generativelanguage.googleapis.com'
 
-    # Frame ancestors: prevents clickjacking (replaces X-Frame-Options)
-    policy.frame_ancestors :none
+    # Frame ancestors: allows same-origin embedding (required for theme builder)
+    policy.frame_ancestors :self
 
     # No base tag hijacking
     policy.base_uri    :self
