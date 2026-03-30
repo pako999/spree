@@ -48,21 +48,39 @@
                       </h1>
                     <% when 'Spree::PageBlocks::Products::Brand' %>
                       <% if product.brand_taxon %>
-                        <% brand_slug = product.brand_taxon.name.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
-                        <% brand_logo_svg = "brand-logos/#{brand_slug}.svg" %>
-                        <% brand_logo_png = "brand-logos/#{brand_slug}.png" %>
-                        <% brand_logo_webp = "brand-logos/#{brand_slug}.webp" %>
                         <%= link_to spree.nested_taxons_path(product.brand_taxon), title: product.brand_taxon.name, class: "inline-block mb-1" do %>
-                          <% if File.exist?(Rails.root.join("public", brand_logo_svg)) %>
-                            <img src="/<%= brand_logo_svg %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
-                          <% elsif File.exist?(Rails.root.join("public", brand_logo_png)) %>
-                            <img src="/<%= brand_logo_png %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
-                          <% elsif File.exist?(Rails.root.join("public", brand_logo_webp)) %>
-                            <img src="/<%= brand_logo_webp %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
+                          <% if product.brand_taxon.image.attached? %>
+                            <%= image_tag product.brand_taxon.image, alt: product.brand_taxon.name, class: "h-8 lg:h-10 w-auto object-contain", loading: "lazy" %>
                           <% else %>
-                            <h3 class="text-sm lg:mt-0 inline-block">
-                              <%= product.brand_taxon.name %>
-                            </h3>
+                            <% brand_name = product.brand_taxon.name.downcase %>
+                            <% brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
+                            <%# Look for exact or fuzzy match in public/brand-logos/ %>
+                            <%
+                              potential_logos = ["svg", "png", "webp"].map { |ext| "brand-logos/#{brand_slug}.#{ext}" }
+                              
+                              # Special case for Duotone missing generic logo
+                              if brand_name.include?("duotone") && !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.svg"))
+                                cat_path = product.taxons.map(&:name).join(" ").downcase
+                                prod_name = product.name.downcase
+                                if (cat_path + prod_name).include?("wing") || (cat_path + prod_name).include?("foil")
+                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.svg")
+                                elsif (cat_path + prod_name).include?("kite")
+                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.svg")
+                                elsif (cat_path + prod_name).include?("windsurf")
+                                  potential_logos.unshift("brand-logos/duotone-windsurfing.svg")
+                                end
+                              end
+
+                              logo_path = potential_logos.find { |p| File.exist?(Rails.root.join("public", p)) }
+                            %>
+                            
+                            <% if logo_path %>
+                              <img src="/<%= logo_path %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
+                            <% else %>
+                              <h3 class="text-sm lg:mt-0 inline-block font-bold">
+                                <%= product.brand_taxon.name %>
+                              </h3>
+                            <% end %>
                           <% end %>
                         <% end %>
                       <% end %>
