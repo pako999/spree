@@ -6,16 +6,16 @@
     <% aspect_ratio = spree_asset_aspect_ratio(logo) %>
     <% logo_style = "aspect-ratio: #{aspect_ratio};" %>
     <% if aspect_ratio.to_f > 10 %>
-      <% mobile_class = "h-[16px]" %>
+      <% mobile_class = "h-[21px]" %>
       <% desktop_class = "md:h-[32px]" %>
     <% elsif aspect_ratio.to_f > 5 %>
-      <% mobile_class = "h-[25px]" %>
+      <% mobile_class = "h-[33px]" %>
       <% desktop_class = "md:h-[32px]" %>
     <% elsif aspect_ratio.to_f < 3 %>
-      <% mobile_class = "h-[32px]" %>
+      <% mobile_class = "h-[42px]" %>
       <% desktop_class = "md:h-[64px]" %>
     <% else %>
-      <% mobile_class = "h-[32px]" %>
+      <% mobile_class = "h-[42px]" %>
     <% end %>
     <% if defined?(height) && height > 0 %>
       <% logo_style += "--desktop-height: #{height}px;" %>
