@@ -1,8 +1,7 @@
 # Set the host name for URL generation
+# We use a robust fallback to ensure it works across different domain setups
 SitemapGenerator::Sitemap.default_host = "https://www.surf-store.com"
-
-# Store sitemaps in the public directory
-SitemapGenerator::Sitemap.public_path = 'public/'
+SitemapGenerator::Sitemap.sitemaps_host = "https://www.surf-store.com"
 
 SitemapGenerator::Sitemap.create do
   # We use the Spree engine's route helpers
