@@ -1,1 +1,25 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# Robots.txt for Surf Store (SEO Ready)
+# See https://www.robotstxt.org/robotstxt.html for documentation
+
+User-agent: *
+# Allow everything by default
+Allow: /
+
+# Disallow admin and internal paths to save crawl budget
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /user
+Disallow: /user/*
+Disallow: /account
+Disallow: /account/*
+Disallow: /checkout
+Disallow: /checkout/*
+Disallow: /cart
+Disallow: /cart/*
+Disallow: /orders
+Disallow: /orders/*
+Disallow: /password
+Disallow: /password/*
+
+# Sitemap directive linking to the generated XML sitemap
+Sitemap: https://www.surf-store.com/sitemap.xml.gz

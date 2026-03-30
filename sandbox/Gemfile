@@ -83,4 +83,5 @@ group :development, :test do
 end
 
 gem "pg", "~> 1.6"
+gem "sitemap_generator"
 gem "spree_storefront", "~> 5.3"
