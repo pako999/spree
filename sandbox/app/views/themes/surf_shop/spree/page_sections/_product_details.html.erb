@@ -56,29 +56,35 @@
                             <% brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
                             <%# Look for exact or fuzzy match in public/brand-logos/ %>
                             <%
-                              # Prioritize webp as requested by user
+                              # Even more robust lookup
+                              brand_name = product.brand_taxon.name.downcase
+                              brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "")
+                              
+                              # Start with slug-based lookup
                               potential_logos = ["webp", "svg", "png"].map { |ext| "brand-logos/#{brand_slug}.#{ext}" }
                               
-                              # Special case for Duotone missing generic logo
                               if brand_name.include?("duotone")
+                                # Always ensure the professional generic logo is a primary fallback
                                 potential_logos.push("brand-logos/duotone.webp")
                                 
-                                if !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.webp")) && 
-                                   !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.svg"))
-                                  
-                                  cat_path = product.taxons.map(&:name).join(" ").downcase
-                                  prod_name = product.name.downcase
-                                  if (cat_path + prod_name).include?("wing") || (cat_path + prod_name).include?("foil")
-                                    potential_logos.unshift("brand-logos/duotone-wing-foiling.webp")
-                                  elsif (cat_path + prod_name).include?("kite")
-                                    potential_logos.unshift("brand-logos/duotone-kiteboarding.webp")
-                                  elsif (cat_path + prod_name).include?("windsurf")
-                                    potential_logos.unshift("brand-logos/duotone-windsurfing.webp")
-                                  end
+                                # Search for specific Duotone category logos based on product and taxon names
+                                product_search_text = (product.taxons.map(&:name).join(" ") + " " + product.name).downcase
+                                
+                                # Add specific logos to the front of the list if keywords match
+                                if product_search_text.include?("wing") || product_search_text.include?("foil")
+                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.webp")
+                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.svg")
+                                elsif product_search_text.include?("kite")
+                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.webp")
+                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.svg")
+                                elsif product_search_text.include?("windsurf")
+                                  potential_logos.unshift("brand-logos/duotone-windsurfing.webp")
+                                  potential_logos.unshift("brand-logos/duotone-windsurfing.svg")
                                 end
                               end
 
-                              logo_path = potential_logos.find { |p| File.exist?(Rails.root.join("public", p)) }
+                              # Find the first existing file in the public directory
+                              logo_path = potential_logos.uniq.find { |p| File.exist?(Rails.root.join("public", p)) }
                             %>
                             
                             <% if logo_path %>
