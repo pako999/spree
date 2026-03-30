@@ -56,18 +56,25 @@
                             <% brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
                             <%# Look for exact or fuzzy match in public/brand-logos/ %>
                             <%
-                              potential_logos = ["svg", "png", "webp"].map { |ext| "brand-logos/#{brand_slug}.#{ext}" }
+                              # Prioritize webp as requested by user
+                              potential_logos = ["webp", "svg", "png"].map { |ext| "brand-logos/#{brand_slug}.#{ext}" }
                               
                               # Special case for Duotone missing generic logo
-                              if brand_name.include?("duotone") && !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.svg"))
-                                cat_path = product.taxons.map(&:name).join(" ").downcase
-                                prod_name = product.name.downcase
-                                if (cat_path + prod_name).include?("wing") || (cat_path + prod_name).include?("foil")
-                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.svg")
-                                elsif (cat_path + prod_name).include?("kite")
-                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.svg")
-                                elsif (cat_path + prod_name).include?("windsurf")
-                                  potential_logos.unshift("brand-logos/duotone-windsurfing.svg")
+                              if brand_name.include?("duotone")
+                                potential_logos.push("brand-logos/duotone.webp")
+                                
+                                if !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.webp")) && 
+                                   !File.exist?(Rails.root.join("public", "brand-logos/#{brand_slug}.svg"))
+                                  
+                                  cat_path = product.taxons.map(&:name).join(" ").downcase
+                                  prod_name = product.name.downcase
+                                  if (cat_path + prod_name).include?("wing") || (cat_path + prod_name).include?("foil")
+                                    potential_logos.unshift("brand-logos/duotone-wing-foiling.webp")
+                                  elsif (cat_path + prod_name).include?("kite")
+                                    potential_logos.unshift("brand-logos/duotone-kiteboarding.webp")
+                                  elsif (cat_path + prod_name).include?("windsurf")
+                                    potential_logos.unshift("brand-logos/duotone-windsurfing.webp")
+                                  end
                                 end
                               end
 
