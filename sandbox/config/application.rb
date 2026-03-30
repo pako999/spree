@@ -30,5 +30,17 @@ module Sandbox
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Security headers applied to every response (FIND-04 remediation)
+    # X-Frame-Options omitted — CSP frame-ancestors: none is the modern replacement.
+    # X-XSS-Protection set to 0 — the legacy XSS auditor is disabled in all modern
+    # browsers and a non-zero value can introduce vulnerabilities; rely on CSP instead.
+    config.action_dispatch.default_headers = {
+      'X-Content-Type-Options'    => 'nosniff',
+      'X-XSS-Protection'          => '0',
+      'Referrer-Policy'            => 'strict-origin-when-cross-origin',
+      'Permissions-Policy'         => 'camera=(), microphone=(), geolocation=(), payment=(self)',
+      'Cross-Origin-Opener-Policy' => 'same-origin'
+    }
   end
 end

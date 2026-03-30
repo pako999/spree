@@ -1,29 +1,51 @@
 # Be sure to restart your server when you modify this file.
+# Content Security Policy — https://guides.rubyonrails.org/security.html#content-security-policy-header
 
-# Define an application-wide content security policy.
-# See the Securing Rails Applications Guide for more information:
-# https://guides.rubyonrails.org/security.html#content-security-policy-header
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    # Trusted script sources: self + common Spree/Hotwire CDN origins
+    policy.script_src  :self, :https,
+                        'https://unpkg.com',
+                        'https://cdn.jsdelivr.net'
 
-# Rails.application.configure do
-#   config.content_security_policy do |policy|
-#     policy.default_src :self, :https
-#     policy.font_src    :self, :https, :data
-#     policy.img_src     :self, :https, :data
-#     policy.object_src  :none
-#     policy.script_src  :self, :https
-#     policy.style_src   :self, :https
-#     # Specify URI for violation reports
-#     # policy.report_uri "/csp-violation-report-endpoint"
-#   end
-#
-#   # Generate session nonces for permitted importmap, inline scripts, and inline styles.
-#   config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
-#   config.content_security_policy_nonce_directives = %w(script-src style-src)
-#
-#   # Automatically add `nonce` to `javascript_tag`, `javascript_include_tag`, and `stylesheet_link_tag`
-#   # if the corresponding directives are specified in `content_security_policy_nonce_directives`.
-#   # config.content_security_policy_nonce_auto = true
-#
-#   # Report violations without enforcing the policy.
-#   # config.content_security_policy_report_only = true
-# end
+    # Images: allow self, https, data URIs (for inline images and Active Storage)
+    policy.img_src     :self, :https, :data, :blob
+
+    # Styles: self + https (Spree admin uses inline styles extensively)
+    policy.style_src   :self, :https, :unsafe_inline
+
+    # Fonts from self or https CDNs
+    policy.font_src    :self, :https, :data
+
+    # Object/embed: none
+    policy.object_src  :none
+
+    # XHR/fetch/WebSockets: self + Saferpay + Gemini API
+    policy.connect_src :self,
+                        'https://www.saferpay.com',
+                        'https://test.saferpay.com',
+                        'https://generativelanguage.googleapis.com'
+
+    # Frame ancestors: prevents clickjacking (replaces X-Frame-Options)
+    policy.frame_ancestors :none
+
+    # No base tag hijacking
+    policy.base_uri    :self
+
+    # Form submissions only to self and Saferpay (external checkout redirect)
+    policy.form_action :self, 'https://www.saferpay.com', 'https://test.saferpay.com'
+
+    # Default: self for anything unspecified
+    policy.default_src :self
+  end
+
+  # Generate session nonces for permitted inline scripts (importmap, Turbo)
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[script-src]
+
+  # Automatically add nonce to javascript_tag, javascript_include_tag etc.
+  config.content_security_policy_nonce_auto = true
+
+  # Switch to report-only mode to test before enforcing:
+  # config.content_security_policy_report_only = true
+end

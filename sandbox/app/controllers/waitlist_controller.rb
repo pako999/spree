@@ -1,5 +1,7 @@
 class WaitlistController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:create]
+  # CSRF protection is enforced. The frontend JS must include:
+  #   headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content }
+
 
   def create
     variant = Spree::Variant.find_by(id: params[:variant_id])

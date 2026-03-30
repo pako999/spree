@@ -80,13 +80,17 @@ module Spree
     end
 
     def make_request(prompt)
-      uri = URI("#{GEMINI_URL}?key=#{api_key}")
+      # API key passed as a header, NOT a URL query param, to avoid leaking it
+      # into Rails logs (request URLs are logged), Nginx access logs, and Referer headers.
+      uri = URI(GEMINI_URL)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
+      http.open_timeout = 5   # TCP connection timeout (prevent thread blocking on stalled DNS/TCP)
       http.read_timeout = 30
 
       request = Net::HTTP::Post.new(uri)
       request['Content-Type'] = 'application/json'
+      request['x-goog-api-key'] = api_key
       request.body = {
         contents: [
           {
