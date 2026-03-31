@@ -7,7 +7,10 @@ image: sandbox
 # Deploy to these servers.
 servers:
   web:
-    - 51.195.110.240
+    hosts:
+      - 51.195.110.240
+    options:
+      add-host: host.docker.internal:host-gateway
   # job:
   #   hosts:
   #     - 192.168.0.1
