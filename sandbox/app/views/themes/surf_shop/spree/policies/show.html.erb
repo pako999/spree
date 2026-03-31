@@ -8,7 +8,7 @@
     <%= l(@policy.updated_at.to_date) %>
   </p>
 
-  <div class="mb-5">
-    <%= @policy.body.to_s %>
+  <div class="mb-5 trix-content">
+    <%= @policy.body.to_s.html_safe %>
   </div>
 </div>
