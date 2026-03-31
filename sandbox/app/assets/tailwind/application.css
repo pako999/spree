@@ -3597,11 +3597,4 @@ body {
    Mobile product image gallery
    ======================================== */
 
-/* Force overflow hidden so adjacent slides don't peek */
-[id^="media-gallery"][id$="-mobile"] {
-  overflow: hidden !important;
-}
-
-[id^="media-gallery"][id$="-mobile"] .swiper-wrapper {
-  overflow: hidden;
-}
+/* Container already has overflow:hidden via Tailwind — no override needed */
