@@ -57,9 +57,12 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  # Canonical host for all URL generation (controllers, Active Storage, mailers).
+  config.action_controller.default_url_options = { host: "www.surf-store.com", protocol: "https" }
+
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "surf-store.com", protocol: "https" }
-  config.action_mailer.asset_host = "https://surf-store.com"
+  config.action_mailer.default_url_options = { host: "www.surf-store.com", protocol: "https" }
+  config.action_mailer.asset_host = "https://www.surf-store.com"
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   
