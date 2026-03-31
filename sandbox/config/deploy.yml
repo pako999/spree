@@ -43,13 +43,11 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
-    - DATABASE_URL
     - TELEGRAM_BOT_TOKEN
     - TELEGRAM_CHAT_ID
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
+    DATABASE_URL: "postgresql://ubuntu:kite@host.docker.internal/my_kite_shop_production"
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
