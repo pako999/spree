@@ -3560,3 +3560,48 @@ body {
   object-fit: contain;
   width: 100%;
 }
+
+/* ========================================
+   Related Products ("You might also like")
+   ======================================== */
+
+/* Ensure swiper-wrapper is always horizontal flex,
+   regardless of Swiper JS initialization timing */
+.section-related-products .swiper-wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Slide width: match slidesPerView setting so layout
+   is correct even before Swiper JS sets inline widths */
+.section-related-products .swiper-slide {
+  flex-shrink: 0;
+  width: calc(50% - 8px) !important;   /* mobile: 2 per row, 16px gap */
+}
+
+@media (min-width: 768px) {
+  .section-related-products .swiper-slide {
+    width: calc(25% - 18px) !important; /* desktop: 4 per row, 24px gap */
+  }
+}
+
+/* Hide side nav buttons on mobile — they overlap product cards */
+@media (max-width: 767px) {
+  .section-related-products [class*="swiper-custom-button-prev"],
+  .section-related-products [class*="swiper-custom-button-next"] {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   Mobile product image gallery
+   ======================================== */
+
+/* Force overflow hidden so adjacent slides don't peek */
+[id^="media-gallery"][id$="-mobile"] {
+  overflow: hidden !important;
+}
+
+[id^="media-gallery"][id$="-mobile"] .swiper-wrapper {
+  overflow: hidden;
+}
