@@ -114,40 +114,40 @@
             </nav>
           <% end %>
 
-          <%# BRANDS column — inserted between SHOP and ACCOUNT %>
-          <nav class="mt-footer-col" aria-label="Brands">
-            <h4 class="mt-footer-heading">Brands</h4>
-            <ul class="mt-footer-links">
-              <li><a href="/t/brands/cabrinha" class="mt-footer-link">Cabrinha</a></li>
-              <li><a href="/t/brands/duotone-kiteboarding" class="mt-footer-link">Duotone Kiteboarding</a></li>
-              <li><a href="/t/brands/duotone-windsurfing" class="mt-footer-link">Duotone Windsurfing</a></li>
-              <li><a href="/t/brands/duotone-wing-foiling" class="mt-footer-link">Duotone Wing Foiling</a></li>
-              <li><a href="/t/brands/duotone-foiling-and-electric" class="mt-footer-link">Duotone Foiling &amp; Electric</a></li>
-              <li><a href="/t/brands/duotone-apparel" class="mt-footer-link">Duotone Apparel</a></li>
-              <li><a href="/t/brands/fanatic-sup" class="mt-footer-link">Fanatic SUP</a></li>
-              <li><a href="/t/brands/fanatic-windsurfing" class="mt-footer-link">Fanatic Windsurfing</a></li>
-              <li><a href="/t/brands/gaastra" class="mt-footer-link">Gaastra</a></li>
-              <li><a href="/t/brands/ion-water" class="mt-footer-link">ION Water</a></li>
-              <li><a href="/t/brands/jp-australia" class="mt-footer-link">JP Australia</a></li>
-              <li><a href="/t/brands/neilpryde" class="mt-footer-link">Neilpryde</a></li>
-              <li><a href="/t/brands/nobile" class="mt-footer-link">Nobile</a></li>
-              <li><a href="/t/brands/point7" class="mt-footer-link">Point7</a></li>
-              <li><a href="/t/brands/tabou" class="mt-footer-link">Tabou</a></li>
-              <li><a href="/t/brands/woo-sports" class="mt-footer-link">WOO Sports</a></li>
-            </ul>
-          </nav>
-
-          <%# ACCOUNT column %>
-          <% if account_block %>
-            <nav class="mt-footer-col" aria-label="Account">
-              <h4 class="mt-footer-heading"><%= account_block.preferred_label %></h4>
+          <%# BRANDS + ACCOUNT column %>
+          <div class="mt-footer-col">
+            <nav aria-label="Brands">
+              <h4 class="mt-footer-heading">Brands</h4>
               <ul class="mt-footer-links">
-                <% render_block_links.call(account_block).each do |link, href| %>
-                  <li><a href="<%= href %>" class="mt-footer-link"<%= ' target="_blank" rel="noopener noreferrer"'.html_safe if link.open_in_new_tab %>><%= link.label %></a></li>
-                <% end %>
+                <li><a href="/t/brands/cabrinha" class="mt-footer-link">Cabrinha</a></li>
+                <li><a href="/t/brands/duotone-kiteboarding" class="mt-footer-link">Duotone Kiteboarding</a></li>
+                <li><a href="/t/brands/duotone-windsurfing" class="mt-footer-link">Duotone Windsurfing</a></li>
+                <li><a href="/t/brands/duotone-wing-foiling" class="mt-footer-link">Duotone Wing Foiling</a></li>
+                <li><a href="/t/brands/duotone-foiling-and-electric" class="mt-footer-link">Duotone Foiling &amp; Electric</a></li>
+                <li><a href="/t/brands/duotone-apparel" class="mt-footer-link">Duotone Apparel</a></li>
+                <li><a href="/t/brands/fanatic-sup" class="mt-footer-link">Fanatic SUP</a></li>
+                <li><a href="/t/brands/fanatic-windsurfing" class="mt-footer-link">Fanatic Windsurfing</a></li>
+                <li><a href="/t/brands/gaastra" class="mt-footer-link">Gaastra</a></li>
+                <li><a href="/t/brands/ion-water" class="mt-footer-link">ION Water</a></li>
+                <li><a href="/t/brands/jp-australia" class="mt-footer-link">JP Australia</a></li>
+                <li><a href="/t/brands/neilpryde" class="mt-footer-link">Neilpryde</a></li>
+                <li><a href="/t/brands/nobile" class="mt-footer-link">Nobile</a></li>
+                <li><a href="/t/brands/point7" class="mt-footer-link">Point7</a></li>
+                <li><a href="/t/brands/tabou" class="mt-footer-link">Tabou</a></li>
+                <li><a href="/t/brands/woo-sports" class="mt-footer-link">WOO Sports</a></li>
               </ul>
             </nav>
-          <% end %>
+            <% if account_block %>
+              <nav aria-label="Account" style="margin-top:24px">
+                <h4 class="mt-footer-heading"><%= account_block.preferred_label %></h4>
+                <ul class="mt-footer-links">
+                  <% render_block_links.call(account_block).each do |link, href| %>
+                    <li><a href="<%= href %>" class="mt-footer-link"<%= ' target="_blank" rel="noopener noreferrer"'.html_safe if link.open_in_new_tab %>><%= link.label %></a></li>
+                  <% end %>
+                </ul>
+              </nav>
+            <% end %>
+          </div>
 
           <%# Community / Social column %>
           <div class="mt-footer-col">

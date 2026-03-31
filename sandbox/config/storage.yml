@@ -6,6 +6,15 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+cloudflare:
+  service: S3
+  access_key_id: <%= ENV['R2_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['R2_SECRET_ACCESS_KEY'] %>
+  region: auto
+  bucket: surf-store-storage
+  endpoint: https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com
+  force_path_style: true
+
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3

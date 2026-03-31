@@ -45,6 +45,8 @@ env:
     - RAILS_MASTER_KEY
     - TELEGRAM_BOT_TOKEN
     - TELEGRAM_CHAT_ID
+    - R2_ACCESS_KEY_ID
+    - R2_SECRET_ACCESS_KEY
   clear:
     SOLID_QUEUE_IN_PUMA: true
     DATABASE_URL: "postgresql://ubuntu:kite@172.17.0.1/my_kite_shop_production"
