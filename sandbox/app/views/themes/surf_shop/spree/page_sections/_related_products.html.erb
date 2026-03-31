@@ -1,12 +1,12 @@
 <% loaded ||= false %>
-<% products ||= [] %>
 <% product ||= @product %>
 
 <%
-  # When the default Spree multi_search returns empty results,
-  # fetch products from the same category/taxon as the current product
-  if products.blank? && product.present?
-    primary_taxon = product.taxons.order(:depth).last
+  # Always show products from the same category as the current product
+  products = []
+  if product.present?
+    taxons = product.taxons.where.not(parent_id: nil).order(depth: :desc)
+    primary_taxon = taxons.first
     if primary_taxon.present?
       products = current_store.products.active(current_currency)
                    .in_taxon(primary_taxon)
@@ -14,6 +14,15 @@
                    .includes(master: [:prices, { images: { attachment_attachment: :blob } }])
                    .distinct
                    .limit(section&.preferred_max_products_to_show || 10)
+      # Fall back to parent taxon if too few results
+      if products.count < 4 && primary_taxon.parent.present?
+        products = current_store.products.active(current_currency)
+                     .in_taxon(primary_taxon.parent)
+                     .where.not(id: product.id)
+                     .includes(master: [:prices, { images: { attachment_attachment: :blob } }])
+                     .distinct
+                     .limit(section&.preferred_max_products_to_show || 10)
+      end
     end
     loaded = true
   end

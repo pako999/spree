@@ -11,17 +11,64 @@
     data-slideover-account-visible-class='translate-x-0,opacity-100'
     data-slideover-account-active-target='#slideover-account'
   >
-    <%# === TIER 1: Dark utility bar with trust badges === %>
+    <%# === TIER 1: Professional trust badge bar === %>
     <div class="mt-utility-bar">
       <div class="page-container">
         <div class="mt-utility-bar-inner">
-          <div class="mt-utility-badge">&#10003; Customer Support</div>
-          <div class="mt-utility-badge">&#9733; Worldwide Delivery</div>
-          <div class="mt-utility-badge hidden sm:flex">&#128737; Secure Payments</div>
-          <div class="mt-utility-badge hidden md:flex">&#8617; 30-Day Returns</div>
+          <%# Duplicate badges for seamless mobile ticker loop %>
+          <% 2.times do %>
+          <div class="mt-trust-ticker">
+            <div class="mt-trust-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              <div class="mt-trust-text">
+                <span class="mt-trust-title">Free Shipping</span>
+                <span class="mt-trust-sub">Starting from 99 €</span>
+              </div>
+            </div>
+            <div class="mt-trust-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+              <div class="mt-trust-text">
+                <span class="mt-trust-title">Free Returns</span>
+                <span class="mt-trust-sub">30 days to reconsider</span>
+              </div>
+            </div>
+            <div class="mt-trust-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <div class="mt-trust-text">
+                <span class="mt-trust-title">Secure Payments</span>
+                <span class="mt-trust-sub">100% secure checkout</span>
+              </div>
+            </div>
+            <div class="mt-trust-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <div class="mt-trust-text">
+                <span class="mt-trust-title">+6000 Happy Customers</span>
+                <span class="mt-trust-sub">Trusted since 2003</span>
+              </div>
+            </div>
+          </div>
+          <% end %>
         </div>
       </div>
     </div>
+    <style>
+      .mt-trust-badge{display:flex;align-items:center;gap:9px;padding:0 16px;flex-shrink:0}
+      .mt-trust-badge+.mt-trust-badge{border-left:1px solid rgba(255,255,255,0.12)}
+      .mt-trust-text{display:flex;flex-direction:column;line-height:1.2}
+      .mt-trust-title{font-size:0.78rem;font-weight:700;color:#fff;white-space:nowrap}
+      .mt-trust-sub{font-size:0.67rem;color:rgba(255,255,255,0.55);white-space:nowrap}
+      @media(max-width:768px){
+        .mt-utility-bar-inner{overflow:hidden;position:relative;mask-image:linear-gradient(to right,transparent 0%,black 5%,black 95%,transparent 100%)}
+        .mt-utility-bar-inner .mt-trust-badge+.mt-trust-badge{border-left:none}
+        .mt-trust-ticker{display:flex;animation:mt-ticker 18s linear infinite;width:max-content}
+        .mt-trust-ticker:hover{animation-play-state:paused}
+        @keyframes mt-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+      }
+      @media(min-width:769px){
+        .mt-trust-ticker{display:contents}
+        .mt-trust-ticker+.mt-trust-ticker{display:none}
+      }
+    </style>
 
     <%# === TIER 2: Main bar === %>
     <nav

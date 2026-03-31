@@ -12,14 +12,14 @@
             <span class="mt-value-icon">🚚</span>
             <div>
               <strong>Free Shipping</strong>
-              <span>Starting from €149</span>
+              <span>Starting from 99 €</span>
             </div>
           </div>
           <div class="mt-value-prop">
             <span class="mt-value-icon">↩️</span>
             <div>
               <strong>Free Returns</strong>
-              <span>14 days to reconsider</span>
+              <span>30 days to reconsider</span>
             </div>
           </div>
           <div class="mt-value-prop">
@@ -32,8 +32,8 @@
           <div class="mt-value-prop">
             <span class="mt-value-icon">⭐</span>
             <div>
-              <strong>Expert Advice</strong>
-              <span>Water sports specialists</span>
+              <strong>+6000 Happy Customers</strong>
+              <span>Trusted since 2003</span>
             </div>
           </div>
         </div>
@@ -47,23 +47,103 @@
           <%# Column 1: Company / Logo %>
           <div class="mt-footer-col">
             <div class="mt-footer-logo">
-              <%= render 'spree/shared/logo', logo: section.logo.attached? ? section.logo : current_header_logo %>
+              <a href="/">
+                <img src="/images/surfstore-logo.webp" alt="Surf-store.com" style="max-height:38px;width:auto;filter:brightness(0) invert(1)">
+              </a>
             </div>
-            <p class="mt-footer-company-text"><%= current_store.name %></p>
-            <p class="mt-footer-company-text mt-footer-company-address">Your trusted water sports shop</p>
+            <p class="mt-footer-company-text mt-footer-company-address" style="margin-bottom:12px">Your trusted water sports shop</p>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Since 2003 — over 20 years of experience
+              </span>
+              <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                More than 2.000 products
+              </span>
+            </div>
           </div>
 
-          <%# Dynamic columns from Page Builder blocks %>
-          <% section.blocks.includes(:links).each do |block| %>
-            <nav class="mt-footer-col" aria-label="<%= block.preferred_label %>">
-              <h4 class="mt-footer-heading"><%= block.preferred_label %></h4>
+          <%# Helper to render links for a block %>
+          <%
+            render_block_links = ->(block) do
+              block.links.map do |link|
+                link_href = if link.url.present?
+                  link.url
+                elsif link.linkable.present?
+                  case link.linkable_type
+                  when 'Spree::Taxon'  then "/t/#{link.linkable.permalink}"
+                  when 'Spree::Policy' then "/policies/#{link.linkable.slug}"
+                  when 'Spree::Page'
+                    case link.linkable.type
+                    when 'Spree::Pages::ShopAll'  then '/products'
+                    when 'Spree::Pages::Account'  then '/account'
+                    when 'Spree::Pages::Wishlist' then '/wishlist'
+                    when 'Spree::Pages::Homepage' then '/'
+                    when 'Spree::Pages::PostList' then '/posts'
+                    when 'Spree::Pages::Cart'     then '/cart'
+                    when 'Spree::Pages::Login'    then '/login'
+                    else link.linkable.slug.present? ? "/#{link.linkable.slug}" : '/'
+                    end
+                  else link.url.to_s
+                  end
+                else
+                  '#'
+                end
+                [link, link_href]
+              end
+            end
+
+            blocks_by_label = section.blocks.includes(:links).index_by { |b| b.preferred_label.to_s.downcase }
+            shop_block    = blocks_by_label['shop']
+            account_block = blocks_by_label['account']
+            other_blocks  = section.blocks.includes(:links).reject { |b|
+              ['shop','account','info'].include?(b.preferred_label.to_s.downcase)
+            }
+          %>
+
+          <%# SHOP column %>
+          <% if shop_block %>
+            <nav class="mt-footer-col" aria-label="Shop">
+              <h4 class="mt-footer-heading"><%= shop_block.preferred_label %></h4>
               <ul class="mt-footer-links">
-                <% block.links.each do |link| %>
-                  <li>
-                    <%= page_builder_link_to link, target: ('_blank' if link.open_in_new_tab), rel: ('noopener noreferrer' if link.open_in_new_tab), class: 'mt-footer-link' do %>
-                      <%= link.label %>
-                    <% end %>
-                  </li>
+                <% render_block_links.call(shop_block).each do |link, href| %>
+                  <li><a href="<%= href %>" class="mt-footer-link"<%= ' target="_blank" rel="noopener noreferrer"'.html_safe if link.open_in_new_tab %>><%= link.label %></a></li>
+                <% end %>
+              </ul>
+            </nav>
+          <% end %>
+
+          <%# BRANDS column — inserted between SHOP and ACCOUNT %>
+          <nav class="mt-footer-col" aria-label="Brands">
+            <h4 class="mt-footer-heading">Brands</h4>
+            <ul class="mt-footer-links">
+              <li><a href="/t/brands/cabrinha" class="mt-footer-link">Cabrinha</a></li>
+              <li><a href="/t/brands/duotone-kiteboarding" class="mt-footer-link">Duotone Kiteboarding</a></li>
+              <li><a href="/t/brands/duotone-windsurfing" class="mt-footer-link">Duotone Windsurfing</a></li>
+              <li><a href="/t/brands/duotone-wing-foiling" class="mt-footer-link">Duotone Wing Foiling</a></li>
+              <li><a href="/t/brands/duotone-foiling-and-electric" class="mt-footer-link">Duotone Foiling &amp; Electric</a></li>
+              <li><a href="/t/brands/duotone-apparel" class="mt-footer-link">Duotone Apparel</a></li>
+              <li><a href="/t/brands/fanatic-sup" class="mt-footer-link">Fanatic SUP</a></li>
+              <li><a href="/t/brands/fanatic-windsurfing" class="mt-footer-link">Fanatic Windsurfing</a></li>
+              <li><a href="/t/brands/gaastra" class="mt-footer-link">Gaastra</a></li>
+              <li><a href="/t/brands/ion-water" class="mt-footer-link">ION Water</a></li>
+              <li><a href="/t/brands/jp-australia" class="mt-footer-link">JP Australia</a></li>
+              <li><a href="/t/brands/neilpryde" class="mt-footer-link">Neilpryde</a></li>
+              <li><a href="/t/brands/nobile" class="mt-footer-link">Nobile</a></li>
+              <li><a href="/t/brands/point7" class="mt-footer-link">Point7</a></li>
+              <li><a href="/t/brands/tabou" class="mt-footer-link">Tabou</a></li>
+              <li><a href="/t/brands/woo-sports" class="mt-footer-link">WOO Sports</a></li>
+            </ul>
+          </nav>
+
+          <%# ACCOUNT column %>
+          <% if account_block %>
+            <nav class="mt-footer-col" aria-label="Account">
+              <h4 class="mt-footer-heading"><%= account_block.preferred_label %></h4>
+              <ul class="mt-footer-links">
+                <% render_block_links.call(account_block).each do |link, href| %>
+                  <li><a href="<%= href %>" class="mt-footer-link"<%= ' target="_blank" rel="noopener noreferrer"'.html_safe if link.open_in_new_tab %>><%= link.label %></a></li>
                 <% end %>
               </ul>
             </nav>
