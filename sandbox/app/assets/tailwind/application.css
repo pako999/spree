@@ -3598,3 +3598,34 @@ body {
    ======================================== */
 
 /* Container already has overflow:hidden via Tailwind — no override needed */
+
+/* ========================================
+   Footer: Mobile centering & Desktop layout
+   ======================================== */
+
+/* Center "Payment Methods" heading + icons on mobile */
+@media (max-width: 767px) {
+  .mt-footer-heading.mt-4 {
+    text-align: center;
+  }
+  .mt-payment-icons {
+    justify-content: center;
+  }
+}
+
+/* Desktop: tighter footer padding, brands in 2 columns */
+@media (min-width: 1024px) {
+  .mt-footer-main {
+    padding: 28px 0;
+  }
+  .mt-footer-links {
+    gap: 6px;
+  }
+  nav[aria-label="Brands"] .mt-footer-links {
+    column-count: 2;
+    column-gap: 16px;
+  }
+  nav[aria-label="Brands"] .mt-footer-links li {
+    break-inside: avoid;
+  }
+}
