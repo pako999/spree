@@ -2,9 +2,9 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: 10
-  host: localhost
-  username: ubuntu
-  password: kite
+  host: <%= ENV.fetch('DB_HOST', 'localhost') %>
+  username: <%= ENV.fetch('DB_USERNAME', 'ubuntu') %>
+  password: <%= ENV.fetch('DB_PASSWORD', 'kite') %>
 
 development:
   <<: *default
