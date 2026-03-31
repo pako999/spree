@@ -4,7 +4,8 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     # Trusted script sources: self + common Spree/Hotwire CDN origins
-    policy.script_src  :self, :https,
+    # unsafe_inline needed for page-section custom code blocks (stored in DB, cannot receive nonce)
+    policy.script_src  :self, :https, :unsafe_inline,
                         'https://unpkg.com',
                         'https://cdn.jsdelivr.net'
 
@@ -39,12 +40,12 @@ Rails.application.configure do
     policy.default_src :self
   end
 
-  # Generate session nonces for permitted inline scripts (importmap, Turbo)
-  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
-  config.content_security_policy_nonce_directives = %w[script-src]
-
-  # Automatically add nonce to javascript_tag, javascript_include_tag etc.
-  config.content_security_policy_nonce_auto = true
+  # Nonces disabled for script-src because page-section custom code blocks (stored in DB)
+  # cannot receive a per-request nonce, and nonces take precedence over unsafe-inline in
+  # CSP2+ browsers, which would prevent those scripts from executing.
+  # config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
+  # config.content_security_policy_nonce_directives = %w[script-src]
+  # config.content_security_policy_nonce_auto = true
 
   # Switch to report-only mode to test before enforcing:
   # config.content_security_policy_report_only = true
