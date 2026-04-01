@@ -36,7 +36,12 @@ Rails.application.routes.draw do
   # the default of "spree".
   mount Spree::Core::Engine, at: '/'
   devise_for :admin_users, class_name: "Spree::AdminUser"
-  devise_for :users, class_name: "Spree::User"
+  devise_for :users, class_name: "Spree::User",
+             controllers: {
+               sessions: 'spree/user_sessions',
+               registrations: 'spree/user_registrations',
+               passwords: 'spree/user_passwords'
+             }
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
