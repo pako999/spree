@@ -1800,9 +1800,7 @@ html[aria-busy="true"] .hide-on-load {
 
 .product-description-truncated {
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--read-more-line-clamp, 3);
+  max-height: 6rem; /* ~3 lines at text-lg; prevents block-level headings in rich text from bleeding through */
 }
 
 /* Desktop: show full description, hide "Read more" button */
