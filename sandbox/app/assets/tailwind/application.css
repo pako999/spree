@@ -2891,7 +2891,7 @@ body {
 
 /* --- Tier 1: Utility badge bar --- */
 .mt-utility-bar {
-  background-color: #1a2332;
+  background-color: #0f172a;
   color: #c8d1dc;
   font-size: 0.72rem;
   letter-spacing: 0.05em;
@@ -2919,15 +2919,15 @@ body {
 
 /* --- Tier 2: Main header bar --- */
 .mt-main-bar {
-  background: #1a2332;
-  border-bottom: 1px solid #2a3a4e;
+  background: #1a2b3d;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   color: #fff;
 }
 
 .mt-main-bar-inner {
   display: flex;
   align-items: center;
-  padding: 14px 0;
+  padding: 12px 0;
   gap: 20px;
 }
 
@@ -2969,18 +2969,19 @@ body {
   justify-content: space-between;
   width: 100%;
   padding: 0;
-  background: rgba(255,255,255,0.12);
-  border: 2px solid rgba(255,255,255,0.25);
-  border-radius: 6px;
-  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.2s, background 0.2s;
   overflow: hidden;
 }
 
 .mt-search-bar:hover {
-  border-color: rgba(255,255,255,0.5);
+  border-color: rgba(255,255,255,0.38);
+  background: rgba(255,255,255,0.11);
 }
 
 .mt-search-placeholder {
@@ -2992,11 +2993,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.12);
   color: #fff;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
+  border-left: 1.5px solid rgba(255,255,255,0.12);
 }
 
 /* Right icons group */
@@ -3042,9 +3044,9 @@ body {
 
 /* --- Tier 3: Dark mega-navigation bar --- */
 .mt-nav-bar {
-  background-color: #1a2332 !important;
-  border-bottom: none;
-  box-shadow: none;
+  background-color: #111d2c !important;
+  border-bottom: 2px solid rgba(255,255,255,0.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   position: relative;
 }
 
@@ -3056,28 +3058,40 @@ body {
 .mt-nav-bar .header--nav-item>a,
 .mt-nav-bar .header--nav-item>button,
 .mt-nav-bar .menu-item {
-  color: #fff !important;
-  font-weight: 700;
-  font-size: 0.82rem;
+  color: rgba(255,255,255,0.82) !important;
+  font-weight: 500;
+  font-size: 0.77rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 12px 14px;
+  letter-spacing: 0.12em;
+  padding: 13px 16px;
+  transition: color 0.18s, background 0.18s;
 }
 
 .mt-nav-bar .header--nav-item>a:hover,
 .mt-nav-bar .header--nav-item>button:hover,
 .mt-nav-bar .menu-item:hover {
-  color: #93c5fd !important;
+  color: #fff !important;
+  background: rgba(255,255,255,0.07) !important;
 }
 
 .mt-nav-bar .header--nav-item .active-link,
 .mt-nav-bar .active-link {
-  border-bottom: 3px solid #3b82f6;
-  padding-bottom: 9px;
+  color: #fff !important;
+  border-bottom: 2px solid rgba(255,255,255,0.55);
+  padding-bottom: 11px;
 }
 
 .mt-nav-bar .header--nav-item svg {
   color: #94a3b8;
+}
+
+/* SALE link accent colour */
+.mt-nav-bar [data-title="sale"] span,
+.mt-nav-bar .header--nav-item:has([data-title="sale"]) [data-title="sale"] span {
+  color: #f97316 !important;
+}
+.mt-nav-bar [data-title="sale"]:hover span {
+  color: #fb923c !important;
 }
 
 /* Mobile horizontal scroll nav */
