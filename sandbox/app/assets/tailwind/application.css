@@ -3056,10 +3056,6 @@ body {
 }
 
 /* Nav items */
-.mt-nav-bar .header--nav-item {
-  position: relative;
-}
-
 .mt-nav-bar .header--nav-item>a,
 .mt-nav-bar .header--nav-item>button,
 .mt-nav-bar .menu-item {
@@ -3069,49 +3065,24 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 16px 20px;
-  transition: color 0.15s;
-  display: inline-block;
-  position: relative;
+  transition: color 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 -2px 0 transparent;
 }
 
-/* Hover: bright white + bottom accent line grows in */
+/* Hover: bright white + inset underline (no position:relative needed) */
 .mt-nav-bar .header--nav-item>a:hover,
 .mt-nav-bar .header--nav-item>button:hover,
 .mt-nav-bar .menu-item:hover {
   color: #fff !important;
   background: transparent !important;
-}
-
-.mt-nav-bar .header--nav-item>a::after,
-.mt-nav-bar .header--nav-item>button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 20px;
-  right: 20px;
-  height: 2px;
-  background: rgba(255,255,255,0.6);
-  transform: scaleX(0);
-  transition: transform 0.2s ease;
-}
-
-.mt-nav-bar .header--nav-item>a:hover::after,
-.mt-nav-bar .header--nav-item>button:hover::after,
-.mt-nav-bar .header--nav-item:hover>a::after,
-.mt-nav-bar .header--nav-item:hover>button::after {
-  transform: scaleX(1);
+  box-shadow: inset 0 -2px 0 rgba(255,255,255,0.5);
 }
 
 /* Active page */
 .mt-nav-bar .header--nav-item .active-link,
 .mt-nav-bar .active-link {
   color: #fff !important;
-}
-
-.mt-nav-bar .active-link::after,
-.mt-nav-bar .header--nav-item .active-link::after {
-  transform: scaleX(1) !important;
-  background: #3b82f6 !important;
+  box-shadow: inset 0 -2px 0 #3b82f6;
 }
 
 .mt-nav-bar .header--nav-item svg {
@@ -3123,11 +3094,8 @@ body {
 .mt-nav-bar .header--nav-item:has([data-title="sale"]) [data-title="sale"] span {
   color: #f97316 !important;
 }
-.mt-nav-bar [data-title="sale"]:hover span {
-  color: #fb923c !important;
-}
-.mt-nav-bar [data-title="sale"]::after {
-  background: #f97316 !important;
+.mt-nav-bar [data-title="sale"]:hover {
+  box-shadow: inset 0 -2px 0 #f97316 !important;
 }
 
 /* ── Mega-menu dropdown refinements ── */
