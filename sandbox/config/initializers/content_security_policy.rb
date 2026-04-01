@@ -21,11 +21,12 @@ Rails.application.configure do
     # Object/embed: none
     policy.object_src  :none
 
-    # XHR/fetch/WebSockets: self + Saferpay + Gemini API
+    # XHR/fetch/WebSockets: self + Saferpay + Gemini API + Cloudflare R2 (Active Storage direct upload)
     policy.connect_src :self,
                         'https://www.saferpay.com',
                         'https://test.saferpay.com',
-                        'https://generativelanguage.googleapis.com'
+                        'https://generativelanguage.googleapis.com',
+                        'https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com'
 
     # Frame ancestors: allows same-origin embedding (required for theme builder)
     policy.frame_ancestors :self
