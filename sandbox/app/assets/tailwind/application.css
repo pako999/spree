@@ -1800,20 +1800,21 @@ html[aria-busy="true"] .hide-on-load {
 
 .product-description-truncated {
   overflow: hidden;
-  max-height: 6rem; /* ~3 lines at text-lg; prevents block-level headings in rich text from bleeding through */
+  max-height: 6rem; /* ~3 lines; prevents text from bleeding over product grid */
 }
 
-/* Desktop: show full description, hide "Read more" button */
+/* Desktop: taller truncation */
 @media (min-width: 768px) {
   .product-description-truncated {
-    overflow: visible;
-    display: block;
-    -webkit-line-clamp: unset;
+    max-height: 8rem; /* ~4 lines on desktop */
+    overflow: hidden;
   }
+}
 
-  [data-controller="read-more"]>button[data-action="read-more#toggle"] {
-    display: none !important;
-  }
+/* When expanded via stimulus-read-more JS (sets --read-more-line-clamp to 'unset') */
+.product-description-truncated[style*="--read-more-line-clamp"] {
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .header--nav-item .menu-item:focus:not(.header--mega-nav-container *) {
