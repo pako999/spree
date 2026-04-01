@@ -16,7 +16,7 @@
   <div class="page-container">
     <nav class="mt-policy-breadcrumb" aria-label="Breadcrumb">
       <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
+      <span aria-hidden="true">&rsaquo;</span>
       <span><%= @policy.name %></span>
     </nav>
     <h1 class="mt-policy-title"><%= @policy.name %></h1>
@@ -49,7 +49,7 @@
   <article class="mt-policy-article">
 
     <% if is_contact %>
-      <%# ── Contact: info cards + body ── %>
+      <%# -- Contact: info cards + body -- %>
       <div class="mt-contact-cards">
         <div class="mt-contact-card">
           <div class="mt-contact-card-icon">
@@ -64,7 +64,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <h4>Business Hours</h4>
-          <p>Mon – Fri: 9:00 – 17:00 CET</p>
+          <p>Mon - Fri: 9:00 - 17:00 CET</p>
           <p class="mt-contact-card-sub">Saturday &amp; Sunday: Closed</p>
         </div>
         <div class="mt-contact-card">
@@ -84,13 +84,13 @@
       <% end %>
 
     <% elsif @policy.body.present? && @policy.body.to_s.length > 0 %>
-      <%# ── Standard policy: prose ── %>
+      <%# -- Standard policy: prose -- %>
       <div class="trix-content mt-policy-prose">
         <%= @policy.body.to_s.html_safe %>
       </div>
 
     <% else %>
-      <%# ── Empty policy ── %>
+      <%# -- Empty policy -- %>
       <div class="mt-policy-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <p>This page is currently being updated. Please check back soon.</p>
