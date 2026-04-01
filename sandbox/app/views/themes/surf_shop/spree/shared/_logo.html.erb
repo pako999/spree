@@ -1,4 +1,5 @@
-<% logo ||= current_store.logo %>
+<%# Normalize logo: if passed logo isn't attached (unattached AS object), fall back to store logo %>
+<% logo = (logo.respond_to?(:attached?) && logo.attached?) ? logo : current_store.logo %>
 <% height ||= 64 %>
 <% logo_css ||= '' %>
 <%= link_to spree.root_path, id: 'site-logo' do %>
