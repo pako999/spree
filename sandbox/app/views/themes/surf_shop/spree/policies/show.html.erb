@@ -1,14 +1,102 @@
-<div class="page-container py-12">
-  <h1 class="text-2xl tracking-tight text-center lg:text-left mb-3 uppercase">
-    <%= @policy.name %>
-  </h1>
+<%
+  policy_nav = [
+    { label: 'Terms & Conditions', slug: 'terms-and-conditions' },
+    { label: 'Privacy Policy',     slug: 'privacy-policy' },
+    { label: 'Shipping Policy',    slug: 'shipping-policy' },
+    { label: 'Shipping & Refunds', slug: 'returns-refund-policy' },
+    { label: 'Cookie Policy',      slug: 'cookie-policy' },
+    { label: 'About Us',           slug: 'about-us' },
+    { label: 'Contact',            slug: 'contact' },
+  ]
+  is_contact = @policy.slug == 'contact'
+%>
 
-  <p class="mb-8 text-center lg:text-left">
-    <%= Spree.t(:updated_at) %>:
-    <%= l(@policy.updated_at.to_date) %>
-  </p>
-
-  <div class="mb-5 trix-content">
-    <%= @policy.body.to_s.html_safe %>
+<%# === Hero Header === %>
+<div class="mt-policy-hero">
+  <div class="page-container">
+    <nav class="mt-policy-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <span><%= @policy.name %></span>
+    </nav>
+    <h1 class="mt-policy-title"><%= @policy.name %></h1>
+    <p class="mt-policy-updated"><%= Spree.t(:updated_at) %>: <%= l(@policy.updated_at.to_date) %></p>
   </div>
+</div>
+
+<%# === Two-column layout: sidebar + article === %>
+<div class="page-container mt-policy-page">
+
+  <%# Sidebar navigation %>
+  <aside class="mt-policy-sidebar" aria-label="Policy navigation">
+    <div class="mt-policy-sidebar-inner">
+      <p class="mt-policy-sidebar-title">Legal & Info</p>
+      <nav>
+        <% policy_nav.each do |item| %>
+          <% active = @policy.slug == item[:slug] ||
+                      (@policy.slug == 'therms-and-conditions' && item[:slug] == 'terms-and-conditions') %>
+          <a href="/policies/<%= item[:slug] %>"
+             class="mt-policy-nav-link<%= ' active' if active %>"
+             <%= 'aria-current="page"'.html_safe if active %>>
+            <%= item[:label] %>
+          </a>
+        <% end %>
+      </nav>
+    </div>
+  </aside>
+
+  <%# Main article %>
+  <article class="mt-policy-article">
+
+    <% if is_contact %>
+      <%# ── Contact: info cards + body ── %>
+      <div class="mt-contact-cards">
+        <div class="mt-contact-card">
+          <div class="mt-contact-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <h4>Email Us</h4>
+          <p><a href="mailto:info@surf-store.com">info@surf-store.com</a></p>
+          <p class="mt-contact-card-sub">Response within 24h on business days</p>
+        </div>
+        <div class="mt-contact-card">
+          <div class="mt-contact-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h4>Business Hours</h4>
+          <p>Mon – Fri: 9:00 – 17:00 CET</p>
+          <p class="mt-contact-card-sub">Saturday &amp; Sunday: Closed</p>
+        </div>
+        <div class="mt-contact-card">
+          <div class="mt-contact-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <h4>Our Address</h4>
+          <p>Sport group d.o.o.<br>Osojnikova 4<br>2000 Maribor, Slovenia</p>
+          <p class="mt-contact-card-sub">European Union</p>
+        </div>
+      </div>
+
+      <% if @policy.body.present? && @policy.body.to_s.length > 0 %>
+        <div class="trix-content mt-policy-prose">
+          <%= @policy.body.to_s.html_safe %>
+        </div>
+      <% end %>
+
+    <% elsif @policy.body.present? && @policy.body.to_s.length > 0 %>
+      <%# ── Standard policy: prose ── %>
+      <div class="trix-content mt-policy-prose">
+        <%= @policy.body.to_s.html_safe %>
+      </div>
+
+    <% else %>
+      <%# ── Empty policy ── %>
+      <div class="mt-policy-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>This page is currently being updated. Please check back soon.</p>
+        <p>For any questions, contact us at <a href="/policies/contact">info@surf-store.com</a>.</p>
+      </div>
+    <% end %>
+
+  </article>
 </div>

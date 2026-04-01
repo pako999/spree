@@ -3629,3 +3629,267 @@ body {
     break-inside: avoid;
   }
 }
+
+/* ========================================
+   Policy Pages — Professional Layout
+   ======================================== */
+
+.mt-policy-hero {
+  background: linear-gradient(135deg, #0b1e35 0%, #1a3a5c 60%, #0c2a4a 100%);
+  padding: 44px 0 36px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.mt-policy-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 14px;
+}
+
+.mt-policy-breadcrumb a {
+  color: rgba(255,255,255,0.45);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.mt-policy-breadcrumb a:hover {
+  color: #fff;
+}
+
+.mt-policy-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+@media (min-width: 768px) {
+  .mt-policy-title {
+    font-size: 2.5rem;
+  }
+}
+
+.mt-policy-updated {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.38);
+}
+
+/* Page layout: sidebar + article */
+.mt-policy-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  padding-top: 44px;
+  padding-bottom: 72px;
+}
+
+@media (min-width: 1024px) {
+  .mt-policy-page {
+    grid-template-columns: 200px 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+}
+
+/* Sidebar */
+.mt-policy-sidebar-inner {
+  position: sticky;
+  top: 90px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.mt-policy-sidebar-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+.mt-policy-nav-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  color: #475569;
+  text-decoration: none;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  margin-bottom: 2px;
+}
+
+.mt-policy-nav-link:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+  border-left-color: #cbd5e1;
+}
+
+.mt-policy-nav-link.active {
+  color: #0284c7;
+  background: #eff9ff;
+  border-left-color: #0284c7;
+  font-weight: 600;
+}
+
+/* Article — prose styling */
+.mt-policy-article {
+  min-width: 0;
+}
+
+.mt-policy-prose h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.mt-policy-prose h2:first-child {
+  margin-top: 0;
+}
+
+.mt-policy-prose h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 1.5em;
+  margin-bottom: 0.4em;
+}
+
+.mt-policy-prose div,
+.mt-policy-prose p {
+  font-size: 0.915rem;
+  line-height: 1.8;
+  color: #374151;
+  margin-bottom: 0.5em;
+}
+
+.mt-policy-prose ul,
+.mt-policy-prose ol {
+  padding-left: 1.5em;
+  margin: 0.6em 0 1em;
+}
+
+.mt-policy-prose li {
+  font-size: 0.915rem;
+  line-height: 1.75;
+  color: #374151;
+  margin-bottom: 0.25em;
+}
+
+.mt-policy-prose a {
+  color: #0284c7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mt-policy-prose a:hover {
+  color: #0369a1;
+}
+
+.mt-policy-prose strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Empty state */
+.mt-policy-empty {
+  padding: 56px 32px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.mt-policy-empty svg {
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.mt-policy-empty p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 6px;
+}
+
+.mt-policy-empty a {
+  color: #0284c7;
+}
+
+/* Contact cards */
+.mt-contact-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+@media (min-width: 640px) {
+  .mt-contact-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mt-contact-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.mt-contact-card:hover {
+  border-color: #bae6fd;
+  box-shadow: 0 4px 16px rgba(2,132,199,0.08);
+}
+
+.mt-contact-card-icon {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.mt-contact-card h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.mt-contact-card p {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.mt-contact-card a {
+  color: #0284c7;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mt-contact-card a:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+.mt-contact-card-sub {
+  color: #94a3b8 !important;
+  font-size: 0.78rem !important;
+  margin-top: 4px;
+}
