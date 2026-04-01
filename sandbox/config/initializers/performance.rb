@@ -5,6 +5,4 @@
 # Without this, Spree product listing pages fire 1,500+ queries per request.
 # With auto_preload enabled, related associations are batched automatically,
 # dropping query count to ~50-100 per page.
-ArLazyPreload.setup do |config|
-  config.auto_preload = true
-end
+ArLazyPreload.config.auto_preload = true
