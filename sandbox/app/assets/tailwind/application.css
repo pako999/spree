@@ -3045,8 +3045,8 @@ body {
 /* --- Tier 3: Dark mega-navigation bar --- */
 .mt-nav-bar {
   background-color: #111d2c !important;
-  border-bottom: 2px solid rgba(255,255,255,0.06);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  border-bottom: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   position: relative;
 }
 
@@ -3055,30 +3055,63 @@ body {
   padding-top: 0 !important;
 }
 
+/* Nav items */
+.mt-nav-bar .header--nav-item {
+  position: relative;
+}
+
 .mt-nav-bar .header--nav-item>a,
 .mt-nav-bar .header--nav-item>button,
 .mt-nav-bar .menu-item {
-  color: rgba(255,255,255,0.82) !important;
-  font-weight: 500;
-  font-size: 0.77rem;
+  color: rgba(255,255,255,0.78) !important;
+  font-weight: 600;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  padding: 13px 16px;
-  transition: color 0.18s, background 0.18s;
+  letter-spacing: 0.08em;
+  padding: 16px 20px;
+  transition: color 0.15s;
+  display: inline-block;
+  position: relative;
 }
 
+/* Hover: bright white + bottom accent line grows in */
 .mt-nav-bar .header--nav-item>a:hover,
 .mt-nav-bar .header--nav-item>button:hover,
 .mt-nav-bar .menu-item:hover {
   color: #fff !important;
-  background: rgba(255,255,255,0.07) !important;
+  background: transparent !important;
 }
 
+.mt-nav-bar .header--nav-item>a::after,
+.mt-nav-bar .header--nav-item>button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: rgba(255,255,255,0.6);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.mt-nav-bar .header--nav-item>a:hover::after,
+.mt-nav-bar .header--nav-item>button:hover::after,
+.mt-nav-bar .header--nav-item:hover>a::after,
+.mt-nav-bar .header--nav-item:hover>button::after {
+  transform: scaleX(1);
+}
+
+/* Active page */
 .mt-nav-bar .header--nav-item .active-link,
 .mt-nav-bar .active-link {
   color: #fff !important;
-  border-bottom: 2px solid rgba(255,255,255,0.55);
-  padding-bottom: 11px;
+}
+
+.mt-nav-bar .active-link::after,
+.mt-nav-bar .header--nav-item .active-link::after {
+  transform: scaleX(1) !important;
+  background: #3b82f6 !important;
 }
 
 .mt-nav-bar .header--nav-item svg {
@@ -3092,6 +3125,48 @@ body {
 }
 .mt-nav-bar [data-title="sale"]:hover span {
   color: #fb923c !important;
+}
+.mt-nav-bar [data-title="sale"]::after {
+  background: #f97316 !important;
+}
+
+/* ── Mega-menu dropdown refinements ── */
+.mt-nav-bar .header--mega-nav-container {
+  border-top: 3px solid #3b82f6;
+}
+
+.header--mega-nav-container {
+  color: var(--text, #1a2332) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.header--mega-nav-container h6 {
+  color: #1a2332 !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 8px !important;
+}
+
+.header--mega-nav-container a,
+.header--mega-nav-container .menu-item,
+.header--mega-nav-container .header--nav-link {
+  color: #374151 !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  transition: color 0.15s, padding-left 0.15s !important;
+}
+
+.header--mega-nav-container a:hover,
+.header--mega-nav-container .menu-item:hover,
+.header--mega-nav-container .header--nav-link:hover {
+  color: #1d4ed8 !important;
+  padding-left: 6px !important;
 }
 
 /* Mobile horizontal scroll nav */
@@ -3474,32 +3549,7 @@ body {
   border-bottom-color: var(--accent);
 }
 
-/* ============================================================
-   MEGA MENU DROPDOWN TEXT COLOR FIX
-   The .mt-nav-bar CSS forces all nav text to white for the
-   dark nav bar, but the dropdown has a white background.
-   Override text color inside the dropdown container.
-   ============================================================ */
-
-.header--mega-nav-container {
-  color: var(--text, #1a2332) !important;
-}
-
-.header--mega-nav-container a,
-.header--mega-nav-container .menu-item,
-.header--mega-nav-container .header--nav-link {
-  color: var(--text, #1a2332) !important;
-}
-
-.header--mega-nav-container a:hover,
-.header--mega-nav-container .menu-item:hover,
-.header--mega-nav-container .header--nav-link:hover {
-  color: var(--primary, #3b82f6) !important;
-}
-
-.header--mega-nav-container h6 {
-  color: var(--text, #1a2332) !important;
-}
+/* Mega-menu text color overrides are consolidated in the mt-nav-bar section above */
 
 /* Bolder mobile menu category text */
 .header--mobile-menu .header--nav-link {
