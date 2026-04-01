@@ -23,9 +23,10 @@ servers:
 #
 # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
 #
-# proxy:
-#   ssl: true
-#   host: surf-store.com
+proxy:
+  ssl: true
+  host: surf-store.com,www.surf-store.com
+  app_port: 3000
 
 # Where you keep your container images.
 registry:
