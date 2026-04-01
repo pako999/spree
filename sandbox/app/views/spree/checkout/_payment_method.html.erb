@@ -4,10 +4,10 @@
           method.id,
           selected_method == method,
           class: 'mr-3' %>
-    <span class="flex items-center gap-3 flex-1">
-      <%= Spree.t(method.name, scope: :payment_methods, default: method.name) %>
+    <span class="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+      <span class="shrink-0"><%= Spree.t(method.name, scope: :payment_methods, default: method.name) %></span>
       <% if method.method_type == 'saferpay' %>
-        <span class="flex items-center gap-1 ml-1">
+        <span class="flex flex-wrap items-center gap-1">
           <img src="/assets/payment_icons/visa-6afc887d.svg" alt="Visa" style="height:20px">
           <img src="/assets/payment_icons/master-9d8915b1.svg" alt="Mastercard" style="height:20px">
           <img src="/assets/payment_icons/maestro-cf8bad4d.svg" alt="Maestro" style="height:20px">
@@ -16,7 +16,7 @@
           <img src="/assets/payment_icons/twint-cb67e20e.svg" alt="Twint" style="height:20px">
         </span>
       <% elsif method.method_type == 'check' %>
-        <span class="flex items-center gap-1 ml-1">
+        <span class="flex items-center gap-1">
           <img src="/assets/payment_icons/banktransfer-235c36ae.svg" alt="Bank Transfer" style="height:20px">
         </span>
       <% end %>

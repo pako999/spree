@@ -19,7 +19,13 @@
             <div class="page-container py-6 grid grid-cols-4 gap-5">
               <% presenter.columns.each do |column| %>
                 <div class="flex flex-col">
-                  <h6 class="uppercase text-sm tracking-widest px-2 font-semibold mb-5"><%= column.title %></h6>
+                  <h6 class="uppercase text-sm tracking-widest px-2 font-semibold mb-5">
+                    <% if column.view_all_linkable.present? %>
+                      <%= link_to column.title, spree_storefront_resource_url(column.view_all_linkable), class: "hover:underline" %>
+                    <% else %>
+                      <%= column.title %>
+                    <% end %>
+                  </h6>
                   <% column.links.each do |link| %>
                     <div class="p-2">
                       <%= page_builder_link_to link, data: { title: link.label.downcase.strip }, class: "shrink-0 menu-item !normal-case header--nav-link", target: link.open_in_new_tab.presence && "_blank", rel: link.open_in_new_tab.presence && "noopener noreferrer" do %>
@@ -27,7 +33,6 @@
                       <% end %>
                     </div>
                   <% end %>
-                  <%= link_to Spree.t(:view_all), spree_storefront_resource_url(column.view_all_linkable), class: "py-3 px-2 uppercase text-sm inline-block tracking-widest font-semibold" %>
                 </div>
               <% end %>
               <% if block.try(:featured_taxon) %>

@@ -11,7 +11,7 @@
             <%= spree_image_tag(taxon.image, width: 500, height: 280, alt: taxon.name, class: 'w-full lg:h-[280px] h-full lg:w-auto mb-6', style: aspect_ratio_style, loading: :lazy) %>
           </div>
         <% end %>
-        <div class="lg:col-span-5 flex flex-col justify-center items-start gap-1">
+        <div class="<%= taxon.image.present? ? 'lg:col-span-5' : 'lg:col-span-12' %> flex flex-col justify-center items-start gap-1">
           <div class="text-xs lg:text-sm tracking-widest" style="<%= section_heading_styles(section) %>">
             <% if taxon.root? || taxon.parent.root? %>
               <%= taxon.taxonomy.name.singularize %>
@@ -20,24 +20,26 @@
             <% end %>
           </div>
           <h1 class="self-stretch text-2xl lg:text-3xl font-medium" style="<%= section_heading_styles(section) %>"><%= taxon.name %></h1>
-          <% description_text = taxon.description.to_plain_text %>
-          <div
-            data-controller="read-more"
-            class="flex flex-col gap-4"
-            data-read-more-more-text-value="<%= Spree.t(:read_more) %>"
-            data-read-more-less-text-value="<%= Spree.t(:read_less) %>">
-            <div class="prose self-stretch text-lg font-normal <%= 'product-description-truncated' if description_text.length > 250 %>" data-read-more-target="content">
-              <%= taxon.description %>
-            </div>
-            <% if description_text.length > 250 %>
-              <%= button_tag Spree.t(:read_more),
-                            type: 'button',
-                            class: "font-bold underline",
-                            data: { action: "read-more#toggle" } %>
-            <% end %>
-          </div>
         </div>
       </div>
+      <% description_text = taxon.description.to_plain_text %>
+      <% if description_text.present? %>
+        <div
+          data-controller="read-more"
+          class="flex flex-col gap-4 mt-4"
+          data-read-more-more-text-value="<%= Spree.t(:read_more) %>"
+          data-read-more-less-text-value="<%= Spree.t(:read_less) %>">
+          <div class="prose self-stretch text-base font-normal product-description-truncated" data-read-more-target="content" style="max-width: 100% !important;">
+            <%= taxon.description %>
+          </div>
+          <% if description_text.length > 250 %>
+            <%= button_tag Spree.t(:read_more),
+                          type: 'button',
+                          class: "font-bold underline text-sm",
+                          data: { action: "read-more#toggle" } %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 <% end %>
