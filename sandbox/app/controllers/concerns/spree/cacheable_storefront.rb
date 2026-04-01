@@ -17,7 +17,7 @@ module Spree
     def set_storefront_cache_headers
       return if response.status != 200
       return if request.post? || request.patch? || request.put? || request.delete?
-      return if current_spree_user.present?  # never cache logged-in pages at edge
+      return if try(:current_spree_user).present?  # never cache logged-in pages at edge
 
       # Cloudflare: cache for 2 minutes at edge, browser revalidates after 30s
       response.set_header('Cache-Control', 'public, max-age=30, s-maxage=120, stale-while-revalidate=60')
