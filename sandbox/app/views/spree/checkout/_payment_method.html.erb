@@ -1,0 +1,31 @@
+<li class="list-group-item p-0 m-0 border-b delivery-list-item border-default">
+  <%= link_to spree.checkout_state_path(token: @order.token, state: 'payment', payment_method_id: method.id), class: 'custom-control custom-radio flex items-center px-5 py-4 cursor-pointer w-full' do %>
+    <%= radio_button_tag "order[payments_attributes][][payment_method_id]",
+          method.id,
+          selected_method == method,
+          class: 'mr-3' %>
+    <span class="flex items-center gap-3 flex-1">
+      <%= Spree.t(method.name, scope: :payment_methods, default: method.name) %>
+      <% if method.method_type == 'saferpay' %>
+        <span class="flex items-center gap-1 ml-1">
+          <img src="/assets/payment_icons/visa-6afc887d.svg" alt="Visa" style="height:20px">
+          <img src="/assets/payment_icons/master-9d8915b1.svg" alt="Mastercard" style="height:20px">
+          <img src="/assets/payment_icons/maestro-cf8bad4d.svg" alt="Maestro" style="height:20px">
+          <img src="/assets/payment_icons/apple_pay-1866766c.svg" alt="Apple Pay" style="height:20px">
+          <img src="/assets/payment_icons/google_pay-a13ce581.svg" alt="Google Pay" style="height:20px">
+          <img src="/assets/payment_icons/twint-cb67e20e.svg" alt="Twint" style="height:20px">
+        </span>
+      <% elsif method.method_type == 'check' %>
+        <span class="flex items-center gap-1 ml-1">
+          <img src="/assets/payment_icons/banktransfer-235c36ae.svg" alt="Bank Transfer" style="height:20px">
+        </span>
+      <% end %>
+    </span>
+  <% end %>
+
+  <% if selected_method == method %>
+    <div class="px-5 py-4">
+      <%= render partial: "spree/checkout/payment/#{method.method_type}", locals: { payment_method: method } %>
+    </div>
+  <% end %>
+</li>
