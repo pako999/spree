@@ -22,7 +22,10 @@ class SaferpayClient
 
   # Step 1: Initialize a Payment Page session
   # Returns { token:, redirect_url:, expiration: }
-  def payment_page_initialize(amount_cents:, currency:, order_id:, description:, return_url:, fail_url:, notify_url: nil)
+  # NOTE: Saferpay v1.51 uses a single ReturnUrl for all outcomes (success & abort).
+  # AbortUrl is not a valid field — it causes VALIDATION_FAILED. The outcome is
+  # determined by calling PaymentPage/Assert after the customer returns.
+  def payment_page_initialize(amount_cents:, currency:, order_id:, description:, return_url:, fail_url: nil, notify_url: nil)
     body = {
       RequestHeader: request_header,
       TerminalId: @terminal_id,
@@ -37,8 +40,7 @@ class SaferpayClient
       ReturnUrl: {
         Url: return_url
       },
-      AbortUrl: fail_url,
-      Notification: notify_url ? { NotifyUrl: notify_url } : nil
+      Notification: notify_url ? { SuccessNotifyUrl: notify_url, FailNotifyUrl: notify_url } : nil
     }.compact
 
     response = post('/Payment/v1/PaymentPage/Initialize', body: body)

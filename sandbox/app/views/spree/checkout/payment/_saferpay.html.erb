@@ -1,3 +1,19 @@
 <p class="text-sm text-neutral-600">
   You will be redirected to Saferpay to complete your payment securely.
 </p>
+<div class="flex flex-wrap gap-2 mt-3 items-center">
+  <img src="/assets/payment_icons/visa-6afc887d.svg" alt="Visa" style="height:24px">
+  <img src="/assets/payment_icons/master-9d8915b1.svg" alt="Mastercard" style="height:24px">
+  <img src="/assets/payment_icons/maestro-cf8bad4d.svg" alt="Maestro" style="height:24px">
+  <img src="/assets/payment_icons/apple_pay-1866766c.svg" alt="Apple Pay" style="height:24px">
+  <img src="/assets/payment_icons/google_pay-a13ce581.svg" alt="Google Pay" style="height:24px">
+  <img src="/assets/payment_icons/twint-cb67e20e.svg" alt="Twint" style="height:24px">
+  <img src="/assets/payment_icons/banktransfer-235c36ae.svg" alt="Bank Transfer" style="height:24px">
+</div>
+<script>
+  // Disable Turbo on the checkout form so the external Saferpay redirect works
+  (function() {
+    var form = document.querySelector('form');
+    if (form) { form.setAttribute('data-turbo', 'false'); }
+  })();
+</script>
