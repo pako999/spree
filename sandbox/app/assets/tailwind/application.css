@@ -3278,8 +3278,8 @@ body {
 
 @media (min-width: 1024px) {
   .mt-footer-grid {
-    grid-template-columns: 1.3fr repeat(auto-fill, minmax(150px, 1fr));
-    gap: 40px;
+    grid-template-columns: 1.2fr 1fr 1.3fr 1fr 1fr 1fr;
+    gap: 32px;
   }
 }
 

@@ -114,7 +114,7 @@
             </nav>
           <% end %>
 
-          <%# BRANDS + ACCOUNT column %>
+          <%# BRANDS column %>
           <div class="mt-footer-col">
             <nav aria-label="Brands">
               <h4 class="mt-footer-heading">Brands</h4>
@@ -137,17 +137,32 @@
                 <li><a href="/t/brands/woo-sports" class="mt-footer-link">WOO Sports</a></li>
               </ul>
             </nav>
-            <% if account_block %>
-              <nav aria-label="Account" style="margin-top:24px">
-                <h4 class="mt-footer-heading"><%= account_block.preferred_label %></h4>
-                <ul class="mt-footer-links">
-                  <% render_block_links.call(account_block).each do |link, href| %>
-                    <li><a href="<%= href %>" class="mt-footer-link"<%= ' target="_blank" rel="noopener noreferrer"'.html_safe if link.open_in_new_tab %>><%= link.label %></a></li>
-                  <% end %>
-                </ul>
-              </nav>
-            <% end %>
           </div>
+
+          <%# MY ACCOUNT column %>
+          <nav class="mt-footer-col" aria-label="My Account">
+            <h4 class="mt-footer-heading">My Account</h4>
+            <ul class="mt-footer-links">
+              <li><a href="/account/orders" class="mt-footer-link">My Orders</a></li>
+              <li><a href="/wishlist" class="mt-footer-link">Favorites</a></li>
+              <li><a href="/account" class="mt-footer-link">My Profile</a></li>
+              <li><a href="/users/sign_in" class="mt-footer-link">Login</a></li>
+              <li><a href="/users/sign_up" class="mt-footer-link">Register</a></li>
+            </ul>
+          </nav>
+
+          <%# INFO column %>
+          <nav class="mt-footer-col" aria-label="Info">
+            <h4 class="mt-footer-heading">Info</h4>
+            <ul class="mt-footer-links">
+              <li><a href="/policies/therms-and-conditions" class="mt-footer-link">Terms &amp; Conditions</a></li>
+              <li><a href="/policies/shipping-policy" class="mt-footer-link">Shipping Policy</a></li>
+              <li><a href="/policies/returns-refund-policy" class="mt-footer-link">Shipping &amp; Refunds</a></li>
+              <li><a href="/policies/privacy-policy" class="mt-footer-link">Privacy Policy</a></li>
+              <li><a href="/policies/about-us" class="mt-footer-link">About Us</a></li>
+              <li><a href="/policies/contact" class="mt-footer-link">Contact</a></li>
+            </ul>
+          </nav>
 
           <%# Community / Social column %>
           <div class="mt-footer-col">
