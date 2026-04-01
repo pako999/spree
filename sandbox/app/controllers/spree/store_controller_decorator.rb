@@ -67,3 +67,4 @@ module Spree
 end
 
 Spree::StoreController.include(Spree::StoreControllerDecorator)
+Spree::StoreController.include(Spree::CacheableStorefront)
