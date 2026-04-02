@@ -218,6 +218,82 @@ RULES = [
 
   # ---- E-FOIL ---------------------------------------------------------
   [/e-?foil.*set|\bfliteboard\b|\bwaydoo\b|\blift.*efoil/i, [:efoil_sets, :efoil]],
+  [/e-?foil|emast|e-?mast|epropeller|motor.*bell|motor.*pod|battery.*box|battery.*bag|battery.*7a|cruise.*battery|wire.*antenna/i, [:efoil_spare, :efoil]],
+
+  # ---- KITE SPARE PARTS (Duotone, Cabrinha — bladers, bridles, lines) ---
+  [/bladder.*(leading|strut|tip|middle|quarter|center|quart|front.*tube)/i, [:kite_spare, :kitesurfing]],
+  [/bladder.*strut.*unit/i,                             [:kite_spare, :kitesurfing]],
+  [/bridle.*set|bridle.*line|front.*bridle|back.*bridle|pigtail|back.*pigtail|front.*pigtail/i, [:kite_spare, :kitesurfing]],
+  [/line.*set.*(bar|qc)|click.*bar|trust.*bar|bar.*(plain|small|medium|large)/i, [:kite_bars, :kitesurfing]],
+  [/flying.*line|back.*line|front.*line|rear.*line|upper.*front.*line|lower.*front.*line|depower.*line|landing.*line/i, [:kite_spare, :kitesurfing]],
+  [/relaunch.*bungee|noseline|bungee.*nose|bungee.*click|floater.*bar/i, [:kite_spare, :kitesurfing]],
+  [/airlock.*valve|valve.*assembly|valve.*seal|valve.*socket|valve.*angled|valve.*straight/i, [:kite_spare, :kitesurfing]],
+  [/dacron|tri-ply|odl.*sandwich|adhesive.*ripstop|adhesive.*markcloth|kite.*repair|repair.*tape/i, [:kite_spare, :kitesurfing]],
+  [/safety.*leash.*kite|kite.*safety|short.*safety.*leash|neoprene.*safety.*leash/i, [:kite_spare, :kitesurfing]],
+  [/\bstrut\b.*(kite|neo|evo|rebel|dice|juice|moto|mantis|apex|nitro|vision|aer|vapor)/i, [:kite_spare, :kitesurfing]],
+  [/(kite|neo|evo|rebel|dice|juice|moto|mantis|apex|nitro|vapor).*\bstrut\b/i, [:kite_spare, :kitesurfing]],
+  [/connector.*system|connector.*loop|connector.*pin|connector.*freestyle|surf.*slider/i, [:kite_spare, :kitesurfing]],
+  [/bar.*bungee|winding.*post|sliding.*bar.*stopper|rubber.*plug.*bar|red.*safety.*line/i, [:kite_spare, :kitesurfing]],
+  [/extension.*line.*set|click.*bar.*upgrade|hadlow.*upgrade|5th.*element.*upgrade/i, [:kite_spare, :kitesurfing]],
+  [/iron.*heart|ratchet.*lever|power.*xt|double.*pin.*lock|entity.*strap|entity.*washer/i, [:kite_spare, :kitesurfing]],
+  [/traction.*pad|vario.*pad|insert.*pad|\bpad\b.*(dlab|sls|insert)/i, [:kite_pads, :kitesurfing]],
+  [/\bfin\b.*(ts-m|ts-s|inj.*mold|rtm|quad|thruster|screw|tt.*fin|surf.*fin)/i, [:kite_spare, :kitesurfing]],
+  [/tt.*handle|track.*nut|ultralight.*strap|waist.*leash.*kite|unify.*leash|unify.*qr/i, [:kite_spare, :kitesurfing]],
+  [/screw.*set.*tools|board.*spare.*kit|board.*spare.*multi|zipper.*teeth|zipper.*pouch/i, [:kite_spare, :kitesurfing]],
+  [/duffel.*bag.*kite|roller.*bag.*kite|carry.*on.*bag|surf.*travel.*bag/i, [:kite_spare, :kitesurfing]],
+  [/cabrinha.*(foam|code|bump|link|logic|mantis|moto|nitro|phantom|swift|switchblade|vapor|flare|drifter|h3|spirit)/i, [:kite_spare, :kitesurfing]],
+
+  # ---- KITE BARS (standalone) ----------------------------------------
+  [/trust.*bar.*quad|\bclick.*bar\b|\btrust.*bar\b|5th.*line.*pigtail|minimalistic.*pigtail/i, [:kite_bars, :kitesurfing]],
+
+  # ---- HARNESS PARTS (ION) -------------------------------------------
+  [/\bharn.*sp\b|\bharn\.sp\b|harness.*spare|harness.*seatpart|ergo.*pad|downforce.*loop|releasebuckle|carbine.*rope|lever.*buckle|webbing.*slider|safety.*leash.*d-ring|c-bar.*screw|spectre.*bar.*screw/i, [:harness_parts, :windsurf_harnesses, :windsurf]],
+  [/hook.*windsurf|windsurf.*hook|windsurf.*aluminium.*hook|spreader.*bar/i,              [:harness_hooks, :windsurf_harnesses, :windsurf]],
+
+  # ---- WINDSURF ACCESSORIES/PARTS (ION, Neilpryde, Duotone) ----------
+  [/uphaul.*line|uphaul.*rope|\buphaul\b/i,             [:windsurf_spare, :windsurf]],
+  [/mast.*base.*protector|mastbase.*protector|nose.*bumper.*windsurf|windsurf.*nose|board.*protector.*windsurf/i, [:windsurf_spare, :windsurf]],
+  [/windsurf.*seat|seat.*windsurf|windsurf.*harness.*seat|windsurf.*octane|windsurf.*radium/i, [:windsurf_harnesses, :windsurf]],
+  [/windsurf.*waist|waist.*windsurf/i,                  [:windsurf_harnesses, :windsurf]],
+  [/\brdm\b|\bsdm\b|x100.*pro|x75.*rdm|spx.*sdm|dragonfly.*rdm|mxt.*rdm|mxt.*sdm|uxt.*rdm|uxt.*sdm/i, [:windsurf_masts, :windsurf]],
+  [/rdm.*extension|sdm.*extension|mxt.*extension|uxt.*extension|x-tender|deep.*tuttle.*adapter|power.*box.*adapter|power.*mxt.*base|power.*uxt.*base|surfplate.*adapter/i, [:windsurf_extensions, :windsurf]],
+  [/neilpryde.*gravity|neilpryde.*evo.*harness|neilpryde.*s1.*ez/i,                       [:windsurf_harnesses, :windsurf]],
+  [/performer.*boardbag|windsurf.*boardbag|boardbag.*windsurf/i,                          [:windsurf_bags, :windsurf]],
+  [/neilpryde.*thermabase/i,                            [:wetsuit_2mm_men, :men_wetsuits, :wetsuits]],
+  [/solid.*batten|single.*batten|batten.*replacement/i, [:windsurf_spare, :windsurf]],
+  [/\bfin\b.*(fanatic|windsurf|jag)|fanatic.*fin|\btuttle\b/i, [:windsurf_fins, :windsurf]],
+
+  # ---- WINDSURF BOARDS (Tabou, Fanatic) -------------------------------
+  [/tabou|fanatic.*(windsurf|wave|freeride|freestyle|slalom|speed)|air.*ride|rocket.*plus|super.*yaka|manta.*foil/i, [:windsurf_boards, :windsurf]],
+  [/downwinder|falcon.*fin|falcon.*speed|crush.*sls|skate.*sls|sky.*style|blur.*sls|select.*concept|volt.*dlab|volt.*sls/i, [:windsurf_boards, :windsurf]],
+
+  # ---- ION BAGS & ACCESSORIES -----------------------------------------
+  [/blade.*bag|gearbag.*tec|session.*bag|session.*duffel|suspect.*duffel|carry.*on.*wheelie|mission.*backpack|explorer.*bag/i, [:windsurf_bags, :windsurf]],
+  [/surf.*boardbag|surf.*sock|wake.*boardbag|surf.*leash|surf.*bag/i,                     [:kite_surf_boards, :kitesurfing]],
+  [/\bboardbag\b|\bboard.*bag\b/i,                      [:windsurf_bags, :windsurf]],
+
+  # ---- ION APPAREL/LIFESTYLE ------------------------------------------
+  [/\bponcho\b|\bchanging.*bucket\b|\bchanging.*mat\b|\bwetbag\b|\bdry.*bag\b|\bbeach.*towel\b|\bseat.*towel\b/i, [:ponchos, :apparel]],
+  [/\btee\b|\bt-shirt\b|\bsweater\b|\bhoodie\b|\bhoody\b|\bfleece\b|\bshirt\b.*ionic|\bshirt\b.*denim/i, [:tops, :apparel]],
+  [/\bshorts\b.*denim|\bshorts\b.*cotton|\bshorts\b.*hd|\bpants\b.*denim|\bpants\b.*cotton|\bpants\b.*hd/i, [:boardshorts, :apparel]],
+  [/ball.*slapper.*shorts|\bbottom.*tights\b|\bbottom.*shorts\b|\bbottom.*base\b/i,       [:boardshorts, :apparel]],
+  [/\bsocks\b.*ionic|\bsocks\b.*long/i,                 [:neo_accessories, :wetsuits]],
+  [/plasma.*slipper|plasma.*socks|ballistic.*toes|bandit.*gaiter|open.*palm.*mitten/i,    [:shoes, :neo_accessories, :wetsuits]],
+  [/long.*john|monoshorty|neo.*pants|neo.*shorts|wetshirt|seek.*core|long.*jane/i,        [:men_wetsuits, :wetsuits]],
+
+  # ---- ION HARNESS PRODUCTS -------------------------------------------
+  [/\briot\b|\bapex\b|\barc\b|\baxxis\b|\bb2\b|\becho\b|\bfuel\b|\bicon\b|\bjade\b|\bjewel\b|\bmuse\b|\bnova\b|\boctane\b|\bradar\b|\bradium\b|\brave\b|\brail.*lover\b|\bripper\b|\brival\b|\brogue\b|\brush\b|\bsol\b|\bsonar\b|\bspectre\b|\bvega\b/i, [:kite_harnesses, :kitesurfing]],
+  [/hip.*belt|foot.*protector|\bfootstrap\b|safety.*footstrap|v-footstrap/i,              [:kite_spare, :kitesurfing]],
+
+  # ---- ION KITE ACCESSORIES -------------------------------------------
+  [/handle.*pass.*leash|surf.*ring.*harness|roof.*rack|roof.*strap|car.*rack/i,           [:kite_spare, :kitesurfing]],
+  [/connector.*loop.*spectre|flaps.*spectre|pad.*spectre|repl.*webbing.*spectre|washer.*set.*spectre/i, [:harness_parts, :windsurf_harnesses, :windsurf]],
+
+  # ---- SUN PROTECTION -------------------------------------------------
+  [/island.*tribe|spf.*lip|spf.*lotion|sunscreen|sun.*cream/i,                           [:sun_protection, :apparel]],
+
+  # ---- E-FOIL ---------------------------------------------------------
+  [/e-?foil.*set|\bfliteboard\b|\bwaydoo\b|\blift.*efoil/i, [:efoil_sets, :efoil]],
   [/e-?foil/i,                                          [:efoil_spare, :efoil]],
 ].freeze
 
