@@ -1,7 +1,8 @@
 <% shared_class = "pdp-sale-badge z-10 product-label" %>
 <% mobile_pdp ||= false %>
 
-<% if !product.available? || (@variant_from_options.present? && !@variant_from_options.in_stock?) %>
+<% all_variants_sold_out = product.available? && product.variants.none? { |v| v.in_stock? || v.backorderable? } && !product.master.in_stock? && !product.master.backorderable? %>
+<% if !product.available? || all_variants_sold_out || (@variant_from_options.present? && !@variant_from_options.in_stock?) %>
   <div class='<%= shared_class %> product-label--sold-out' style="background:#999;color:#fff;">
     <%= Spree.t(:sold_out) %>
   </div>

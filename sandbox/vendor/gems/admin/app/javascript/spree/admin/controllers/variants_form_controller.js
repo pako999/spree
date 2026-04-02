@@ -144,7 +144,7 @@ export default class extends CheckboxSelectAll {
       const internalName = checkbox.value
 
       this.ignoredVariants.add(internalName)
-      const variant = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
+      const variant = this.variantsContainerTarget.querySelector(`[data-variant-name="${this.escapeAttrValue(internalName)}"]`)
 
       const nestingLevel = internalName.split('/').length
       if (nestingLevel === 1) {
@@ -304,7 +304,7 @@ export default class extends CheckboxSelectAll {
     const { variantName } = event.target.closest('[data-variants-form-target="variant"]').dataset
     const stockLocationId = event.target.dataset.stockLocationId
     const childrenCountOnHand = this.variantsContainerTarget.querySelectorAll(
-      `[data-variant-name^="${variantName}/"] input[data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
+      `[data-variant-name^="${this.escapeAttrValue(variantName)}/"] input[data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
     )
     const parentCountOnHand = event.target.value
 
@@ -327,7 +327,7 @@ export default class extends CheckboxSelectAll {
     const { variantName } = event.target.closest('[data-variants-form-target="variant"]').dataset
     const currency = event.target.dataset.currency
     const childrenPrices = this.variantsContainerTarget.querySelectorAll(
-      `[data-variant-name^="${variantName}/"] input[data-slot="[prices_attributes][${currency}][amount]_input"]`
+      `[data-variant-name^="${this.escapeAttrValue(variantName)}/"] input[data-slot="[prices_attributes][${currency}][amount]_input"]`
     )
     const parentPrice = event.target.value
 
@@ -347,7 +347,7 @@ export default class extends CheckboxSelectAll {
     const { variantName } = event.target.closest('[data-variants-form-target="variant"]').dataset
 
     const children = this.variantsContainerTarget.querySelectorAll(
-      `[data-variant-name^="${variantName}/"] input[type="checkbox"]`
+      `[data-variant-name^="${this.escapeAttrValue(variantName)}/"] input[type="checkbox"]`
     )
 
     children.forEach((child) => {
@@ -419,12 +419,12 @@ export default class extends CheckboxSelectAll {
 
   updateParentPriceRange(variantName, currency) {
     const parentPriceEl = this.variantsContainerTarget.querySelector(
-      `div:not(.nested)[data-variant-name="${variantName}"] [data-slot="[prices_attributes][${currency}][amount]_input"]`
+      `div:not(.nested)[data-variant-name="${this.escapeAttrValue(variantName)}"] [data-slot="[prices_attributes][${currency}][amount]_input"]`
     )
     if (!parentPriceEl) return
 
     const currentVariantKeys = Array.from(
-      this.variantsContainerTarget.querySelectorAll(`[data-variant-name^="${variantName}/"]`)
+      this.variantsContainerTarget.querySelectorAll(`[data-variant-name^="${this.escapeAttrValue(variantName)}/"]`)
     ).map((el) => el.dataset.variantName)
 
     const pricesVariation = new Set(
@@ -454,12 +454,12 @@ export default class extends CheckboxSelectAll {
 
   updateParentStockSum(variantName, stockLocationId) {
     const parentStockEl = this.variantsContainerTarget.querySelector(
-      `div:not(.nested)[data-variant-name="${variantName}"] [data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
+      `div:not(.nested)[data-variant-name="${this.escapeAttrValue(variantName)}"] [data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
     )
     if (!parentStockEl) return
 
     const currentVariantKeys = Array.from(
-      this.variantsContainerTarget.querySelectorAll(`[data-variant-name^="${variantName}/"]`)
+      this.variantsContainerTarget.querySelectorAll(`[data-variant-name^="${this.escapeAttrValue(variantName)}/"]`)
     ).map((el) => el.dataset.variantName)
 
     if (currentVariantKeys.length === 0) {
@@ -506,7 +506,7 @@ export default class extends CheckboxSelectAll {
           }
           currentVariants.add(internalName)
 
-          const existingVariant = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
+          const existingVariant = this.variantsContainerTarget.querySelector(`[data-variant-name="${this.escapeAttrValue(internalName)}"]`)
           if (existingVariant) {
             if (i === 0) {
               if (nestingLevel > 1) {
@@ -562,7 +562,7 @@ export default class extends CheckboxSelectAll {
           if (i > 0) {
             const { internalName: parentInternalName } = this.calculateVariantName(variant, keys, 0)
             const variantsInThisGroup = this.variantsContainerTarget.querySelectorAll(
-              `[data-variant-name^="${parentInternalName}/"]`
+              `[data-variant-name^="${this.escapeAttrValue(parentInternalName)}/"]`
             )
             if (variantsInThisGroup.length > 0) {
               // If there are already variants in this option type then we want to render this variant after the last variant in the group
@@ -570,7 +570,7 @@ export default class extends CheckboxSelectAll {
             } else {
               // Otherwise we want to render this variant after the parent variant
               previousVariant = this.variantsContainerTarget.querySelector(
-                `[data-variant-name="${parentInternalName}"]`
+                `[data-variant-name="${this.escapeAttrValue(parentInternalName)}"]`
               )
             }
             variantTarget.classList.add('nested')
@@ -653,6 +653,12 @@ export default class extends CheckboxSelectAll {
         this.updateShopLocationCountOnHand()
       })
     }
+  }
+
+  // Escape a variant name for safe use as a CSS attribute selector value.
+  // Double-quotes and backslashes inside [attr="VALUE"] break the selector.
+  escapeAttrValue(name) {
+    return name.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   }
 
   createInputsForVariant(keys, variant, i) {
