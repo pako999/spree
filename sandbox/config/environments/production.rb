@@ -21,8 +21,9 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :cloudflare
+  # Store uploaded files on the persistent local volume (see deploy.yml volumes).
+  # All existing blobs are on local disk; R2 has a checksum bug with aws-sdk-s3 3.x.
+  config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
