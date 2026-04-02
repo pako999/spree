@@ -3,7 +3,8 @@
 
 <% if color_option.present? && variants_with_color.length > 0 %>
   <% cache spree_storefront_base_cache_scope.call(variants_with_color) do %>
-    <% color_values = product.option_values.find_all { |ov| ov.option_type_id == color_option.id }.uniq %>
+    <%# Use preloaded variant option_values instead of firing a DB query via product.option_values through association %>
+    <% color_values = product.variants.flat_map(&:option_values).select { |ov| ov.option_type_id == color_option.id }.uniq %>
     <%= raw(Spree::ColorsPreviewStylesPresenter.new(color_values.map { |o| { name: o.presentation, filter_name: o.name } }).to_s) %>
 
     <div class="product-card-color-swatches pt-2 flex flex-wrap gap-0.5" data-plp-variant-picker-target="colorsContainer">
