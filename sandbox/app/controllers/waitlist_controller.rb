@@ -1,7 +1,8 @@
 class WaitlistController < ApplicationController
-  # CSRF protection is enforced. The frontend JS must include:
-  #   headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content }
-
+  # The CSRF meta tags live in a <template> outside <html> (cache-safe pattern).
+  # application.js injects them into <head> so @rails/request.js can find them.
+  # null_session is a graceful fallback: clears session instead of raising 422.
+  protect_from_forgery with: :null_session
 
   def create
     variant = Spree::Variant.find_by(id: params[:variant_id])
