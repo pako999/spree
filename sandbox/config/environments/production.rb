@@ -60,6 +60,9 @@ Rails.application.configure do
   # Canonical host for all URL generation (controllers, Active Storage, mailers).
   config.action_controller.default_url_options = { host: "www.surf-store.com", protocol: "https" }
 
+  # Host for Active Storage URL generation outside of request context (console, jobs, scripts).
+  config.active_storage.url_options = { host: "www.surf-store.com", protocol: "https" }
+
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "www.surf-store.com", protocol: "https" }
   config.action_mailer.asset_host = "https://www.surf-store.com"
