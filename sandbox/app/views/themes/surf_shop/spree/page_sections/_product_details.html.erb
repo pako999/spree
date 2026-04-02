@@ -308,14 +308,16 @@
         </div>
       </div>
 
-      <%# Description rendered full-width below product grid %>
-      <% section.blocks.each do |block| %>
-        <% next unless block.class.name == 'Spree::PageBlocks::Products::Description' %>
-        <div class="mt-10" <%= block_attributes(block) %>>
-          <%= render 'spree/products/description', product: product, block: block, section: section %>
-        </div>
-      <% end %>
     </div>
   </div>
   <%= render 'spree/products/json_ld', product: product, selected_variant: @selected_variant %>
 </turbo-frame>
+
+<%# Description rendered OUTSIDE turbo-frame so AI crawlers and SEO bots always see it %>
+<%# (description is product-level, not variant-specific, so turbo-frame refresh is not needed) %>
+<% section.blocks.each do |block| %>
+  <% next unless block.class.name == 'Spree::PageBlocks::Products::Description' %>
+  <div class="page-container mt-10" <%= block_attributes(block) %>>
+    <%= render 'spree/products/description', product: product, block: block, section: section %>
+  </div>
+<% end %>
