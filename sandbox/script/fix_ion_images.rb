@@ -123,23 +123,17 @@ rows_by_handle.each do |handle, rows|
 
   total += 1
 
-  # Count current valid images (local service only)
-  current_images = product.master.images.joins(attachment_attachment: :blob)
-    .where(active_storage_blobs: { service_name: 'local' }).count
-  variant_images = Spree::Variant.where(product: product, is_master: false)
-    .joins(:images => { attachment_attachment: :blob })
-    .where(active_storage_blobs: { service_name: 'local' }).count
+  # After purging cloudflare blobs, all remaining images are local.
+  # Re-download if master has 0 images (all were lost to R2).
+  current_images = product.master.images.count
 
-  # Collect expected images from CSV
-  expected_product_imgs = rows.map { |r| r['Image Src'] }.compact.uniq.reject(&:empty?)
-  expected_variant_imgs = rows.map { |r| r['Variant Image'] }.compact.uniq.reject(&:empty?)
-
-  if current_images >= expected_product_imgs.size && variant_images >= expected_variant_imgs.size
+  if current_images > 0
     skipped += 1
     next
   end
 
-  print "\n  [#{total}] #{product.name} (has #{current_images}/#{expected_product_imgs.size} product imgs, #{variant_images}/#{expected_variant_imgs.size} variant imgs)"
+  expected_product_imgs = rows.map { |r| r['Image Src'] }.compact.uniq.reject(&:empty?)
+  print "\n  [#{total}] #{product.name} (0/#{expected_product_imgs.size} product imgs)"
 
   attached_images = {}
 
