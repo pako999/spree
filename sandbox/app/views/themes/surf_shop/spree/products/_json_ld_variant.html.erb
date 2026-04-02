@@ -4,9 +4,51 @@
   <% if variant.sku.present? %>
     "sku": <%= variant.sku.to_json.html_safe %>,
   <% end %>
-  "availability": "http://schema.org/<%= variant.available? ? 'InStock' : 'OutOfStock' %>",
+  "availability": "https://schema.org/<%= variant.available? ? 'InStock' : 'OutOfStock' %>",
+  "itemCondition": "https://schema.org/NewCondition",
   "price": <%= variant.amount_in(current_currency).to_json.html_safe %>,
   "priceCurrency": <%= current_currency.to_json.html_safe %>,
-  "url": <%= spree.product_url(product, variant_id: variant.id, host: current_store.url_or_custom_domain).to_json.html_safe %>
+  "priceValidUntil": "<%= (variant.updated_at + 1.year).strftime('%Y-%m-%d') %>",
+  "url": <%= spree.product_url(product, variant_id: variant.id, host: current_store.url_or_custom_domain).to_json.html_safe %>,
+  "seller": {
+    "@type": "Organization",
+    "name": <%= current_store.name.to_json.html_safe %>,
+    "url": <%= current_store.formatted_url_or_custom_domain.to_json.html_safe %>
+  },
+  "hasMerchantReturnPolicy": {
+    "@type": "MerchantReturnPolicy",
+    "applicableCountry": "SI",
+    "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+    "merchantReturnDays": 30,
+    "returnMethod": "https://schema.org/ReturnByMail",
+    "returnFees": "https://schema.org/FreeReturn"
+  },
+  "shippingDetails": {
+    "@type": "OfferShippingDetails",
+    "shippingRate": {
+      "@type": "MonetaryAmount",
+      "value": "0",
+      "currency": "EUR"
+    },
+    "shippingDestination": {
+      "@type": "DefinedRegion",
+      "addressCountry": "EU"
+    },
+    "deliveryTime": {
+      "@type": "ShippingDeliveryTime",
+      "handlingTime": {
+        "@type": "QuantitativeValue",
+        "minValue": 0,
+        "maxValue": 1,
+        "unitCode": "DAY"
+      },
+      "transitTime": {
+        "@type": "QuantitativeValue",
+        "minValue": 1,
+        "maxValue": 5,
+        "unitCode": "DAY"
+      }
+    }
+  }
 }
 <% end %>

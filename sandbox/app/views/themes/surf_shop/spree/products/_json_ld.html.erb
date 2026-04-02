@@ -1,7 +1,7 @@
 <script type="application/ld+json" data-test-id="product-json-ld">
   <% first_or_default_variant = product.first_or_default_variant(current_currency) %>
   {
-    "@context": "https://schema.org/",
+    "@context": "https://schema.org",
     "@type": "Product",
     "name": <%= product.name.to_json.html_safe %>,
     "url": <%= spree.product_url(product, host: current_store.url_or_custom_domain).to_json.html_safe %>,

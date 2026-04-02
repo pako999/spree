@@ -1,0 +1,43 @@
+# Surf-store.com
+
+> Surf-store.com is a European water sports equipment retailer specialising in
+> kitesurfing, windsurfing, wingsurfing, SUP, and electric foiling gear.
+> Operated by Sport group d.o.o., Maribor, Slovenia. Trading since 2003.
+> Official dealer of Duotone, ION, Fanatic, Neilpryde, Cabrinha, Nobile,
+> Point7, Tabou, JP Australia, and Gaastra.
+> Free EU shipping from €99. Free worldwide shipping from €299. 30-day returns.
+
+## About
+
+- [About Surf-store.com](https://www.surf-store.com/policies/about-us): Company history, mission, and team
+- [Contact](https://www.surf-store.com/policies/contact): info@surf-store.com
+
+## Shopping Policies
+
+- [Shipping Policy](https://www.surf-store.com/policies/shipping-policy): EU free shipping from €99, worldwide from €299
+- [Returns & Refunds](https://www.surf-store.com/policies/returns-refund-policy): 30-day free returns on all items
+- [Terms & Conditions](https://www.surf-store.com/policies/terms-and-conditions): Full legal terms
+- [Privacy Policy](https://www.surf-store.com/policies/privacy-policy): GDPR-compliant data policy
+
+## Product Categories
+
+- [Kitesurfing](https://www.surf-store.com/t/categories/kitesurfing): Kites, boards, bars, harnesses, foils, and accessories
+- [Windsurfing](https://www.surf-store.com/t/categories/windsurf): Boards, sails, foils, masts, and accessories
+- [Wingsurfing](https://www.surf-store.com/t/categories/wingfoil): Wings, boards, foil packages, and accessories
+- [SUP](https://www.surf-store.com/t/categories/sup-board): Stand-up paddleboards, paddles, and accessories
+- [Wetsuits](https://www.surf-store.com/t/categories/wetsuits): Wetsuits for men, women, and kids from ION and Neilpryde
+- [E-Foil](https://www.surf-store.com/t/categories/e-foil): Electric foil boards and spare parts
+- [Apparel](https://www.surf-store.com/t/categories/apparel): Water sports clothing and accessories
+
+## Brands
+
+- [Duotone](https://www.surf-store.com/t/brands/duotone-kiteboarding): Kites, boards, wings, and accessories
+- [ION](https://www.surf-store.com/t/brands/ion): Wetsuits, harnesses, and protection
+- [Fanatic](https://www.surf-store.com/t/brands/fanatic-windsurfing): Boards for SUP and windsurfing
+- [Neilpryde](https://www.surf-store.com/t/brands/neilpryde): Sails, kites, and wetsuits
+- [Cabrinha](https://www.surf-store.com/t/brands/cabrinha): Kite systems and foils
+- [Nobile](https://www.surf-store.com/t/brands/nobile): Kiteboards and snowkite equipment
+
+## Sitemap
+
+- [Full Sitemap](https://www.surf-store.com/sitemap.xml): Complete URL index

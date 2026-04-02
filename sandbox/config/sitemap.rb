@@ -1,44 +1,35 @@
 # Set the host name for URL generation
-# We use a robust fallback to ensure it works across different domain setups
 SitemapGenerator::Sitemap.default_host = "https://www.surf-store.com"
 SitemapGenerator::Sitemap.sitemaps_host = "https://www.surf-store.com"
 
 SitemapGenerator::Sitemap.create do
-  # We use the Spree engine's route helpers
   spree = Spree::Core::Engine.routes.url_helpers
 
-  # Fetch all supported locales from the default store
-  begin
-    store = Spree::Store.default
-    locales = store.supported_locales_list
-  rescue
-    locales = ['en'] # Fallback
+  # Homepage — highest priority, always first
+  add '/', changefreq: 'daily', priority: 1.0
+
+  # Policy / static pages
+  Spree::Policy.find_each do |policy|
+    add "/policies/#{policy.slug}", changefreq: 'monthly', priority: 0.6
   end
 
-  # Iterate through each locale to generate localized URLs
-  locales.each do |locale|
-    I18n.with_locale(locale) do
-      # Add Homepage for this locale
-      add spree.root_path(locale: locale), changefreq: 'daily', priority: 1.0
+  # Products — default (English) locale only, no locale prefix
+  I18n.with_locale(:en) do
+    Spree::Product.active.find_each do |product|
+      add spree.product_path(product),
+          lastmod: product.updated_at,
+          changefreq: 'daily',
+          priority: 0.8
+    end
 
-      # Add Products
-      # We only index active, non-deleted products
-      Spree::Product.active.find_each do |product|
-        add spree.product_path(product, locale: locale), 
-            lastmod: product.updated_at, 
-            changefreq: 'daily', 
-            priority: 0.8
-      end
-
-      # Add Taxons (Categories)
-      # We exclude the root taxon (usually "Categories" or "Brands")
-      Spree::Taxon.find_each do |taxon|
-        next if taxon.root?
-        add spree.nested_taxons_path(taxon, locale: locale), 
-            lastmod: taxon.updated_at, 
-            changefreq: 'weekly', 
-            priority: 0.5
-      end
+    # Categories and brand taxons — exclude tag/filter pages
+    Spree::Taxon.includes(:taxonomy).find_each do |taxon|
+      next if taxon.root?
+      next if taxon.taxonomy&.name&.downcase == 'tags'
+      add spree.nested_taxons_path(taxon),
+          lastmod: taxon.updated_at,
+          changefreq: 'weekly',
+          priority: 0.7
     end
   end
 end

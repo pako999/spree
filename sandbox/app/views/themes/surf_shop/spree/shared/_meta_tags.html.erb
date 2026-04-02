@@ -2,6 +2,11 @@
   <meta name="robots" content="noindex, nofollow">
 <% end %>
 
+<%# Noindex tag/filter pages (thin content — not worth indexing) %>
+<% if @taxon.present? && @taxon.taxonomy&.name&.downcase == 'tags' %>
+  <meta name="robots" content="noindex, follow">
+<% end %>
+
 <% og_title = title.presence || current_store.name %>
 <% og_url = canonical_href(current_store.url_or_custom_domain) %>
 <% og_type = 'website' %>
@@ -27,13 +32,18 @@
   <% else %>
     <% image_url = spree_image_url(page_image, width: 1200, height: 630) %>
   <% end %>
+<% elsif current_store.logo && current_store.logo&.attached? && current_store.logo&.variable? %>
+  <%# Fallback: use store logo for pages without a specific image (e.g. homepage) %>
+  <% image_url = spree_image_url(current_store.logo, width: 1200, height: 630) %>
+<% end %>
 
+<% if image_url.present? %>
   <meta property="og:image" content="<%= image_url %>">
   <meta property="og:image:secure_url" content="<%= image_url %>">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="<%= title.gsub(current_store.name, '') %>">
-  <meta property="twitter:image" content="<%= image_url %>" />
+  <meta property="og:image:alt" content="<%= h(og_title) %>">
+  <meta name="twitter:image" content="<%= image_url %>">
 <% end %>
 
 <% if @product.present? %>
