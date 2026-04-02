@@ -8,6 +8,7 @@ export default class extends Controller {
   }
 
   toggleClearButton() {
+    if (!this.hasInputTarget || !this.hasClearTarget) return
     const hasValue = this.inputTarget.value.length > 0
     this.clearTarget.classList.toggle("hidden", !hasValue)
   }
