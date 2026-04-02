@@ -5,7 +5,8 @@ Rails.application.configure do
   config.content_security_policy do |policy|
     # Trusted script sources: self + common Spree/Hotwire CDN origins
     # unsafe_inline needed for page-section custom code blocks (stored in DB, cannot receive nonce)
-    policy.script_src  :self, :https, :unsafe_inline,
+    # blob: needed for ES module shims (importmap via module-shims.js creates blob: worker URLs)
+    policy.script_src  :self, :https, :unsafe_inline, :blob,
                         'https://unpkg.com',
                         'https://cdn.jsdelivr.net'
 
@@ -22,11 +23,18 @@ Rails.application.configure do
     policy.object_src  :none
 
     # XHR/fetch/WebSockets: self + Saferpay + Gemini API + Cloudflare R2 (Active Storage direct upload)
+    # wss: needed for ActionCable/Hotwire live updates in admin
     policy.connect_src :self,
+                        'wss:',
                         'https://www.saferpay.com',
                         'https://test.saferpay.com',
                         'https://generativelanguage.googleapis.com',
                         'https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com'
+
+    # Frames: allow YouTube embeds in product descriptions / TinyMCE
+    policy.frame_src   :self,
+                        'https://www.youtube.com',
+                        'https://www.youtube-nocookie.com'
 
     # Frame ancestors: allows same-origin embedding (required for theme builder)
     policy.frame_ancestors :self
