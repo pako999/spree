@@ -141,13 +141,12 @@
                         end
                         product_available = product.variants.any? { |v| v.in_stock? || v.backorderable? } || product.available?
                       %>
+                      <% if product_available %>
                       <div style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background-color: #f3f4f6; border-radius: 6px;">
-                        <% if product_available %>
-                          <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #16a34a; font-size: 1.2rem;">✓</span>
-                            <span style="color: #16a34a; font-weight: 600; font-size: 0.875rem;">Immediate Availability</span>
-                          </div>
-                        <% end %>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: #16a34a; font-size: 1.2rem;">✓</span>
+                          <span style="color: #16a34a; font-weight: 600; font-size: 0.875rem;">Immediate Availability</span>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                           <span style="font-size: 1.1rem;">🚚</span>
                           <div>
@@ -159,6 +158,7 @@
                           </div>
                         </div>
                       </div>
+                      <% end %>
                       <div class="flex w-full" data-controller='sticky-button'>
                         <%= render 'spree/products/add_to_cart_button', product: product, selected_variant: @selected_variant, sticky_button_classes: "w-full" %>
                         <%= render 'spree/products/add_to_wishlist', variant: current_variant, css_classes: 'btn-secondary ml-5 h-12 !py-0 !px-3 border-default', icon_size: 24 %>
