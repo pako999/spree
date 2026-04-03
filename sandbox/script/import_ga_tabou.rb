@@ -28,18 +28,18 @@ CATEGORY_MAP = {
   'Kites'                => 'categories/kitesurfing/kites',
   'Kiteboards'           => 'categories/kitesurfing/kiteboards',
   'Wings'                => 'categories/wingfoil/wings',
-  'Harness'              => 'categories/windsurf/windsurf-harnesses',
+  'Harness'              => 'categories/windsurf/windsurf-harnesses/windsurf-harness',
   'Foil'                 => 'categories/wingfoil/wing-foils',
   'Wingfoil Boards'      => 'categories/wingfoil/wing-boards',
-  'Windsurfmasts'        => 'categories/windsurf/windsurf-gear',
-  'WindsurfingBooms'     => 'categories/windsurf/windsurf-gear',
+  'Windsurfmasts'        => 'categories/windsurf/windsurf-gear/windsurf-mast',
+  'WindsurfingBooms'     => 'categories/windsurf/windsurf-gear/windsurf-boom',
   'Boardaccessories'     => 'categories/windsurf/windsurf-accessories',
   'Kiteboardaccessories' => 'categories/kitesurfing/kite-accessories',
-  'Mastaccessories'      => 'categories/windsurf/windsurf-accessories',
+  'Mastaccessories'      => 'categories/windsurf/windsurf-gear/windsurf-extension',
   'Boomaccessories'      => 'categories/windsurf/windsurf-accessories',
   'Accessories'          => 'categories/windsurf/windsurf-accessories',
-  'Riggs'                => 'categories/windsurf/windsurf-gear',
-  'Kiteparts'            => 'categories/kitesurfing/kite-accessories',
+  'Riggs'                => 'categories/windsurf/windsurf-gear/windsurf-rig',
+  'Kiteparts'            => 'categories/kitesurfing/kite-accessories/spare-parts',
 }.freeze
 
 def parse_price(str)
@@ -49,6 +49,34 @@ end
 
 def image_urls_from_row(row)
   (0..6).map { |i| row["ImageURLpng#{i}"].presence }.compact
+end
+
+def fetch_description_html(url)
+  return nil if url.blank?
+  uri = URI.parse(url)
+  tries = 0
+  loop do
+    tries += 1
+    return nil if tries > 3
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', open_timeout: 10, read_timeout: 20) do |http|
+      http.request(Net::HTTP::Get.new(uri))
+    end
+    case res
+    when Net::HTTPSuccess
+      html = res.body.to_s.force_encoding('UTF-8').encode('UTF-8', invalid: :replace, undef: :replace)
+      html.gsub!(/<meta[^>]*>/i, '')
+      html.gsub!(/<script[^>]*>.*?<\/script>/mi, '')
+      html.gsub!(/<style[^>]*>.*?<\/style>/mi, '')
+      return html.strip.presence
+    when Net::HTTPRedirection
+      uri = URI.parse(res['location'])
+    else
+      return nil
+    end
+  end
+rescue => e
+  puts " [desc err: #{e.message.truncate(50)}]"
+  nil
 end
 
 def download_image(url_str)
@@ -182,11 +210,11 @@ products_data.each_with_index do |group, idx|
 
   print "\n[#{idx + 1}/#{total}] #{product_name} (#{variants.size} variants)"
 
-  # Description: store URL from V row if available
+  # Description: fetch real HTML from cdn.gaastra.io
   description = nil
   if v_row && v_row['DESCRIPTION'].present?
     desc_url = v_row['DESCRIPTION'].strip
-    description = "<p><a href=\"#{desc_url}\" target=\"_blank\" rel=\"noopener\">View full product description</a></p>"
+    description = fetch_description_html(desc_url)
   end
 
   # Slug
