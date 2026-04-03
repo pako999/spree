@@ -1,0 +1,104 @@
+<div data-controller="checkout-summary" class="w-full">
+  <div data-controller='toggle' data-toggle-class="summary-folded" class="w-full summary-wrapper flex flex-col leading-none" data-toggle-target="toggleable" data-checkout-summary-target="wrapper">
+    <button data-action='click->toggle#toggle touch->toggle#toggle' class="w-full lg:hidden relative z-[999] bg-accent", id="toggle-order-summary">
+      <div class="h-full flex justify-between text-sm items-center">
+        <p class="flex gap-1 chevron-summary items-center">
+          <%= heroicon("shopping-bag", variant: :outline) %>
+          <span class="show-summary hidden">
+            <%= Spree.t(:show) %>
+          </span>
+          <span class="hide-summary">
+            <%= Spree.t(:hide) %>
+          </span>
+          <span class="lowercase"><%= Spree.t(:order_summary) %></span>
+        </p>
+        <span class="font-bold" id='summary-order-total'>
+          <%= @order.display_total.to_html %>
+        </span>
+      </div>
+    </button>
+    <div class="summary overflow-hidden transition-[height] h-0 p-0" data-checkout-summary-target="container">
+      <div class="summary-content flex flex-col gap-5" data-checkout-summary-target="content">
+        <%= render 'line_items', order: @order %>
+
+        <div data-checkout-summary-target="coupon_area" class="flex flex-col gap-5">
+          <% unless action_name == 'complete' %>
+            <%= render 'coupon_code', promotion: @order.valid_coupon_promotions.first %>
+            <%= render 'store_credit' %>
+          <% end %>
+          <%= render 'summary', order: @order %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# === CHECKOUT TRUST BADGES === %>
+  <div class="hidden lg:block" style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+
+    <%# WhatsApp Live Support %>
+    <a href="https://wa.me/38671604980" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background-color: #f3f4f6; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 12px;" onmouseover="this.style.backgroundColor='#e8f5e9'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #0284c7); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-weight: 700; font-size: 0.95rem;">M</div>
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-weight: 700; font-size: 0.8rem;">Need help? Ask Marko</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <span style="font-size: 0.7rem; color: #6b7280;">Replies in 1-10 min on working days</span>
+      </div>
+    </a>
+
+    <%# Trust Badges %>
+    <div style="display: flex; flex-direction: column; gap: 0; background: #f3f4f6; border-radius: 8px; overflow: hidden;">
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #e5e7eb;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">Since 2003</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">Over 20 years serving watersports community</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #e5e7eb;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">Official Authorized Dealer</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">Genuine products from top brands</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #e5e7eb;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">Free Shipping</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">Free EU delivery on orders over €99</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #e5e7eb;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">30-Day Returns</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">Changed your mind? No problem</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #e5e7eb;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">Secure Checkout</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">SSL encrypted, safe payments</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <div>
+          <span style="font-weight: 700; font-size: 0.8rem; color: #1a2332;">6000+ Happy Customers</span>
+          <span style="font-size: 0.7rem; color: #6b7280; display: block;">Trusted across Europe since 2003</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
