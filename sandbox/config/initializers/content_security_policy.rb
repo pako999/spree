@@ -8,7 +8,10 @@ Rails.application.configure do
     # blob: needed for ES module shims (importmap via module-shims.js creates blob: worker URLs)
     policy.script_src  :self, :https, :unsafe_inline, :blob,
                         'https://unpkg.com',
-                        'https://cdn.jsdelivr.net'
+                        'https://cdn.jsdelivr.net',
+                        'https://www.googletagmanager.com',
+                        'https://www.google-analytics.com',
+                        'https://esm.sh'
 
     # Images: allow self, https, data URIs (for inline images and Active Storage)
     policy.img_src     :self, :https, :data, :blob
@@ -24,12 +27,18 @@ Rails.application.configure do
 
     # XHR/fetch/WebSockets: self + Saferpay + Gemini API + Cloudflare R2 (Active Storage direct upload)
     # wss: needed for ActionCable/Hotwire live updates in admin
+    # Google Analytics 4 uses region1.analytics.google.com + www.google-analytics.com for data collection
     policy.connect_src :self,
                         'wss:',
                         'https://www.saferpay.com',
                         'https://test.saferpay.com',
                         'https://generativelanguage.googleapis.com',
-                        'https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com'
+                        'https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com',
+                        'https://www.google-analytics.com',
+                        'https://analytics.google.com',
+                        'https://region1.analytics.google.com',
+                        'https://stats.g.doubleclick.net',
+                        'https://www.googletagmanager.com'
 
     # Frames: allow YouTube embeds in product descriptions / TinyMCE
     policy.frame_src   :self,
