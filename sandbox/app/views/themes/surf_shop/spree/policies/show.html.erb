@@ -53,17 +53,33 @@
       <%# -- Shipping Policy: carrier info + logos -- %>
       <h2 class="text-xl font-semibold mb-4">Our Shipping Partners</h2>
       <div class="flex flex-wrap gap-4 mb-8">
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px 24px;display:flex;align-items:center;gap:10px;min-width:140px">
-          <span style="background:#FF6600;color:#fff;font-weight:800;font-size:1.1rem;padding:4px 10px;border-radius:4px;letter-spacing:1px">GLS</span>
+        <%# GLS %>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 28px;display:flex;align-items:center;justify-content:center;min-width:130px;background:#fff;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 48" width="100" height="40" aria-label="GLS">
+            <rect width="120" height="48" rx="6" fill="#FF6600"/>
+            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#fff" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="26" letter-spacing="2">GLS</text>
+          </svg>
         </div>
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px 24px;display:flex;align-items:center;gap:10px;min-width:140px">
-          <span style="background:#DC0032;color:#fff;font-weight:800;font-size:1.1rem;padding:4px 10px;border-radius:4px;letter-spacing:1px">DPD</span>
+        <%# DPD — real SimpleIcons path, brand red #DC0032 %>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 28px;display:flex;align-items:center;justify-content:center;min-width:130px;background:#fff;">
+          <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="52" height="52" aria-label="DPD" fill="#DC0032">
+            <title>DPD</title>
+            <path d="M16.01 10.71a.364.364 0 01-.343-.006l-.558-.331a.43.43 0 01-.182-.312l-.014-.65a.363.363 0 01.165-.3l6.7-3.902L12.377.085A.799.799 0 0012 0a.798.798 0 00-.377.085l-9.4 5.124 10.53 6.13c.098.054.172.181.172.295v8.944c0 .112-.08.241-.178.294l-.567.315c-.171.062-.256.043-.361 0l-.569-.315a.362.362 0 01-.175-.294v-7.973a.223.223 0 00-.095-.156L1.702 7.048v10.579c0 .236.167.528.371.648l9.556 5.636c.102.06.237.09.371.089a.745.745 0 00.371-.09l9.557-5.635a.835.835 0 00.37-.648V7.047Z"/>
+          </svg>
         </div>
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px 24px;display:flex;align-items:center;gap:10px;min-width:140px">
-          <span style="background:#351C15;color:#FFB500;font-weight:800;font-size:1.1rem;padding:4px 10px;border-radius:4px;letter-spacing:1px">UPS</span>
+        <%# UPS — real SimpleIcons path, brand brown #351C15 %>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 28px;display:flex;align-items:center;justify-content:center;min-width:130px;background:#fff;">
+          <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="52" height="52" aria-label="UPS" fill="#351C15">
+            <title>UPS</title>
+            <path d="M11.668 14.544l-.028-5.226c.138-.055.387-.111.608-.111.995 0 1.41.774 1.41 2.682 0 1.853-.47 2.765-1.438 2.765-.22 0-.441-.055-.552-.11zM3.124 7.438c4.203-3.843 9.29-4.866 14.018-4.866 1.3 0 2.544.083 3.76.194h-.028v11.253c0 2.184-.774 3.926-2.295 5.171-1.355 1.134-5.447 2.959-6.581 3.456-1.161-.525-5.253-2.378-6.581-3.456-1.493-1.244-2.295-3.014-2.295-5.171V7.438zm12.664 2.599c.028.912.276 1.576 1.687 2.406.747.442 1.051.747 1.051 1.272 0 .581-.387.94-1.023.94-.553 0-1.189-.304-1.631-.691v1.576c.553.304 1.217.525 1.88.525 1.687 0 2.433-1.189 2.461-2.267.028-.995-.249-1.742-1.659-2.571-.608-.387-1.134-.636-1.106-1.244 0-.581.525-.802.995-.802.581 0 1.161.332 1.521.691V8.378c-.304-.221-.94-.581-1.88-.553-1.135.028-2.296.829-2.296 2.212zm-5.834 9.484h1.714l-.028-3.594c.166.028.415.083.774.083 1.908 0 2.986-1.687 2.986-4.175 0-2.461-1.106-4.009-3.152-4.009-.94 0-1.687.221-2.295.608v11.087zm-5.945-6.166c0 1.797.829 2.71 2.516 2.71 1.051 0 1.908-.249 2.571-.691V7.991H7.41v6.387c-.194.138-.47.221-.802.221-.774 0-.885-.719-.885-1.189V7.991H4.009v5.364zM22.12 2.295v11.723c0 2.516-.94 4.645-2.765 6.111-1.549 1.3-6.332 3.429-7.355 3.871-1.023-.442-5.806-2.571-7.355-3.843-1.797-1.465-2.765-3.594-2.765-6.111V2.295C4.756.747 8.074 0 12 0s7.244.747 10.12 2.295zm-.304.221c-2.71-1.465-6-2.184-9.788-2.184s-7.079.746-9.788 2.184v11.502c0 2.433.912 4.452 2.627 5.862 1.576 1.3 6.581 3.484 7.161 3.76.581-.249 5.585-2.433 7.161-3.733 1.714-1.41 2.627-3.429 2.627-5.862V2.516zm-2.433 20.295c0 .47-.387.829-.829.829a.831.831 0 0 1-.829-.829c0-.47.387-.829.829-.829.441 0 .801.359.829.829zm-.166 0a.679.679 0 0 0-.664-.691c-.359 0-.664.332-.664.691 0 .359.304.664.664.664a.673.673 0 0 0 .664-.664zm-.553.055c.028.055.304.442.304.442h-.221s-.276-.387-.276-.415h-.028v.415h-.194v-.995l.304-.028c.249 0 .332.166.332.304s-.083.25-.221.277zm.027-.276c0-.055 0-.138-.166-.138h-.083v.304h.028c.194 0 .221-.083.221-.166z"/>
+          </svg>
         </div>
-        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px 24px;display:flex;align-items:center;gap:10px;min-width:140px">
-          <span style="background:#FFCC00;color:#CC0000;font-weight:800;font-size:1.1rem;padding:4px 10px;border-radius:4px;letter-spacing:1px">DHL</span>
+        <%# DHL — real SimpleIcons path, brand yellow bg + red text %>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 28px;display:flex;align-items:center;justify-content:center;min-width:130px;background:#FFCC00;">
+          <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="80" height="32" aria-label="DHL" fill="#CC0000">
+            <title>DHL</title>
+            <path d="M4.22 10.303l-.767 1.043h4.18c.21 0 .208.078.105.218-.105.142-.28.39-.386.534-.054.073-.154.207.171.207h1.71l.505-.69c.314-.426.028-1.312-1.095-1.312H4.22zm7.204 0l-1.475 2.002h5.39l1.473-2.002H14.61l-.843 1.146h-.985l.846-1.146h-2.203zm6.105 0l-1.474 2.002h2.334l1.472-2.002H17.53zm-12.845 1.3l-1.54 2.094h3.754c1.24 0 1.932-.844 2.145-1.136h-2.56c-.326 0-.226-.133-.172-.207.107-.143.283-.388.388-.53.104-.14.107-.22-.105-.22h-1.91zM0 12.562v.242h3.398l.176-.242H0zm9.762 0l-.836 1.136h2.203l.836-1.136H9.762zm3.185 0l-.836 1.136h2.203l.836-1.136h-2.203zm2.918 0s-.159.22-.238.326c-.276.374-.033.81.87.81h3.538l.834-1.136h-5.004zm5.408 0l-.177.242H24v-.242h-2.727zM0 13.01v.24h3.068l.178-.24H0zm20.943 0l-.175.24H24v-.24h-3.057zM0 13.457v.24h2.74l.176-.24H0zm20.615 0l-.177.24H24v-.24h-3.385z"/>
+          </svg>
         </div>
       </div>
 
