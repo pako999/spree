@@ -268,6 +268,9 @@ products_data.each_with_index do |group, idx|
           ovs << find_or_build_option_value(ot1, ov1_val) if ot1 && ov1_val.present?
           ovs << find_or_build_option_value(ot2, ov2_val) if ot2 && ov2_val.present?
 
+          # Skip stray rows that have no option values in an option-based product
+          next if ovs.empty?
+
           v = Spree::Variant.new(
             product:  product,
             sku:      sku,
