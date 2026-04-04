@@ -14,6 +14,13 @@ production:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
+  clear_solid_queue_failed_jobs:
+    # Discard failed executions older than 7 days to prevent table bloat.
+    # Jobs with discard_on handlers (FileNotFoundError, DeserializationError)
+    # will no longer land here, but existing backlog still needs clearing.
+    command: "SolidQueue::FailedExecution.where(created_at: ...7.days.ago).delete_all"
+    schedule: every day at 3am
+
   sync_bam_stock:
     class: SyncBamStockJob
     queue: default

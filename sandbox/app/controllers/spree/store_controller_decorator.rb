@@ -36,9 +36,11 @@ module Spree
     # Override to preload option_types and option_values so that color swatches
     # and variant pickers don't N+1 on every product card.
     # Also preload taxonomy so brand_taxon can resolve in-memory.
+    # taggings: needed by _label.html.erb (product.taggings.find { |t| t.context == 'labels' })
     def storefront_products_includes
       {
         taxons: [:taxonomy],
+        taggings: [],
         master: [:images, :prices, :stock_locations, { stock_items: :stock_location }],
         variants: [:images, :prices, :option_values, :stock_locations, { stock_items: :stock_location }],
         option_types: []
