@@ -30,3 +30,8 @@ production:
     class: SyncPrydeStockJob
     queue: default
     schedule: every 6 hours at minute 30
+
+  sync_gaastra_stock:
+    class: SyncGaastraStockJob
+    queue: default
+    schedule: every 3 hours at minute 45
