@@ -30,12 +30,17 @@ module Spree
 
     def strip_session_cookie_for_cdn
       # Session keys that are safe to ignore — they don't represent user-specific state
-      # that should prevent caching.
+      # that should prevent caching (e.g. no cart, no geo-detected currency).
       ignorable = %w[_csrf_token session_id flash]
       meaningful = session.to_hash.except(*ignorable)
       return if meaningful.any?
 
-      response.headers.delete('Set-Cookie')
+      # response.headers.delete('Set-Cookie') does NOT work: the session
+      # middleware (ActionDispatch::Session::CookieStore) adds the cookie
+      # AFTER Rails action processing completes, overwriting any header delete.
+      # request.session_options[:skip] = true tells the middleware not to set
+      # the cookie at all — this is the correct Rails way to suppress it.
+      request.session_options[:skip] = true
     end
   end
 end
