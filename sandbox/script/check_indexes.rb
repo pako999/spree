@@ -1,24 +1,25 @@
-sql = <<-SQL
-  SELECT tablename, indexname, idx_scan
-  FROM pg_stat_user_indexes
-  WHERE idx_scan = 0
-    AND schemaname = 'public'
-    AND tablename LIKE 'spree_%'
-  ORDER BY tablename, indexname
-  LIMIT 40
-SQL
-rows = ActiveRecord::Base.connection.execute(sql)
-rows.each { |r| puts "#{r['tablename'].ljust(45)} #{r['indexname']}" }
+# frozen_string_literal: true
+conn = ActiveRecord::Base.connection
 
-puts "\n--- Slow/sequential scan tables ---"
-sql2 = <<-SQL
-  SELECT relname, seq_scan, idx_scan,
-         n_live_tup
+puts "=== UNUSED INDEXES on spree_* tables ==="
+unused = conn.select_all(<<~SQL)
+  SELECT relname AS table_name, indexrelname AS index_name, idx_scan
+  FROM pg_stat_user_indexes
+  JOIN pg_index ON pg_index.indexrelid = pg_stat_user_indexes.indexrelid
+  WHERE idx_scan = 0
+    AND relname LIKE 'spree_%'
+    AND NOT pg_index.indisprimary
+  ORDER BY relname, indexrelname
+SQL
+unused.each { |r| puts "  #{r['table_name'].ljust(40)} #{r['index_name']}" }
+
+puts "\n=== HIGH seq_scan tables (potential missing indexes) ==="
+seqs = conn.select_all(<<~SQL)
+  SELECT relname AS table_name, seq_scan, idx_scan, n_live_tup AS row_count
   FROM pg_stat_user_tables
   WHERE relname LIKE 'spree_%'
     AND seq_scan > 100
   ORDER BY seq_scan DESC
   LIMIT 20
 SQL
-rows2 = ActiveRecord::Base.connection.execute(sql2)
-rows2.each { |r| puts "seq=#{r['seq_scan'].to_s.rjust(8)} idx=#{r['idx_scan'].to_s.rjust(8)} rows=#{r['n_live_tup'].to_s.rjust(8)} #{r['relname']}" }
+seqs.each { |r| puts "  seq=#{r['seq_scan'].to_s.rjust(7)} idx=#{r['idx_scan'].to_s.rjust(7)} rows=#{r['row_count'].to_s.rjust(7)} #{r['table_name']}" }
