@@ -2,9 +2,11 @@
   You will be redirected to Saferpay to complete your payment securely.
 </p>
 <script>
-  // Disable Turbo on the checkout form so the external Saferpay redirect works
+  // Disable Turbo on the checkout form so the external Saferpay redirect works.
+  // Must use the specific ID because document.querySelector('form') would match the
+  // search form in the site header (added to checkout layout) instead of the checkout form.
   (function() {
-    var form = document.querySelector('form');
+    var form = document.getElementById('checkout_form_payment') || document.querySelector('form[id^="checkout_form"]');
     if (form) { form.setAttribute('data-turbo', 'false'); }
   })();
 </script>
