@@ -10,7 +10,7 @@ require 'tempfile'
 require 'open-uri'
 
 CURRENCY = 'EUR'
-CSV_URL  = 'https://docs.google.com/spreadsheets/d/1dkeQj7Jxiv74wl8s8QpJeCJ17-uMlFxG9KQ9MpFT5TU/export?format=csv'
+CSV_URL  = 'https://docs.google.com/spreadsheets/d/1D47OyXHEJuYd3ULxB_W7CTldjor2LhfjNSz-7CJzF8w/export?format=csv'
 
 # Map Shopify tag category hints → Spree taxon permalink
 CATEGORY_TAG_MAP = {

@@ -102,3 +102,28 @@
   </div>
 
 </div>
+
+<% if ENV['KLAVIYO_PUBLIC_KEY'].present? && @order&.email.present? && action_name != 'complete' %>
+<script>
+  (function() {
+    var _learnq = window._learnq || [];
+    _learnq.push(['identify', { '$email': '<%= j @order.email %>' }]);
+    _learnq.push(['track', 'Started Checkout', <%= raw({
+      '$event_id'   => "#{@order.number}-started",
+      '$value'      => @order.total.to_f,
+      'CheckoutURL' => spree.checkout_url(host: current_store.url),
+      'ItemNames'   => @order.line_items.map(&:name),
+      'Items'       => @order.line_items.map { |li|
+        {
+          'ProductID'   => li.variant.product_id.to_s,
+          'SKU'         => li.variant.sku.to_s,
+          'ProductName' => li.name,
+          'Quantity'    => li.quantity,
+          'ItemPrice'   => li.price.to_f,
+          'RowTotal'    => li.amount.to_f
+        }
+      }
+    }.to_json) %>]);
+  })();
+</script>
+<% end %>
