@@ -8,13 +8,21 @@
             <% main_link = presenter.main_link %>
             <% next unless main_link.present? %>
             <% if presenter.columns.any? %>
-              <button
-                data-action="click->mobile-nav#openSubmenu touch->mobile-nav#openSubmenu"
-                data-title="<%= main_link.label.downcase.strip %>"
-                class='text-base text-left tracking-widest p-4 w-full uppercase border-default border-b flex justify-between items-center header--nav-link'>
-                <%= main_link.label %>
-                <%= render 'spree/shared/icons/chevron_right', size: 12 %>
-                <template>
+              <%# Split row: label = navigation link, chevron = submenu opener.
+                  The button wraps only the chevron so e.currentTarget always has the <template>. %>
+              <div class='border-default border-b flex items-center header--nav-link'>
+                <%= link_to spree_storefront_resource_url(main_link.linkable || main_link),
+                    class: 'flex-1 text-base tracking-widest p-4 uppercase',
+                    data: { title: main_link.label.downcase.strip } do %>
+                  <%= main_link.label %>
+                <% end %>
+                <button
+                  data-action="click->mobile-nav#openSubmenu touch->mobile-nav#openSubmenu"
+                  data-title="<%= main_link.label.downcase.strip %>"
+                  class='p-4 border-l border-default flex items-center justify-center'
+                  aria-label="Open <%= main_link.label %> submenu">
+                  <%= render 'spree/shared/icons/chevron_right', size: 12 %>
+                  <template>
                   <button data-action="click->mobile-nav#closeSubmenu touch->mobile-nav#closeSubmenu" class='flex gap-2 items-center text-base font-medium text-left tracking-widest p-4 w-full uppercase border-default border-b header--mega-nav-close-submenu bg-background sticky top-0'>
                     <%= render 'spree/shared/icons/chevron', size: 12 %>
                     <%= main_link.label %>
@@ -63,8 +71,9 @@
                       </div>
                     <% end %>
                   </div>
-                </template>
-              </button>
+                  </template>
+                </button>
+              </div>
             <% else %>
               <%= page_builder_link_to main_link, data: { title: main_link.label.downcase.strip }, class: "block text-base tracking-widest p-4 w-full uppercase border-default border-b header--nav-link", target: main_link.open_in_new_tab.presence && "_blank", rel: main_link.open_in_new_tab.presence && "noopener noreferrer" do %>
                 <span><%= main_link.label %></span>
