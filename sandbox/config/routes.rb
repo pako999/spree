@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # CSRF token refresh for pages served from Cloudflare cache (no session cookie)
+  get '/csrf_token', to: 'csrf_tokens#show'
+
   Spree::Core::Engine.add_routes do
     # AI Description routes
     namespace :admin do

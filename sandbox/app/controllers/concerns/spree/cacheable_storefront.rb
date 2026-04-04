@@ -21,6 +21,21 @@ module Spree
 
       # Cloudflare: cache for 2 minutes at edge, browser revalidates after 30s
       response.set_header('Cache-Control', 'public, max-age=30, s-maxage=120, stale-while-revalidate=60')
+
+      # Strip Set-Cookie so Cloudflare can cache the HTML response.
+      # Only safe when the session has no real data (no cart, no flash).
+      # The CSRF token is refreshed client-side via /csrf_token.json when needed.
+      strip_session_cookie_for_cdn
+    end
+
+    def strip_session_cookie_for_cdn
+      # Session keys that are safe to ignore — they don't represent user-specific state
+      # that should prevent caching.
+      ignorable = %w[_csrf_token session_id flash]
+      meaningful = session.to_hash.except(*ignorable)
+      return if meaningful.any?
+
+      response.headers.delete('Set-Cookie')
     end
   end
 end
