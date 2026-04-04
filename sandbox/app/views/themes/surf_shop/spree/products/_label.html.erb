@@ -1,6 +1,7 @@
 <% shared_class = "pdp-sale-badge z-10 product-label" %>
 <% mobile_pdp ||= false %>
 
+<% cache [product.cache_key_with_version, @variant_from_options&.cache_key_with_version, current_currency, 'label-v1'] do %>
 <% all_variants_sold_out = product.available? && product.variants.none? { |v| v.in_stock? || v.backorderable? } && !product.master.in_stock? && !product.master.backorderable? %>
 <% if !product.available? || all_variants_sold_out || (@variant_from_options.present? && !@variant_from_options.in_stock?) %>
   <div class='<%= shared_class %> product-label--sold-out' style="background:#999;color:#fff;">
@@ -18,4 +19,5 @@
   <div class='<%= shared_class %> product-label--custom' data-title="<%= product.labels.first.name.strip.downcase.truncate(20) %>">
     <%= product.labels.first.name.truncate(20) %>
   </div>
+<% end %>
 <% end %>

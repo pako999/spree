@@ -3,6 +3,7 @@
 <% price_class ||= ''%>
 <% price_container_class ||= '' %>
 <% selected_variant ||= nil %>
+
 <%
   if use_variant
     target = selected_variant
@@ -17,7 +18,9 @@
   end
 
   target ||= product
-
+%>
+<% cache [target.cache_key_with_version, current_currency, cookies[:preferred_country], 'price-v2'] do %>
+<%
   variant_for_context = target.is_a?(Spree::Product) ? target.default_variant : target
   pricing_context = pricing_context_for_variant(variant_for_context)
   price = variant_for_context.price_for(pricing_context)
@@ -128,3 +131,4 @@
     <% end %>
   <% end %>
 </div>
+<% end %>

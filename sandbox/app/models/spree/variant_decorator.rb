@@ -26,6 +26,11 @@ module Spree
   # Separate prepend module for instance method overrides.
   # When stock_items are preloaded, skip the Rails.cache round-trip for
   # backorderable? — quantifier.backorderable? uses in-memory stock_items.
+  #
+  # Also fix in_stock?: core requires BOTH stock_items AND stock_locations
+  # to be marked loaded, but we preload via `{ stock_items: :stock_location }`
+  # which loads each stock_item's stock_location but does NOT mark the
+  # through-association :stock_locations as loaded. We only need stock_items.
   module VariantBackorderableDecorator
     def backorderable?
       if association(:stock_items).loaded?
@@ -33,6 +38,16 @@ module Spree
       else
         super
       end
+    end
+
+    def in_stock?
+      @in_stock ||= if association(:stock_items).loaded?
+                      total_on_hand.positive?
+                    else
+                      Rails.cache.fetch(in_stock_cache_key, version: cache_version) do
+                        total_on_hand.positive?
+                      end
+                    end
     end
   end
 end
