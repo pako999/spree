@@ -1,4 +1,7 @@
-<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_scope.call(section), request.path] do %>
+<%# Cache key: section + locale + currency only.
+    Omitting request.path means one cached header for ALL pages (not one per URL).
+    Active nav item is highlighted client-side by setActiveNavItem() in application.js. %>
+<% cache_unless page_builder_enabled?, [section.cache_key_with_version, I18n.locale, current_currency] do %>
   <% layout = section.preferred_layout %>
   <header
     class='header-<%= layout %> mt-header'

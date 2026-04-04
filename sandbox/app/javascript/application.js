@@ -46,3 +46,19 @@ async function refreshCsrfIfCached() {
 
 document.addEventListener('DOMContentLoaded', refreshCsrfIfCached)
 document.addEventListener('turbo:load', refreshCsrfIfCached)
+
+// Mark the active nav item based on the current URL.
+// The header is now cached without request.path (one cache entry for all pages),
+// so the active state can't be set server-side — we set it here instead.
+function setActiveNavItem() {
+  const path = window.location.pathname
+  document.querySelectorAll('.header--nav-link[href]').forEach(link => {
+    const href = link.getAttribute('href')
+    if (!href || href === '#') return
+    const homeOnly = link.dataset.navHome === 'true'
+    const isActive = homeOnly ? path === href : (href !== '/' && path.startsWith(href))
+    link.classList.toggle('menu-item--active', isActive)
+  })
+}
+document.addEventListener('DOMContentLoaded', setActiveNavItem)
+document.addEventListener('turbo:load', setActiveNavItem)
