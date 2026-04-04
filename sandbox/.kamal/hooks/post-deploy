@@ -1,0 +1,56 @@
+#!/bin/sh
+# Warm fragment caches for all category pages right after deploy.
+# Without this, the first real visitor to each category pays the 3-4s cold-cache
+# penalty while price/label/color-swatch fragments are built.
+
+echo "$KAMAL_PERFORMER deployed $KAMAL_VERSION in $KAMAL_RUNTIME seconds — warming caches..."
+
+BASE_URL="https://www.surf-store.com"
+
+# All leaf and mid-level category taxon paths
+CATEGORIES="
+/t/categories/kitesurfing/kites
+/t/categories/kitesurfing/kiteboards
+/t/categories/kitesurfing/kite-accessories
+/t/categories/kitesurfing/kite-foil
+/t/categories/kitesurfing/kite-harnesses
+/t/categories/kitesurfing/protection-and-safety
+/t/categories/wingfoil/wings
+/t/categories/wingfoil/wing-boards
+/t/categories/wingfoil/wing-foils
+/t/categories/wingfoil/wing-accessories
+/t/categories/windsurf/windsurf-sails
+/t/categories/windsurf/windsurf-boards
+/t/categories/windsurf/windsurf-gear
+/t/categories/windsurf/windsurf-harnesses
+/t/categories/windsurf/windsurf-accessories
+/t/categories/windsurf/windsurf-foils
+/t/categories/wetsuits/men-wetsuits
+/t/categories/wetsuits/women-wetsuits
+/t/categories/wetsuits/kids-wetsuits
+/t/categories/wetsuits/neoprene-accessories
+/t/categories/sup-board/sup-boards
+/t/categories/sup-board/sup-paddles
+/t/categories/sup-board/sup-accessories
+/t/categories/e-foil/e-foil-sets
+/t/categories/e-foil/e-foil-spare-parts
+/t/categories/apparel/boardshorts
+/t/categories/apparel/ponchos
+/t/categories/apparel/tops
+"
+
+warmed=0
+failed=0
+
+for path in $CATEGORIES; do
+  url="${BASE_URL}${path}"
+  status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$url")
+  if [ "$status" = "200" ]; then
+    warmed=$((warmed + 1))
+  else
+    echo "  WARN: $url returned $status"
+    failed=$((failed + 1))
+  fi
+done
+
+echo "Cache warm-up done: $warmed OK, $failed failed"
