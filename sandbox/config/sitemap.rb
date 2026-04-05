@@ -31,5 +31,13 @@ SitemapGenerator::Sitemap.create do
           changefreq: 'weekly',
           priority: 0.7
     end
+
+    # Blog posts
+    Spree::Post.where.not(published_at: nil).find_each do |post|
+      add spree.post_path(post),
+          lastmod: post.updated_at,
+          changefreq: 'monthly',
+          priority: 0.6
+    end
   end
 end
