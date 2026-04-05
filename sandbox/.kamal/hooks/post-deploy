@@ -54,3 +54,13 @@ for path in $CATEGORIES; do
 done
 
 echo "Cache warm-up done: $warmed OK, $failed failed"
+
+# Regenerate sitemap after every deploy
+echo "Regenerating sitemap..."
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter name=sandbox-web --format '{{.Names}}' | head -1" 2>/dev/null)
+if [ -n "$CONTAINER" ]; then
+  ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bin/rails sitemap:refresh 2>&1 | tail -3"
+  echo "Sitemap regenerated."
+else
+  echo "WARN: Could not find running web container for sitemap refresh"
+fi

@@ -1,6 +1,7 @@
 # Set the host name for URL generation
 SitemapGenerator::Sitemap.default_host = "https://www.surf-store.com"
 SitemapGenerator::Sitemap.sitemaps_host = "https://www.surf-store.com"
+SitemapGenerator::Sitemap.compress      = false
 
 SitemapGenerator::Sitemap.create do
   spree = Spree::Core::Engine.routes.url_helpers
