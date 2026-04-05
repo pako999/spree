@@ -8,25 +8,27 @@
             <% main_link = presenter.main_link %>
             <% next unless main_link.present? %>
             <% if presenter.columns.any? %>
-              <%# Split row: label = navigation link, chevron = submenu opener.
-                  The button wraps only the chevron so e.currentTarget always has the <template>. %>
-              <div class='border-default border-b flex items-center header--nav-link'>
-                <%= link_to spree_storefront_resource_url(main_link.linkable || main_link),
-                    class: 'flex-1 text-base tracking-widest p-4 uppercase',
-                    data: { title: main_link.label.downcase.strip } do %>
+              <%# Full-row button opens submenu — tap anywhere on the row %>
+              <button
+                class='border-default border-b flex items-center w-full text-left header--nav-link'
+                data-action="click->mobile-nav#openSubmenu touch->mobile-nav#openSubmenu"
+                data-title="<%= main_link.label.downcase.strip %>"
+                aria-label="Open <%= main_link.label %> submenu">
+                <span class='flex-1 text-base tracking-widest p-4 uppercase font-medium'>
                   <%= main_link.label %>
-                <% end %>
-                <button
-                  data-action="click->mobile-nav#openSubmenu touch->mobile-nav#openSubmenu"
-                  data-title="<%= main_link.label.downcase.strip %>"
-                  class='p-4 border-l border-default flex items-center justify-center'
-                  aria-label="Open <%= main_link.label %> submenu">
+                </span>
+                <span class='p-4 flex items-center justify-center shrink-0'>
                   <%= render 'spree/shared/icons/chevron_right', size: 12 %>
                   <template>
                   <button data-action="click->mobile-nav#closeSubmenu touch->mobile-nav#closeSubmenu" class='flex gap-2 items-center text-base font-medium text-left tracking-widest p-4 w-full uppercase border-default border-b header--mega-nav-close-submenu bg-background sticky top-0'>
                     <%= render 'spree/shared/icons/chevron', size: 12 %>
                     <%= main_link.label %>
                   </button>
+                  <%# "Shop all" link so users can still navigate to the category page %>
+                  <%= link_to spree_storefront_resource_url(main_link.linkable || main_link),
+                      class: 'block text-sm font-semibold text-accent px-4 py-3 border-b border-default uppercase tracking-widest' do %>
+                    Shop all <%= main_link.label %> →
+                  <% end %>
                   <div class="p-4 pt-0 w-full gap-2 flex flex-col">
                     <% if block.try(:featured_taxon) %>
                       <% cache spree_storefront_base_cache_scope.call(block.featured_taxon) do %>
@@ -72,8 +74,8 @@
                     <% end %>
                   </div>
                   </template>
-                </button>
-              </div>
+                </span>
+              </button>
             <% else %>
               <%= page_builder_link_to main_link, data: { title: main_link.label.downcase.strip }, class: "block text-base tracking-widest p-4 w-full uppercase border-default border-b header--nav-link", target: main_link.open_in_new_tab.presence && "_blank", rel: main_link.open_in_new_tab.presence && "noopener noreferrer" do %>
                 <span><%= main_link.label %></span>

@@ -3,6 +3,7 @@
 <% selected_variant ||= product.first_or_default_variant(current_currency) %>
 
 <div class="swiper-slide w-full">
+  <% cache [product.cache_key_with_version, selected_variant&.cache_key_with_version, current_currency, I18n.locale, 'card-v1'] do %>
   <div
     class="product-card flex h-full flex-col w-full gap-2 relative"
     data-controller="plp-variant-picker"
@@ -59,4 +60,5 @@
     </div>
     <%= render 'spree/products/color_swatches', product: product if product && (defined?(show_variant_picker) ? show_variant_picker : true) %>
   </div>
+  <% end %>
 </div>
