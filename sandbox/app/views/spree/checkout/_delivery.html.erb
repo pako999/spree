@@ -1,0 +1,88 @@
+<%= form_for @order, url: spree.update_checkout_path(@order.token, @order.state), data: { controller: 'checkout-delivery' } do |form| %>
+  <div class="mb-5">
+    <%= render 'spree/checkout/order_lock_version', order: @order %>
+    <div id="shipping-method">
+      <%= render 'spree/checkout/delivery_backorder_notice', order: @order %>
+
+      <div id="methods">
+        <%# Build a method-name → [rate per shipment] map for JS mirroring %>
+        <% shipments = @order.shipments.to_a %>
+        <% first_shipment = shipments.first %>
+
+        <% form.fields_for :shipments do |ship_form| %>
+          <% is_first = ship_form.object.id == first_shipment&.id %>
+
+          <% if is_first %>
+            <%# Show the full UI only for the first shipment (no stock location label) %>
+            <div class="shipment">
+              <h5 class="checkout-content-header mb-3 font-body">
+                <%= Spree.t('storefront.checkout.delivery_method').capitalize %>
+              </h5>
+              <ul class="rounded-md list-group mb-4 border border-default border-b-0 text-sm border-default"
+                  data-checkout-delivery-target="shippingList">
+                <% ship_form.object.shipping_rates.includes(:shipping_method, :tax_rate).each do |rate| %>
+                  <%= render 'spree/checkout/delivery_shipping_rate', ship_form: ship_form, rate: rate %>
+                <% end %>
+              </ul>
+            </div>
+          <% else %>
+            <%# For all other shipments: hidden fields only, JS will keep them in sync %>
+            <div class="hidden" data-mirror-shipment
+                 data-rate-map="<%= ship_form.object.shipping_rates.includes(:shipping_method).each_with_object({}) { |r, h| h[r.shipping_method.name] = r.id }.to_json %>">
+              <%= ship_form.hidden_field :id %>
+              <%= ship_form.hidden_field :selected_shipping_rate_id,
+                    value: ship_form.object.selected_shipping_rate&.id || ship_form.object.shipping_rates.first&.id,
+                    data: { mirror_rate: true } %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end w-full gap-2 mt-5">
+    <div class="flex justify-end w-full gap-2">
+      <%= button_tag Spree.t(:save_and_continue),
+                      class: 'btn-primary w-full lg:w-2/5 font-semibold checkout-content-save-continue-button my-5 !py-4',
+                      data: { action: 'click->checkout-delivery#disableShippingRates',
+                              'checkout-delivery-target': 'submit',
+                              'turbo-submits-with': (render 'button_processing', is_hidden: false)
+                      } %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  // Mirror the first shipment's shipping method selection to all hidden shipments.
+  // Each [data-mirror-shipment] element has a data-rate-map JSON mapping
+  // shipping method name → rate ID for that shipment.
+  (function() {
+    function mirrorSelection(selectedLabel) {
+      document.querySelectorAll('[data-mirror-shipment]').forEach(function(el) {
+        var rateMap = JSON.parse(el.dataset.rateMap || '{}');
+        var matchingId = rateMap[selectedLabel];
+        if (matchingId) {
+          el.querySelector('[data-mirror-rate]').value = matchingId;
+        }
+      });
+    }
+
+    document.addEventListener('change', function(e) {
+      var input = e.target;
+      if (!input.matches('input[type="radio"]')) return;
+      // Only act on the visible first-shipment radios
+      var label = document.querySelector('label[for="' + input.id + '"]');
+      if (!label) return;
+      // The label text starts with the method name; strip delivery range suffix
+      var methodName = label.textContent.replace(/\s+\d+–\d+.*$/, '').trim();
+      mirrorSelection(methodName);
+    });
+
+    // On page load, mirror current selection
+    var checked = document.querySelector('#methods input[type="radio"]:checked');
+    if (checked) {
+      var lbl = document.querySelector('label[for="' + checked.id + '"]');
+      if (lbl) mirrorSelection(lbl.textContent.replace(/\s+\d+–\d+.*$/, '').trim());
+    }
+  })();
+</script>
