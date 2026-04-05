@@ -90,7 +90,7 @@ module Seo
       taxon.meta_title       = row['meta_title'].presence
       taxon.meta_description = row['meta_description'].presence
       taxon.meta_keywords    = row['meta_keywords'].presence
-      taxon.description      = strip_html(row['description_html'].presence)
+      taxon.description      = row['description_html'].presence
 
       # Store rich description + batch_id in public_metadata for rollback
       taxon.public_metadata ||= {}
@@ -100,11 +100,6 @@ module Seo
       )
 
       taxon
-    end
-
-    def strip_html(html)
-      return nil if html.blank?
-      html.gsub(/<[^>]+>/, ' ').gsub(/\s+/, ' ').strip
     end
 
     def attach_hero_image(taxon, filename)
