@@ -1,0 +1,100 @@
+<% # ── SEO meta tags injected into <head> via content_for ────────────────── %>
+<% content_for :head do %>
+  <% effective_title = @post.meta_title.presence || @post.title %>
+  <% effective_desc  = @post.meta_description.presence || @post.try(:shortened_description) %>
+  <% canonical_url  = spree.post_url(@post, host: current_store.url) %>
+
+  <%# Primary meta %>
+  <title><%= effective_title %> | Surf Store</title>
+  <meta name="description" content="<%= effective_desc %>">
+  <% if @post.get_metafield('meta_keywords')&.value.present? %>
+    <meta name="keywords" content="<%= @post.get_metafield('meta_keywords').value %>">
+  <% end %>
+  <link rel="canonical" href="<%= canonical_url %>">
+
+  <%# Open Graph %>
+  <meta property="og:type"        content="article">
+  <meta property="og:title"       content="<%= effective_title %>">
+  <meta property="og:description" content="<%= effective_desc %>">
+  <meta property="og:url"         content="<%= canonical_url %>">
+  <meta property="og:site_name"   content="Surf Store">
+  <% if @post.image.attached? %>
+    <meta property="og:image" content="<%= spree_image_url(@post.image, width: 1200, height: 630) %>">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+  <% end %>
+  <meta property="article:published_time" content="<%= @post.published_at&.iso8601 %>">
+  <meta property="article:modified_time"  content="<%= @post.updated_at&.iso8601 %>">
+
+  <%# Twitter Card %>
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="<%= effective_title %>">
+  <meta name="twitter:description" content="<%= effective_desc %>">
+  <% if @post.image.attached? %>
+    <meta name="twitter:image" content="<%= spree_image_url(@post.image, width: 1200, height: 630) %>">
+  <% end %>
+
+  <%# JSON-LD structured data (SEO schema + existing breadcrumbs) %>
+  <script type="application/ld+json">
+    <%= Seo::SchemaGenerator.for_post(@post).to_json.html_safe %>
+  </script>
+  <script type="application/ld+json" data-test-id="post-breadcrumbs-json-ld">
+    <%= posts_json_ld_breadcrumbs(@post).to_json.html_safe %>
+  </script>
+<% end %>
+
+<%# ── Page body ──────────────────────────────────────────────────────────── %>
+<%# Render through page builder (handles standard blog layout + sections) %>
+<%= render_page(current_page, post: @post) %>
+
+<%# ── Related categories (SEO taxons from metafield) ───────────────────── %>
+<% related_taxon_ids_json = @post.get_metafield('related_taxon_ids')&.value %>
+<% if related_taxon_ids_json.present? %>
+  <% related_taxon_ids = JSON.parse(related_taxon_ids_json) rescue [] %>
+  <% related_taxons = Spree::Taxon.where(id: related_taxon_ids).limit(6) if related_taxon_ids.any? %>
+  <% if related_taxons&.any? %>
+    <section class="page-container py-10" aria-label="Related Categories">
+      <h2 class="text-2xl font-semibold mb-6">Related Categories</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <% related_taxons.each do |taxon| %>
+          <%= link_to spree_storefront_resource_url(taxon), class: "block p-4 border border-default rounded-lg hover:bg-accent transition-colors" do %>
+            <% if taxon.image.attached? %>
+              <%= spree_image_tag taxon.image, width: 200, height: 120,
+                    class: "w-full h-28 object-cover rounded mb-3",
+                    alt: taxon.name, loading: :lazy %>
+            <% end %>
+            <span class="font-medium text-sm uppercase tracking-wide"><%= taxon.name %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+<% end %>
+
+<%# ── Related products (from metafield) ────────────────────────────────── %>
+<% related_product_ids_json = @post.get_metafield('related_product_ids')&.value %>
+<% if related_product_ids_json.present? %>
+  <% related_product_ids = JSON.parse(related_product_ids_json) rescue [] %>
+  <% related_products = Spree::Product.active.where(id: related_product_ids).includes(:master, :images).limit(4) if related_product_ids.any? %>
+  <% if related_products&.any? %>
+    <section class="page-container py-10 border-t border-default" aria-label="Related Products">
+      <h2 class="text-2xl font-semibold mb-6">Featured Products</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <% related_products.each do |product| %>
+          <%= link_to spree_storefront_resource_url(product), class: "block group" do %>
+            <div class="aspect-square bg-surface rounded overflow-hidden mb-3">
+              <% thumbnail = product.images.first || product.master.images.first %>
+              <% if thumbnail %>
+                <%= spree_image_tag thumbnail, width: 300, height: 300,
+                      class: "w-full h-full object-cover group-hover:scale-105 transition-transform",
+                      alt: product.name, loading: :lazy %>
+              <% end %>
+            </div>
+            <h3 class="text-sm font-medium leading-tight"><%= product.name %></h3>
+            <p class="text-sm text-muted mt-1"><%= product.display_price %></p>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+<% end %>
