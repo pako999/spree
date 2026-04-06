@@ -41,12 +41,21 @@ module Seo
       }
 
       if post.image.attached?
-        schema['image'] = {
-          '@type'  => 'ImageObject',
-          'url'    => post.image.url,
-          'width'  => 1200,
-          'height' => 675
-        }
+        begin
+          image_url = Rails.application.routes.url_helpers.rails_blob_url(
+            post.image,
+            host: 'www.surf-store.com',
+            protocol: 'https'
+          )
+          schema['image'] = {
+            '@type'  => 'ImageObject',
+            'url'    => image_url,
+            'width'  => 1200,
+            'height' => 675
+          }
+        rescue
+          # skip image in schema if URL cannot be generated
+        end
       end
 
       schema['description'] = post.meta_description if post.meta_description.present?
