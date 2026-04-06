@@ -1,22 +1,28 @@
 <div class="swiper-slide w-full">
-  <div id="<%= dom_id(post) %>">
-    <%= link_to spree.post_path(post), class: 'block hover:opacity-70 transition-opacity', data: { turbo_frame: '_top' } do %>
-      <div class="h-[200px] w-full bg-gray-100">
-        <% if post.image.attached? && post.image.variable? %>
-          <%= spree_image_tag(
-            post.image,
-            width: 400,
-            height: 200,
-            class: "h-full w-full object-cover object-center",
-            loading: :lazy,
-            alt: post.title,
-          ) %>
+  <div id="<%= dom_id(post) %>" class="h-full">
+    <%= link_to spree.post_path(post), class: 'flex flex-col h-full group', data: { turbo_frame: '_top' } do %>
+      <div class="rounded-lg overflow-hidden bg-gray-100 aspect-[16/9] w-full shrink-0">
+        <% if post.image.attached? %>
+          <% begin %>
+            <%= spree_image_tag(post.image, width: 600, height: 338,
+                  class: "h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500",
+                  loading: :lazy, alt: post.title) %>
+          <% rescue %>
+            <div class="h-full w-full bg-gray-200"></div>
+          <% end %>
+        <% else %>
+          <div class="h-full w-full bg-gray-200 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
         <% end %>
       </div>
 
-      <h1 class="uppercase text-lg font-medium mt-4"><%= post.title %></h1>
-      <div class="mt-2 text-sm"><%= local_time(post.published_at, "%B %e, %Y") %></div>
-      <div class="mt-4"><%= post.shortened_description %></div>
+      <div class="mt-4 flex flex-col flex-1">
+        <p class="text-xs font-semibold text-accent uppercase tracking-widest mb-2"><%= local_time(post.published_at, "%B %e, %Y") %></p>
+        <h2 class="text-base font-bold leading-snug group-hover:text-accent transition-colors"><%= post.title %></h2>
+        <p class="mt-2 text-sm text-gray-500 line-clamp-2 flex-1"><%= post.shortened_description %></p>
+        <span class="mt-3 text-sm font-semibold text-accent">Read more →</span>
+      </div>
     <% end %>
   </div>
 </div>
