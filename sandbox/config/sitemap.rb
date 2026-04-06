@@ -6,9 +6,6 @@ SitemapGenerator::Sitemap.compress      = false
 SitemapGenerator::Sitemap.create do
   spree = Spree::Core::Engine.routes.url_helpers
 
-  # Homepage — highest priority, always first
-  add '/', changefreq: 'daily', priority: 1.0
-
   # Policy / static pages — deduplicate by slug
   Spree::Policy.find_each do |policy|
     next if policy.slug.blank?
