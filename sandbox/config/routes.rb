@@ -56,6 +56,12 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  # Catch-all: redirect any unmatched URL to homepage
+  # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
+  # Excludes API, admin, Rails internals, and static assets
+  match '*path', to: redirect('/'), via: :all,
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up)} }
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
