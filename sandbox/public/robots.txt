@@ -22,4 +22,4 @@ Disallow: /password
 Disallow: /password/*
 
 # Sitemap directive linking to the generated XML sitemap
-Sitemap: https://www.surf-store.com/sitemap.xml.gz
+Sitemap: https://www.surf-store.com/sitemap.xml

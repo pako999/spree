@@ -4,8 +4,8 @@
   <% effective_desc  = @post.meta_description.presence || @post.try(:shortened_description) %>
   <% canonical_url  = spree.post_url(@post, host: current_store.url) %>
 
-  <%# Primary meta %>
-  <title><%= effective_title %> | Surf Store</title>
+  <%# Primary meta — title set via content_for :title so Spree's head partial uses it %>
+  <% content_for :title, "#{effective_title} | Surf Store" %>
   <meta name="description" content="<%= effective_desc %>">
   <% if @post.get_metafield('meta_keywords')&.value.present? %>
     <meta name="keywords" content="<%= @post.get_metafield('meta_keywords').value %>">
