@@ -9,8 +9,9 @@ SitemapGenerator::Sitemap.create do
   # Homepage — highest priority, always first
   add '/', changefreq: 'daily', priority: 1.0
 
-  # Policy / static pages
+  # Policy / static pages — deduplicate by slug
   Spree::Policy.find_each do |policy|
+    next if policy.slug.blank?
     add "/policies/#{policy.slug}", changefreq: 'monthly', priority: 0.6
   end
 
@@ -23,11 +24,15 @@ SitemapGenerator::Sitemap.create do
           priority: 0.8
     end
 
-    # Categories and brand taxons — exclude tag/filter pages
+    # Categories and brand taxons — exclude root, tags, and homepage taxon
+    seen_paths = Set.new
     Spree::Taxon.includes(:taxonomy).find_each do |taxon|
       next if taxon.root?
       next if taxon.taxonomy&.name&.downcase == 'tags'
-      add spree.nested_taxons_path(taxon),
+      path = spree.nested_taxons_path(taxon)
+      next if seen_paths.include?(path)
+      seen_paths << path
+      add path,
           lastmod: taxon.updated_at,
           changefreq: 'weekly',
           priority: 0.7
