@@ -54,3 +54,38 @@ end
 
 Spree::Variant.include(Spree::VariantDecorator)
 Spree::Variant.prepend(Spree::VariantBackorderableDecorator)
+
+# Fix: when the admin form submits stock_items_attributes without an ID
+# (e.g. after Turbo frame refresh during image upload), resolve the existing
+# stock item by (variant_id, stock_location_id) instead of trying to create a new one.
+module Spree
+  module StockItemIdResolver
+    def stock_items_attributes=(attrs)
+      resolved = case attrs
+                 when Hash
+                   attrs.transform_values { |item| resolve_stock_item_attrs(item) }
+                 when Array
+                   attrs.map { |item| resolve_stock_item_attrs(item) }
+                 else
+                   attrs
+                 end
+      super(resolved)
+    end
+
+    private
+
+    def resolve_stock_item_attrs(item_attrs)
+      return item_attrs if item_attrs['id'].present? || item_attrs[:id].present?
+
+      loc_id = item_attrs['stock_location_id'] || item_attrs[:stock_location_id]
+      return item_attrs unless loc_id.present?
+
+      existing = stock_items.find_by(stock_location_id: loc_id.to_s)
+      return item_attrs unless existing
+
+      item_attrs.is_a?(HashWithIndifferentAccess) ? item_attrs.merge('id' => existing.id.to_s) : item_attrs.to_h.merge('id' => existing.id.to_s)
+    end
+  end
+end
+
+Spree::Variant.prepend(Spree::StockItemIdResolver)
