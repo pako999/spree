@@ -1,11 +1,96 @@
 <div style="<%= section_styles(section) %>">
   <% if @posts.any? %>
-    <div class="page-container">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-4 auto-rows-fr">
-        <%= render partial: 'spree/posts/post', collection: @posts, cached: true %>
+    <div class="page-container py-12 md:py-16">
+
+      <%# Page header %>
+      <div class="mb-10 md:mb-12">
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Surf Store Blog</p>
+        <h1 class="text-3xl md:text-4xl font-bold leading-tight">Guides & Expert Tips</h1>
+        <p class="mt-3 text-muted text-base max-w-xl">Everything you need to choose the right gear — from kite sizing charts to wetsuit guides, written by our team.</p>
+        <div style="width: 48px; height: 3px; background: #10D48E; border-radius: 2px; margin-top: 1.25rem;"></div>
       </div>
 
-      <%= render 'spree/shared/pagination' %>
+      <%# Featured first post (large) %>
+      <% featured = @posts.first %>
+      <%= link_to spree.post_path(featured), class: 'group block mb-10 md:mb-14', data: { turbo_frame: '_top' } do %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-0 rounded-xl overflow-hidden border border-default shadow-sm hover:shadow-md transition-shadow duration-300">
+          <%# Image %>
+          <div class="relative overflow-hidden bg-gray-100" style="min-height: 280px;">
+            <% if featured.image.attached? %>
+              <% begin %>
+                <%= spree_image_tag(featured.image, width: 800, height: 500,
+                      class: "w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 absolute inset-0",
+                      loading: :eager, alt: featured.title) %>
+              <% rescue %>
+                <div class="w-full h-full bg-gray-200 absolute inset-0"></div>
+              <% end %>
+            <% else %>
+              <div class="w-full h-full bg-gray-200 absolute inset-0 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+            <% end %>
+            <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(91,75,219,0.18) 0%, transparent 60%);"></div>
+          </div>
+          <%# Content %>
+          <div class="flex flex-col justify-center p-8 md:p-10 bg-white">
+            <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest mb-4" style="color: #10D48E;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#10D48E"><circle cx="12" cy="12" r="10"/></svg>
+              Featured
+            </span>
+            <h2 class="text-xl md:text-2xl font-bold leading-snug group-hover:text-accent transition-colors duration-200"><%= featured.title %></h2>
+            <p class="mt-3 text-sm text-muted leading-relaxed line-clamp-3"><%= featured.shortened_description %></p>
+            <div class="mt-6 flex items-center justify-between">
+              <span class="text-xs text-muted"><%= local_time(featured.published_at, "%B %-d, %Y") %></span>
+              <span class="text-sm font-bold text-accent flex items-center gap-1 group-hover:gap-2 transition-all">
+                Read guide
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Remaining posts grid %>
+      <% if @posts.size > 1 %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <% @posts.drop(1).each do |post| %>
+            <%= link_to spree.post_path(post), class: 'group flex flex-col rounded-xl overflow-hidden border border-default bg-white shadow-sm hover:shadow-md transition-shadow duration-300', data: { turbo_frame: '_top' } do %>
+              <%# Image %>
+              <div class="relative overflow-hidden bg-gray-100 aspect-[16/9] shrink-0">
+                <% if post.image.attached? %>
+                  <% begin %>
+                    <%= spree_image_tag(post.image, width: 600, height: 338,
+                          class: "w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500",
+                          loading: :lazy, alt: post.title) %>
+                  <% rescue %>
+                    <div class="w-full h-full bg-gray-200"></div>
+                  <% end %>
+                <% else %>
+                  <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  </div>
+                <% end %>
+              </div>
+              <%# Content %>
+              <div class="flex flex-col flex-1 p-5 md:p-6">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color: #10D48E;"><%= local_time(post.published_at, "%B %-d, %Y") %></p>
+                <h2 class="text-base font-bold leading-snug group-hover:text-accent transition-colors duration-200 flex-1"><%= post.title %></h2>
+                <p class="mt-2 text-sm text-muted leading-relaxed line-clamp-2"><%= post.shortened_description %></p>
+                <div class="mt-4 pt-4 border-t border-default flex items-center justify-between">
+                  <span class="text-xs text-muted">Buying Guide</span>
+                  <span class="text-sm font-bold text-accent flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Read →
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="mt-10">
+        <%= render 'spree/shared/pagination' %>
+      </div>
     </div>
   <% end %>
 </div>
