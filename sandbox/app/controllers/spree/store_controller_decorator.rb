@@ -33,17 +33,17 @@ module Spree
       before_action :set_geo_currency
     end
 
-    # Override to preload option_types and option_values so that color swatches
-    # and variant pickers don't N+1 on every product card.
-    # Also preload taxonomy so brand_taxon can resolve in-memory.
-    # taggings: needed by _label.html.erb (product.taggings.find { |t| t.context == 'labels' })
+    # Minimal eager-load scope for the product listing.
+    # Only pre-fetch what is needed OUTSIDE the per-card fragment cache block:
+    #   - master + prices: needed by first_or_default_variant for master-only products
+    #   - variants + prices: needed by first_available_variant (price presence check)
+    # Everything else (images, option_values, taggings, taxons, stock_items) lives
+    # INSIDE the cache block — ar_lazy_preload batches those lazily on cache misses.
+    # This eliminates 6-12 wasted queries per page-load when all 20 cards are warm.
     def storefront_products_includes
       {
-        taxons: [:taxonomy],
-        taggings: [],
-        master: [:images, :prices, :stock_locations, { stock_items: :stock_location }],
-        variants: [:images, :prices, { option_values: :option_type }, :stock_locations, { stock_items: :stock_location }],
-        option_types: []
+        master: [:prices],
+        variants: [:prices]
       }
     end
 

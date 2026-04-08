@@ -19,8 +19,11 @@ module Spree
       return if request.post? || request.patch? || request.put? || request.delete?
       return if try(:current_spree_user).present?  # never cache logged-in pages at edge
 
-      # Cloudflare: cache for 2 minutes at edge, browser revalidates after 30s
-      response.set_header('Cache-Control', 'public, max-age=30, s-maxage=120, stale-while-revalidate=60')
+      # Cloudflare: cache for 2 minutes at edge, browser always revalidates (ETag).
+      # no-cache = must revalidate with server each time; 304 responses are instant.
+      # Removing stale-while-revalidate prevents Chrome from serving old HTML with
+      # stale asset fingerprints after a Kamal redeployment (causes JS/CSS 404s).
+      response.set_header('Cache-Control', 'public, no-cache, s-maxage=120')
 
       # Strip Set-Cookie so Cloudflare can cache the HTML response.
       # Only safe when the session has no real data (no cart, no flash).
