@@ -33,17 +33,16 @@ module Spree
       before_action :set_geo_currency
     end
 
-    # Minimal eager-load scope for the product listing.
-    # Only pre-fetch what is needed OUTSIDE the per-card fragment cache block:
-    #   - master + prices: needed by first_or_default_variant for master-only products
-    #   - variants + prices: needed by first_available_variant (price presence check)
-    # Everything else (images, option_values, taggings, taxons, stock_items) lives
-    # INSIDE the cache block — ar_lazy_preload batches those lazily on cache misses.
-    # This eliminates 6-12 wasted queries per page-load when all 20 cards are warm.
+    # Eager-load associations used by the product card template.
+    # Removed stock_items/stock_locations — in_stock? and backorderable? use
+    # Rails.cache when those associations are not loaded, so no N+1 penalty.
     def storefront_products_includes
       {
+        taxons: [:taxonomy],
+        taggings: [],
         master: [:prices],
-        variants: [:prices]
+        variants: [:prices, { option_values: :option_type }],
+        option_types: []
       }
     end
 
