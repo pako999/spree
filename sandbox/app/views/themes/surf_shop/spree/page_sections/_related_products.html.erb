@@ -11,7 +11,7 @@
       products = current_store.products.active(current_currency)
                    .in_taxon(primary_taxon)
                    .where.not(id: product.id)
-                   .includes(master: [:prices, { images: { attachment_attachment: :blob } }])
+                   .includes(taxons: [:taxonomy], taggings: [], master: [:images, :prices, { stock_items: :stock_location }], variants: [:images, :prices, :option_values, { stock_items: :stock_location }], option_types: [])
                    .distinct
                    .limit(section&.preferred_max_products_to_show || 10)
       # Fall back to parent taxon if too few results
@@ -19,7 +19,7 @@
         products = current_store.products.active(current_currency)
                      .in_taxon(primary_taxon.parent)
                      .where.not(id: product.id)
-                     .includes(master: [:prices, { images: { attachment_attachment: :blob } }])
+                     .includes(taxons: [:taxonomy], taggings: [], master: [:images, :prices, { stock_items: :stock_location }], variants: [:images, :prices, :option_values, { stock_items: :stock_location }], option_types: [])
                      .distinct
                      .limit(section&.preferred_max_products_to_show || 10)
       end

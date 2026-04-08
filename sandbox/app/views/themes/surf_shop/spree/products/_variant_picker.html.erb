@@ -1,9 +1,13 @@
 <% options_param_name ||= :options %>
 <% if product.has_variants? %>
-  <%# Build all-variants data %>
-  <% all_variants_data = product.variants.includes(:images).map do |v|
+  <%# Build all-variants data — use already-preloaded associations (no extra queries) %>
+  <% option_type_by_id = product.option_types.index_by(&:id) %>
+  <% all_variants_data = product.variants.map do |v|
     opts = {}
-    v.options.each { |o| opts[o[:name]] = { value: o[:value], presentation: o[:presentation] } }
+    v.option_values.each do |ov|
+      ot = option_type_by_id[ov.option_type_id]
+      opts[ot.name] = { value: ov.name, presentation: ov.presentation } if ot
+    end
     price_obj = v.price_in(current_currency)
     {
       variant: v,

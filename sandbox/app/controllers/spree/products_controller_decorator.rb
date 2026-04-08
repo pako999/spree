@@ -19,7 +19,7 @@ module Spree
         associations: {
           taxons: [:taxonomy],
           master: [:images, :prices, :stock_locations, { stock_items: :stock_location }],
-          variants: [:images, :prices, :option_values, :stock_locations, { stock_items: :stock_location }],
+          variants: [:images, :prices, { option_values: :option_type }, :stock_locations, { stock_items: :stock_location }],
           option_types: []
         }
       ).call
