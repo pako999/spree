@@ -37,8 +37,10 @@ Rails.application.configure do
                         'https://www.google-analytics.com',
                         'https://analytics.google.com',
                         'https://region1.analytics.google.com',
+                        'https://region1.google-analytics.com',
                         'https://stats.g.doubleclick.net',
-                        'https://www.googletagmanager.com'
+                        'https://www.googletagmanager.com',
+                        'https://www.google.com'
 
     # Frames: allow YouTube embeds in product descriptions / TinyMCE
     policy.frame_src   :self,

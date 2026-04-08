@@ -8,7 +8,7 @@
       data-product-form-selected-variant-disabled-value='<%= !@selected_variant&.in_stock? %>'
       data-product-form-variant-from-options-disabled-value='<%= !@variant_from_options&.in_stock? %>'
       data-product-form-frame-name-value="main-product-<%= product.id %>"
-      data-product-form-url-value="<%= spree.product_url(product) %>">
+      data-product-form-url-value="<%= spree.product_url(product, locale: I18n.locale) %>">
       <template data-product-form-target="spinnerTemplate">
         <%= render "spree/shared/icons/spinner" %>
       </template>
