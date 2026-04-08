@@ -41,9 +41,8 @@ module Spree
     def fail
       order = find_order
       if order
-        payment = order.payments.where(
-          payment_method_type: 'Spree::Gateway::Saferpay'
-        ).last
+        saferpay_method_ids = Spree::PaymentMethod.where(type: 'Spree::Gateway::Saferpay').pluck(:id)
+        payment = order.payments.where(payment_method_id: saferpay_method_ids).last
         payment&.failure! if payment&.can_failure?
         redirect_to_checkout(order, 'Payment was cancelled or failed. Please try again.')
       else
@@ -84,8 +83,9 @@ module Spree
     end
 
     def find_saferpay_payment(order)
+      saferpay_method_ids = Spree::PaymentMethod.where(type: 'Spree::Gateway::Saferpay').pluck(:id)
       order.payments.where(
-        payment_method_type: 'Spree::Gateway::Saferpay',
+        payment_method_id: saferpay_method_ids,
         state: %w[checkout pending processing]
       ).last
     end
