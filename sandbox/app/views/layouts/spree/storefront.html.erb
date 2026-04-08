@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="<%= I18n.locale.to_s.split('-').first %>">
   <head>
     <%= render 'spree/shared/head' %>
+    <%= render 'spree/shared/hreflang' %>
     <%= render 'spree/shared/custom_head' %>
     <%= render 'spree/shared/json_ld' %>
     <%= current_store.storefront_custom_code_head&.html_safe %>

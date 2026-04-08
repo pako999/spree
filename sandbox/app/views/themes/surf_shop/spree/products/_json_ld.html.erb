@@ -4,7 +4,7 @@
     "@context": "https://schema.org",
     "@type": "Product",
     "name": <%= product.name.to_json.html_safe %>,
-    "url": <%= spree.product_url(product, host: current_store.url_or_custom_domain).to_json.html_safe %>,
+    "url": <%= spree.product_url(product, host: current_store.url_or_custom_domain, locale: I18n.default_locale).to_json.html_safe %>,
   <% if product.has_images? %>
     "image": [
       <%= spree_image_url(product.default_image, variant: :large).to_json.html_safe %>

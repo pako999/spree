@@ -1,0 +1,18 @@
+<%# Hreflang alternate links for multilingual SEO.
+    Only rendered when the store supports more than one locale.
+    Maps Spree locale codes (sl-SI, de, en) to ISO 639-1 hreflang values. %>
+<% if supported_locales.present? && supported_locales.length > 1 %>
+  <% host = current_store.url_or_custom_domain %>
+  <% default_locale = current_store.default_locale %>
+  <% supported_locales.each do |locale| %>
+    <% lang_code = locale.to_s.split('-').first %>
+    <% is_default = locale.to_s == default_locale %>
+    <% hreflang_url = url_for(locale: is_default ? nil : locale.to_s, only_path: false, host: host) rescue nil %>
+    <% next unless hreflang_url %>
+    <link rel="alternate" hreflang="<%= lang_code %>" href="<%= hreflang_url %>">
+  <% end %>
+  <% x_default_url = url_for(locale: nil, only_path: false, host: host) rescue nil %>
+  <% if x_default_url %>
+    <link rel="alternate" hreflang="x-default" href="<%= x_default_url %>">
+  <% end %>
+<% end %>

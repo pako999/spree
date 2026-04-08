@@ -9,7 +9,7 @@
   "price": <%= variant.amount_in(current_currency).to_json.html_safe %>,
   "priceCurrency": <%= current_currency.to_json.html_safe %>,
   "priceValidUntil": "<%= (variant.updated_at + 1.year).strftime('%Y-%m-%d') %>",
-  "url": <%= spree.product_url(product, variant_id: variant.id, host: current_store.url_or_custom_domain).to_json.html_safe %>,
+  "url": <%= spree.product_url(product, variant_id: variant.id, host: current_store.url_or_custom_domain, locale: I18n.default_locale).to_json.html_safe %>,
   "seller": {
     "@type": "Organization",
     "name": <%= current_store.name.to_json.html_safe %>,

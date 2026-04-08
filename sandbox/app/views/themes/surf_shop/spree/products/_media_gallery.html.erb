@@ -21,7 +21,7 @@
                     class="relative aspect-1 w-full block "
                     id="thumb-desktop-product-image-<%= image.id %>"
                     data-turbo-permanent>
-                    <%= spree_image_tag(image, variant: :small, alt: image_alt(image), class: 'w-full h-full') %>
+                    <%= spree_image_tag(image, variant: :small, alt: image_alt(image), class: 'w-full h-full', width: 256, height: 256, loading: 'lazy') %>
                   </div>
                 </div>
               <% end %>
@@ -33,7 +33,7 @@
         </div>
         <div data-pdp-desktop-gallery-target="imagesSlider" class="overflow-hidden swiper relative w-full h-min">
           <div class="swiper-wrapper w-full h-min">
-            <% images.each do |image| %>
+            <% images.each_with_index do |image, idx| %>
               <div class="swiper-slide w-full">
                 <div
                   class="product-image relative w-full aspect-1"
@@ -43,7 +43,7 @@
                     <div class="zoom-icon hidden absolute bottom-2 right-2 p-4 bg-background rounded-full opacity-75 hover:opacity-100">
                       <%= render 'spree/shared/icons/zoom' %>
                     </div>
-                    <%= spree_image_tag(image, variant: :xlarge, alt: image_alt(image), class: 'w-full h-full') %>
+                    <%= spree_image_tag(image, variant: :xlarge, alt: image_alt(image), class: 'w-full h-full', width: 800, height: 800, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
                   <% end %>
                 </div>
               </div>
@@ -68,13 +68,13 @@
         "grabCursor": true
       }'>
         <div class="swiper-wrapper">
-          <% images.each do |image| %>
+          <% images.each_with_index do |image, idx| %>
             <div class="swiper-slide aspect-1" id="swiper-slide-<%= image.id %>">
               <%= link_to spree_image_url(image, variant: :xlarge), class: "absolute top-2 right-2 p-2 bg-background rounded-full opacity-75 hover:opacity-100", data: { pswp_width: "2000", pswp_height: "2000" } do %>
                 <%= render 'spree/shared/icons/zoom' %>
               <% end %>
               <%= render 'spree/products/label', product: product, mobile_pdp: true %>
-              <%= spree_image_tag(image, variant: :large, alt: image_alt(image), class: 'h-full w-full object-cover object-center', style: 'min-height: 358px') %>
+              <%= spree_image_tag(image, variant: :large, alt: image_alt(image), class: 'h-full w-full object-cover object-center', style: 'min-height: 358px', width: 720, height: 720, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
             </div>
           <% end %>
         </div>
