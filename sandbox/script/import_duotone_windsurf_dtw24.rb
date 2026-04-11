@@ -4,6 +4,11 @@
 # Images: must be pre-staged in /rails/tmp/dtw24_images/ (local files, not URLs)
 # Dedup: skip product if ANY variant barcode already exists in DB (incl. soft-deleted)
 #
+# IMPORTANT: ALWAYS run with --reuse. Plain `kamal app exec` spins up a
+# throwaway container that can terminate before Active Storage's after_commit
+# file-write hook runs, leaving blob records in DB while the bytes never
+# actually land on disk. Use attach_dtw24_images.rb to repair if that happens.
+#
 # Run: kamal app exec --reuse "bin/rails runner /rails/script/import_duotone_windsurf_dtw24.rb"
 
 require 'csv'
