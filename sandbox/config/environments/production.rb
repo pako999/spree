@@ -70,15 +70,14 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   
-  # Specify outgoing SMTP server via credentials.
+  # Brevo (formerly Sendinblue) SMTP relay for transactional emails.
   config.action_mailer.smtp_settings = {
-    user_name: 'resend',
-    password: Rails.application.credentials.dig(:resend_api_key) || Rails.application.credentials.dig(:smtp, :password) || ENV['RESEND_API_KEY'],
-    address: "smtp.resend.com",
-    port: 465,
+    user_name: ENV.fetch('BREVO_SMTP_LOGIN', 'info@surfworld.eu'),
+    password: ENV['BREVO_API_KEY'],
+    address: 'smtp-relay.brevo.com',
+    port: 587,
     authentication: :plain,
-    enable_starttls_auto: true,
-    tls: true
+    enable_starttls_auto: true
   }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
