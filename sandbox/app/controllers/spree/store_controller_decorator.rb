@@ -52,15 +52,13 @@ module Spree
       request.headers['CF-IPCountry'].presence
     end
 
-    # Called by Spree::Core::ControllerHelpers::Locale as a fallback
+    # Disabled: geo-IP locale auto-detection was causing Googlebot (routed
+    # through Vienna/SI by Cloudflare) to see lang="sl" on canonical English
+    # pages (/products/...), making Google index them as Slovenian.
+    # Locale is now set ONLY by the URL prefix (/de/..., /sl-SI/..., etc.).
+    # Currency geo-detection (set_geo_currency) is unaffected.
     def config_locale
-      country = visitor_country
-      return nil if country.blank?
-
-      locale = COUNTRY_TO_LOCALE[country]
-      return nil unless locale && supported_locale?(locale)
-
-      locale
+      nil
     end
 
     def set_geo_currency
