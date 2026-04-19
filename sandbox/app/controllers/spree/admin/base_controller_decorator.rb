@@ -27,5 +27,7 @@ module Spree
 end
 
 if defined?(Spree::Admin::BaseController)
-  Spree::Admin::BaseController.prepend Spree::Admin::BaseControllerDecorator
+  unless Spree::Admin::BaseController.ancestors.include?(Spree::Admin::BaseControllerDecorator)
+    Spree::Admin::BaseController.prepend Spree::Admin::BaseControllerDecorator
+  end
 end
