@@ -1,5 +1,21 @@
-<p id="payment-and-conditions" class="text-xs mt-2 mb-4">
-    By placing this order you agree to
-    <a href="/policies/terms-and-conditions" target="_blank" class="text-primary underline">Terms of Service</a> and
-    <a href="/policies/privacy-policy" target="_blank" class="text-primary underline">Privacy Policy</a>.
+<div id="payment-and-conditions" class="mt-4 mb-2" data-controller="terms-accept">
+  <label class="flex items-start gap-2 cursor-pointer group">
+    <input type="checkbox"
+           id="terms_accept"
+           data-terms-accept-target="checkbox"
+           data-action="change->terms-accept#toggle"
+           class="mt-0.5 cursor-pointer shrink-0 checkbox-input"
+           aria-required="true">
+    <span class="text-xs text-muted leading-relaxed select-none">
+      I have read and agree to the
+      <a href="/policies/terms-and-conditions" target="_blank" class="text-primary underline hover:no-underline">Terms of Service</a>
+      and
+      <a href="/policies/privacy-policy" target="_blank" class="text-primary underline hover:no-underline">Privacy Policy</a>.
+      <span class="text-red-500">*</span>
+    </span>
+  </label>
+  <p data-terms-accept-target="error"
+     class="hidden text-xs text-red-500 mt-1 ml-5">
+    Please accept the Terms of Service and Privacy Policy to continue.
   </p>
+</div>
