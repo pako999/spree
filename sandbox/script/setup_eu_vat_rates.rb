@@ -78,14 +78,16 @@ EU_VAT_RATES.each do |iso, info|
     next
   end
 
-  Spree::TaxRate.create!(
-    name:              rate_name,
-    amount:            info[:rate],
-    zone:              zone,
-    tax_category:      tax_category,
-    included_in_price: INCLUDED_IN_PRICE,
+  rate = Spree::TaxRate.new(
+    name:               rate_name,
+    amount:             info[:rate],
+    zone:               zone,
+    tax_category:       tax_category,
+    included_in_price:  INCLUDED_IN_PRICE,
     show_rate_in_label: true
   )
+  rate.build_calculator(type: 'Spree::Calculator::DefaultTax')
+  rate.save!
 
   puts "  Created: #{info[:name]} (#{iso}) — #{(info[:rate] * 100).round(2)}%"
   created += 1
