@@ -35,3 +35,19 @@ production:
     class: SyncGaastraStockJob
     queue: default
     schedule: every 3 hours at minute 45
+
+  # ── Weekly SEO automation ──────────────────────────────────────────────────
+  generate_seo_meta:
+    class: GenerateSeoMetaJob
+    queue: background
+    schedule: 0 2 * * 1   # every Monday at 02:00 UTC
+
+  generate_alt_tags:
+    class: GenerateAltTagsJob
+    queue: background
+    schedule: 0 3 * * 1   # every Monday at 03:00 UTC
+
+  index_now_ping:
+    class: IndexNowPingJob
+    queue: background
+    schedule: 0 4 * * 1   # every Monday at 04:00 UTC
