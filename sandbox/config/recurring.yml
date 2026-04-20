@@ -51,3 +51,8 @@ production:
     class: IndexNowPingJob
     queue: background
     schedule: 0 4 * * 1   # every Monday at 04:00 UTC
+
+  warm_cache:
+    class: WarmCacheJob
+    queue: background
+    schedule: 0 5 * * *   # every day at 05:00 UTC — refresh category caches
