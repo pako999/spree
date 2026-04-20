@@ -1,3 +1,4 @@
+<%= render 'spree/taxons/json_ld', taxon: taxon unless page_builder_enabled? %>
 <% cache_unless page_builder_enabled?, [*spree_storefront_base_cache_scope.call(section), taxon].compact do %>
   <div
     style="<%= section_styles(section) %>"

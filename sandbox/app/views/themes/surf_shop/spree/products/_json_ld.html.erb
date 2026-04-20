@@ -6,12 +6,14 @@
     "name": <%= product.name.to_json.html_safe %>,
     "url": <%= spree.product_url(product, host: current_store.url_or_custom_domain, locale: I18n.default_locale).to_json.html_safe %>,
   <% if product.has_images? %>
-    "image": [
-      <%= spree_image_url(product.default_image, variant: :large).to_json.html_safe %>
-    ],
+    "image": <%= product.images.limit(8).map { |img| spree_image_url(img, variant: :large) }.to_json.html_safe %>,
   <% end %>
   <% if product.description.present? %>
     "description": <%= strip_tags(product.description).to_json.html_safe %>,
+  <% end %>
+  <% category_taxon = product.taxons.select { |t| t.taxonomy&.name == 'Categories' }.max_by { |t| t.depth.to_i } %>
+  <% if category_taxon %>
+    "category": <%= category_taxon.name.to_json.html_safe %>,
   <% end %>
   <% if !product.has_variants? %>
     <% if first_or_default_variant.sku.present? %>"sku": <%= first_or_default_variant.sku.to_json.html_safe %>,<% end %>

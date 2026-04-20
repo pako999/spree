@@ -1,0 +1,39 @@
+<%
+  store_url = current_store.formatted_url_or_custom_domain
+
+  I18n.with_locale(I18n.default_locale) do
+    taxon_url = "#{store_url}#{spree.nested_taxons_path(taxon)}"
+
+    # Build breadcrumb: Home → non-root ancestors → this taxon
+    crumbs = [{ name: 'Home', url: "#{store_url}/" }]
+    taxon.ancestors.reject(&:root?).each do |anc|
+      crumbs << { name: anc.name, url: "#{store_url}#{spree.nested_taxons_path(anc)}" }
+    end
+    crumbs << { name: taxon.name, url: taxon_url }
+
+    breadcrumb_items = crumbs.each_with_index.map do |crumb, i|
+      { '@type' => 'ListItem', 'position' => i + 1, 'name' => crumb[:name], 'item' => crumb[:url] }
+    end
+
+    schema = {
+      '@context'   => 'https://schema.org',
+      '@type'      => 'CollectionPage',
+      'name'       => taxon.name,
+      'url'        => taxon_url,
+      'breadcrumb' => {
+        '@type'           => 'BreadcrumbList',
+        'itemListElement' => breadcrumb_items
+      }
+    }
+
+    description_text = taxon.description&.to_plain_text&.strip
+    schema['description'] = description_text if description_text.present?
+
+    if taxon.image.attached? && taxon.image.variable?
+      schema['image'] = spree_image_url(taxon.image, width: 800, height: 450)
+    end
+%>
+<script type="application/ld+json" data-test-id="taxon-json-ld">
+  <%= schema.to_json.html_safe %>
+</script>
+<% end %>
