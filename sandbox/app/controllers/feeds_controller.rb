@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 # Generates a Google Merchant Center product feed (RSS 2.0 with g: namespace).
 # Served at GET /feeds/google-shopping.xml — submit this URL to Google Merchant Center.
 #
@@ -58,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v1', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v2', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -105,8 +107,9 @@ class FeedsController < ApplicationController
         color = variant.option_values.find { |ov| ov.option_type&.name == 'color' }&.presentation
         size  = variant.option_values.find { |ov| ov.option_type&.name == 'size'  }&.presentation
 
+        raw_id = variant.sku.presence || "spree-#{variant.id}"
         items << {
-          id:                      variant.sku.presence || "spree-#{variant.id}",
+          id:                      raw_id.length > 50 ? "var-#{variant.id}" : raw_id,
           item_group_id:           has_variants ? "spree-#{product.id}" : nil,
           title:                   build_title(product.name, color, size),
           description:             strip_html(product.description),
@@ -117,7 +120,7 @@ class FeedsController < ApplicationController
           condition:               'new',
           brand:                   brand,
           gtin:                    variant.barcode.presence,
-          mpn:                     variant.sku.presence,
+          mpn:                     variant.sku.presence&.slice(0, 70),
           google_product_category: google_cat,
           color:                   color,
           size:                    size,
@@ -144,7 +147,8 @@ class FeedsController < ApplicationController
   end
 
   def strip_html(text)
-    text.to_s.gsub(/<[^>]+>/, ' ').squish.truncate(5000)
+    # Strip tags first, then decode HTML entities (&amp;mdash; → —), then clean whitespace
+    CGI.unescapeHTML(text.to_s.gsub(/<[^>]+>/, ' ')).squish.truncate(5000)
   end
 
   def blob_full_url(attachment)
