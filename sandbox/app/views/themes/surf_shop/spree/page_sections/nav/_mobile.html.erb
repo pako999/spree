@@ -14,10 +14,10 @@
                 data-action="click->mobile-nav#openSubmenu touch->mobile-nav#openSubmenu"
                 data-title="<%= main_link.label.downcase.strip %>"
                 aria-label="Open <%= main_link.label %> submenu">
-                <span class='flex-1 text-base tracking-widest p-4 uppercase font-medium'>
+                <span class='flex-1 text-base tracking-widest p-4 uppercase font-medium pointer-events-none'>
                   <%= main_link.label %>
                 </span>
-                <span class='p-4 flex items-center justify-center shrink-0'>
+                <span class='p-4 flex items-center justify-center shrink-0 pointer-events-none'>
                   <%= render 'spree/shared/icons/chevron_right', size: 12 %>
                   <template>
                   <button data-action="click->mobile-nav#closeSubmenu touch->mobile-nav#closeSubmenu" class='flex gap-2 items-center text-base font-medium text-left tracking-widest p-4 w-full uppercase border-default border-b header--mega-nav-close-submenu bg-background sticky top-0'>
