@@ -56,3 +56,8 @@ production:
     class: WarmCacheJob
     queue: background
     schedule: 0 5 * * *   # every day at 05:00 UTC — refresh category caches
+
+  abandoned_cart:
+    class: AbandonedCartJob
+    queue: background
+    schedule: 30 * * * *  # every hour at :30 — catch orders abandoned 60–90 min ago

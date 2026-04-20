@@ -1,0 +1,14 @@
+Your cart is waiting for you — surf-store.com
+
+You left some great gear behind. Complete your order before it sells out.
+
+Return to cart: <%= @cart_url %>
+
+YOUR CART (<%= @items.size %> <%= @items.size == 1 ? 'item' : 'items' %>)
+<% @items.each do |item| %>
+- <%= item[:name] %><%= item[:options] ? " (#{item[:options]})" : '' %> × <%= item[:quantity] %> — <%= number_to_currency(item[:price], unit: '€', format: '%n %u') %>
+<% end %>
+
+---
+You're receiving this because you started an order at surf-store.com.
+If you've changed your mind, just ignore this email.
