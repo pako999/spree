@@ -1,0 +1,161 @@
+<%# Preheader text — shown in inbox preview, hidden in email body %>
+<span class="preheader">Your cart is still waiting — save 7% if you complete your order today.</span>
+
+<%# Dark mode overrides — iOS Mail / Apple Mail support embedded CSS media queries %>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .discount-box   { background-color: #1e3a5f !important; border-color: #38bdf8 !important; }
+    .discount-label { color: #7dd3fc !important; }
+    .discount-code  { color: #ffffff !important; }
+    .discount-sub   { color: #94a3b8 !important; }
+    .bank-box       { background-color: #1e293b !important; border-color: #334155 !important; }
+    .bank-title     { color: #e2e8f0 !important; }
+    .bank-body      { color: #94a3b8 !important; }
+    .bank-link      { color: #38bdf8 !important; }
+    .bank-note      { color: #64748b !important; }
+    .cart-label     { color: #94a3b8 !important; }
+    .item-name      { color: #f1f5f9 !important; }
+    .item-options   { color: #94a3b8 !important; }
+    .item-qty       { color: #cbd5e1 !important; }
+    .footer-text    { color: #475569 !important; }
+    .footer-link    { color: #475569 !important; }
+  }
+</style>
+
+<%# Hero -%>
+<table class="purchase" role="presentation" style="width:100%;margin:0 0 24px;">
+  <tr>
+    <td style="background-color:#0f172a;border-radius:8px;padding:36px 32px;text-align:center;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#38bdf8;">
+        Special offer — expires soon
+      </p>
+      <h1 style="margin:0 0 12px;font-size:26px;font-weight:700;color:#ffffff;line-height:1.3;">
+        Still thinking about it? Here's 7% off.
+      </h1>
+      <p style="margin:0 0 28px;font-size:16px;color:#cbd5e1;line-height:1.6;">
+        Your gear is still in your cart. Use code <strong style="color:#ffffff;background-color:#1e3a5f;padding:2px 6px;border-radius:4px;"><%= @discount_code %></strong> at checkout and save <%= @discount_pct %>% on your entire order.
+      </p>
+      <a href="<%= @cart_url %>"
+         style="display:inline-block;background-color:#0ea5e9;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 36px;border-radius:6px;letter-spacing:0.3px;">
+        Claim My 7% Discount →
+      </a>
+    </td>
+  </tr>
+</table>
+
+<%# Discount code highlight -%>
+<table role="presentation" style="width:100%;margin:0 0 24px;">
+  <tr>
+    <td class="discount-box" style="background-color:#0f172a;border:2px solid #0ea5e9;border-radius:8px;padding:24px;text-align:center;">
+      <p class="discount-label" style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#7dd3fc;">
+        Your discount code
+      </p>
+      <p class="discount-code" style="margin:0 0 4px;font-size:32px;font-weight:700;letter-spacing:6px;color:#ffffff;font-family:monospace;">
+        <%= @discount_code %>
+      </p>
+      <p class="discount-sub" style="margin:0;font-size:13px;color:#94a3b8;">
+        <%= @discount_pct %>% off your entire order — enter at checkout
+      </p>
+    </td>
+  </tr>
+</table>
+
+<%# Cart items -%>
+<table class="purchase" role="presentation" style="width:100%;margin:0 0 8px;">
+  <tr>
+    <td style="padding-bottom:10px;border-bottom:2px solid #e2e8f0;">
+      <p class="cart-label" style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748b;">
+        Your Cart &nbsp;·&nbsp; <%= @items.size %> <%= @items.size == 1 ? 'item' : 'items' %>
+      </p>
+    </td>
+  </tr>
+</table>
+
+<% @items.each do |item| %>
+  <table class="purchase" role="presentation" style="width:100%;margin:0;border-bottom:1px solid #e2e8f0;">
+    <tr>
+      <td style="padding:16px 0;width:80px;vertical-align:top;">
+        <% if item[:image_url] %>
+          <img src="<%= item[:image_url] %>"
+               alt="<%= item[:name] %>"
+               width="72" height="72"
+               style="width:72px;height:72px;object-fit:cover;border-radius:6px;display:block;background-color:#f8fafc;" />
+        <% else %>
+          <div style="width:72px;height:72px;border-radius:6px;background-color:#1e293b;"></div>
+        <% end %>
+      </td>
+      <td style="padding:16px 0 16px 16px;vertical-align:top;">
+        <a href="<%= item[:url] %>" style="text-decoration:none;">
+          <p class="item-name" style="margin:0 0 3px;font-size:15px;font-weight:600;color:#0f172a;line-height:1.4;"><%= item[:name] %></p>
+        </a>
+        <% if item[:options] %>
+          <p class="item-options" style="margin:0 0 6px;font-size:13px;color:#64748b;"><%= item[:options] %></p>
+        <% end %>
+        <p class="item-qty" style="margin:0;font-size:14px;color:#374151;">
+          Qty <%= item[:quantity] %>
+          &nbsp;·&nbsp;
+          <strong><%= number_to_currency(item[:price], unit: '€', format: '%n %u') %></strong>
+        </p>
+      </td>
+    </tr>
+  </table>
+<% end %>
+
+<%# Bank transfer offer -%>
+<table role="presentation" style="width:100%;margin:24px 0 8px;">
+  <tr>
+    <td class="bank-box" style="background-color:#0f172a;border:1px solid #1e3a5f;border-radius:8px;padding:24px;">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#38bdf8;">
+        Pay by bank transfer
+      </p>
+      <p class="bank-title" style="margin:0 0 10px;font-size:18px;font-weight:700;color:#ffffff;line-height:1.3;">
+        Get <%= @bank_pct %>% off your entire order
+      </p>
+      <p class="bank-body" style="margin:0 0 16px;font-size:14px;color:#94a3b8;line-height:1.7;">
+        Prefer to pay by bank transfer? Simply complete checkout and choose <strong style="color:#cbd5e1;">Bank Payment</strong> as your payment method. We'll send you the correct invoice with the <strong style="color:#ffffff;"><%= @bank_pct %>% discount</strong> already applied.
+      </p>
+      <table role="presentation" style="width:100%;">
+        <tr>
+          <td style="background-color:#1e3a5f;border-radius:6px;padding:14px 18px;">
+            <p style="margin:0 0 2px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7dd3fc;">
+              How it works
+            </p>
+            <p class="bank-body" style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+              1. Go to checkout → select <strong style="color:#e2e8f0;">Bank Payment</strong><br>
+              2. Complete your order<br>
+              3. We send you the invoice with <strong style="color:#e2e8f0;"><%= @bank_pct %>% off</strong> and bank details
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<%# CTA repeat -%>
+<table class="body-action" role="presentation" style="width:100%;margin:24px 0 8px;">
+  <tr>
+    <td style="text-align:center;">
+      <a href="<%= @cart_url %>"
+         style="display:inline-block;background-color:#0ea5e9;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 36px;border-radius:6px;">
+        Complete My Order — Use Code <%= @discount_code %>
+      </a>
+    </td>
+  </tr>
+</table>
+
+<%# Footer note -%>
+<table role="presentation" style="width:100%;margin-top:32px;">
+  <tr>
+    <td style="border-top:1px solid #e2e8f0;padding-top:20px;text-align:center;">
+      <p class="footer-text" style="color:#94a3b8;font-size:12px;margin:0 0 4px;">
+        You're receiving this because you started an order at
+        <a href="<%= @store_url %>" class="footer-link" style="color:#94a3b8;">surf-store.com</a>.
+        If you've changed your mind, simply ignore this email.
+      </p>
+      <p class="footer-text" style="color:#94a3b8;font-size:12px;margin:0;">
+        Code <strong><%= @discount_code %></strong> = <%= @discount_pct %>% off. Bank payment = <%= @bank_pct %>% off. One discount per order.
+      </p>
+    </td>
+  </tr>
+</table>

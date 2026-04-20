@@ -1,0 +1,28 @@
+Last chance — 7% off your cart at surf-store.com
+
+Your gear is still waiting. Use code <%= @discount_code %> at checkout
+and save <%= @discount_pct %>% on your entire order.
+
+Return to cart: <%= @cart_url %>
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+DISCOUNT CODE: <%= @discount_code %>
+<%= @discount_pct %>% off your entire order
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOUR CART (<%= @items.size %> <%= @items.size == 1 ? 'item' : 'items' %>)
+<% @items.each do |item| %>
+- <%= item[:name] %><%= item[:options] ? " (#{item[:options]})" : '' %> × <%= item[:quantity] %> — <%= number_to_currency(item[:price], unit: '€', format: '%n %u') %>
+<% end %>
+
+---
+PAY BY BANK TRANSFER — GET <%= @bank_pct %>% OFF
+
+Prefer to pay by bank transfer? We'll give you <%= @bank_pct %>% off your total order.
+Email us at <%= @contact_email %> with your order number <%= @order.number %>
+and mention "offer10" to receive a proforma invoice.
+
+---
+You're receiving this because you started an order at surf-store.com.
+Discount code <%= @discount_code %> is valid for <%= @discount_pct %>% off, one-time use.
+If you've changed your mind, just ignore this email.

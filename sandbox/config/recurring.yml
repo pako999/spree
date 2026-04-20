@@ -60,4 +60,9 @@ production:
   abandoned_cart:
     class: AbandonedCartJob
     queue: background
-    schedule: 30 * * * *  # every hour at :30 — catch orders abandoned 60–90 min ago
+    schedule: 30 * * * *  # every hour at :30 — catch orders abandoned ~2 hours ago
+
+  abandoned_cart_24h:
+    class: AbandonedCart24hJob
+    queue: background
+    schedule: 45 * * * *  # every hour at :45 — catch orders abandoned ~24 hours ago

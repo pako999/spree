@@ -17,7 +17,7 @@ class AbandonedCartJob < ApplicationJob
   INCOMPLETE_STATES = %w[cart address delivery payment].freeze
 
   # How long ago the order must have been last touched to qualify
-  ABANDON_WINDOW = (60.minutes..90.minutes)
+  ABANDON_WINDOW = (95.minutes..125.minutes)
 
   def perform
     cutoff_min = ABANDON_WINDOW.min.ago
