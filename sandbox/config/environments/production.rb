@@ -72,7 +72,7 @@ Rails.application.configure do
   
   # Brevo (formerly Sendinblue) SMTP relay for transactional emails.
   config.action_mailer.smtp_settings = {
-    user_name: ENV.fetch('BREVO_SMTP_LOGIN', 'info@surfworld.eu'),
+    user_name: ENV.fetch('BREVO_SMTP_LOGIN', 'a80231001@smtp-brevo.com'),
     password: ENV['BREVO_API_KEY'],
     address: 'smtp-relay.brevo.com',
     port: 587,
