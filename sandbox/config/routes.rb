@@ -52,15 +52,19 @@ Rails.application.routes.draw do
   post "waitlist", to: "waitlist#create"
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Google Merchant Center product feed
+  # Submit https://surf-store.com/feeds/google-shopping.xml to Google Merchant Center.
+  get 'feeds/google-shopping.xml', to: 'feeds#google_shopping', as: :google_shopping_feed, defaults: { format: :xml }
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Catch-all: redirect any unmatched URL to homepage
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
-  # Excludes API, admin, Rails internals, and static assets
+  # Excludes API, admin, Rails internals, static assets, and product feeds
   match '*path', to: redirect('/'), via: :all,
-        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn)} }
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds)} }
 
   # Defines the root path route ("/")
   # root "posts#index"
