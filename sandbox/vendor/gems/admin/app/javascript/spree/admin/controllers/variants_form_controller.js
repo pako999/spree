@@ -831,6 +831,20 @@ export default class extends CheckboxSelectAll {
   }
 
   handleNewOption(_event) {
+    // Auto-commit any text typed in TomSelect inputs but not yet confirmed with Enter
+    this.newOptionValuesSelectContainerTarget
+      .querySelectorAll('[data-multi-tom-select-target="select"]')
+      .forEach((selectTarget) => {
+        const select = selectTarget.querySelector('select')
+        if (!select) return
+        const ts = select.tomselect
+        if (!ts) return
+        const pending = ts.inputValue().trim()
+        if (pending.length > 0) {
+          ts.createItem(pending)
+        }
+      })
+
     const newOptionName = this.newOptionNameInputTarget.options[this.newOptionNameInputTarget.selectedIndex].text
     const newOptionId = String(this.newOptionNameInputTarget.value)
     const newOptionValues = this.newOptionValuesSelectContainerTarget.values()
@@ -905,7 +919,22 @@ export default class extends CheckboxSelectAll {
     let position = this.optionsValue[optionId].position
     let newOptionsPositions = {}
 
-    const optionValues = option.querySelector('[data-slot="optionValuesSelectContainer"]').values()
+    // Auto-commit any text typed in TomSelect inputs but not yet confirmed with Enter
+    const optionValuesContainer = option.querySelector('[data-slot="optionValuesSelectContainer"]')
+    optionValuesContainer
+      .querySelectorAll('[data-multi-tom-select-target="select"]')
+      .forEach((selectTarget) => {
+        const select = selectTarget.querySelector('select')
+        if (!select) return
+        const ts = select.tomselect
+        if (!ts) return
+        const pending = ts.inputValue().trim()
+        if (pending.length > 0) {
+          ts.createItem(pending)
+        }
+      })
+
+    const optionValues = optionValuesContainer.values()
 
     if (optionValues.length === 0) {
       return
