@@ -31,7 +31,16 @@
             data-modal-allow-background-close="true"
             class="h-full w-full waitlist-modal"
             data-modal-backdrop-color-value="rgba(0,0,0,0.32)">
-            <%= form_with(url: spree.line_items_path, method: :post, data: { controller: "turbo-stream-form", product_form_target: "form" }) do |f| %>
+            <%# GA4 data attributes used by the add_to_cart listener in _custom_head.html.erb %>
+            <%= form_with(url: spree.line_items_path, method: :post, data: {
+              controller: "turbo-stream-form",
+              product_form_target: "form",
+              ga_event:      'add_to_cart',
+              ga_item_id:    current_variant&.sku.to_s,
+              ga_item_name:  product.name,
+              ga_item_brand: product.brand_taxon&.name.to_s,
+              ga_price:      current_variant&.price.to_f.to_s
+            }) do |f| %>
               <%= hidden_field_tag :variant_id, current_variant&.id %>
 
               <div data-product-form-target="productDetails">
@@ -311,6 +320,22 @@
     </div>
   </div>
   <%= render 'spree/products/json_ld', product: product, selected_variant: @selected_variant %>
+  <%# GA4 view_item — fires every time a product page (or variant) is rendered %>
+  <script>
+  (function() {
+    if (typeof gtag !== 'function') return;
+    gtag('event', 'view_item', {
+      currency: '<%= current_variant&.currency || "EUR" %>',
+      value:    <%= current_variant&.price.to_f || 0 %>,
+      items: [{
+        item_id:    '<%= j(current_variant&.sku.to_s) %>',
+        item_name:  '<%= j(product.name) %>',
+        item_brand: '<%= j(product.brand_taxon&.name.to_s) %>',
+        price:      <%= current_variant&.price.to_f || 0 %>
+      }]
+    });
+  })();
+  </script>
 </turbo-frame>
 
 <%# Description rendered OUTSIDE turbo-frame so AI crawlers and SEO bots always see it %>

@@ -28,6 +28,28 @@
             <div id="checkout">
               <%= yield %>
             </div>
+            <%# GA4 begin_checkout — fires on the first checkout step (address) only %>
+            <% if @order&.state == 'address' %>
+            <script>
+            (function() {
+              if (typeof gtag !== 'function') return;
+              gtag('event', 'begin_checkout', {
+                currency: '<%= @order.currency %>',
+                value:    <%= @order.total.to_f %>,
+                items: [
+                  <% @order.line_items.each_with_index do |item, idx| %>
+                  {
+                    item_id:   '<%= j(item.variant.sku.to_s) %>',
+                    item_name: '<%= j(item.name) %>',
+                    price:     <%= item.price.to_f %>,
+                    quantity:  <%= item.quantity %>
+                  }<%= ',' if idx < @order.line_items.size - 1 %>
+                  <% end %>
+                ]
+              });
+            })();
+            </script>
+            <% end %>
           </div>
           <footer class="mt-5" id="checkout-footer" data-turbo-permanent>
             <%= render 'spree/checkout/footer' %>

@@ -81,4 +81,30 @@
   <% end %>
 </div>
 
+<% if order_just_completed? %>
+<%# GA4 purchase event — fires once when the order is freshly completed, not on page refresh %>
+<script>
+(function() {
+  if (typeof gtag !== 'function') return;
+  gtag('event', 'purchase', {
+    transaction_id: '<%= j(@order.number) %>',
+    value:          <%= @order.total.to_f %>,
+    tax:            <%= @order.tax_total.to_f %>,
+    shipping:       <%= @order.shipment_total.to_f %>,
+    currency:       '<%= @order.currency %>',
+    items: [
+      <% @order.line_items.each_with_index do |item, idx| %>
+      {
+        item_id:    '<%= j(item.variant.sku.to_s) %>',
+        item_name:  '<%= j(item.name) %>',
+        item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s) %>',
+        price:      <%= item.price.to_f %>,
+        quantity:   <%= item.quantity %>
+      }<%= ',' if idx < @order.line_items.size - 1 %>
+      <% end %>
+    ]
+  });
+})();
+</script>
+<% end %>
 <%= render_storefront_partials(:checkout_complete_partials) if order_just_completed? %>

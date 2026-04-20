@@ -8,13 +8,55 @@
 <script async type="text/javascript" src="https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=<%= ENV['KLAVIYO_PUBLIC_KEY'] %>"></script>
 <% end %>
 
-<!-- Google tag (gtag.js) -->
+<!-- Google tag (gtag.js) — GA4 G-JZLVXELVMD -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZLVXELVMD"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-JZLVXELVMD');
+  gtag('config', 'G-JZLVXELVMD', { send_page_view: true });
+</script>
+
+<!-- GA4 add_to_cart event — listens for successful Turbo form submissions on product forms -->
+<script>
+(function() {
+  var _pending = null;
+
+  // Capture item data just before the add-to-cart form is submitted
+  document.addEventListener('turbo:submit-start', function(e) {
+    var form = e.target;
+    if (form.dataset.gaEvent !== 'add_to_cart') return;
+    var qty = form.querySelector('[name="quantity"]');
+    _pending = {
+      item_id:    form.dataset.gaItemId    || '',
+      item_name:  form.dataset.gaItemName  || '',
+      item_brand: form.dataset.gaItemBrand || '',
+      price:      parseFloat(form.dataset.gaPrice || 0),
+      quantity:   parseInt(qty ? qty.value : 1, 10) || 1
+    };
+  });
+
+  // Fire the event only on success
+  document.addEventListener('turbo:submit-end', function(e) {
+    var form = e.target;
+    if (form.dataset.gaEvent !== 'add_to_cart') { _pending = null; return; }
+    if (!e.detail.success)                       { _pending = null; return; }
+    var d = _pending;
+    _pending = null;
+    if (!d || typeof gtag !== 'function') return;
+    gtag('event', 'add_to_cart', {
+      currency: 'EUR',
+      value:    d.price * d.quantity,
+      items: [{
+        item_id:    d.item_id,
+        item_name:  d.item_name,
+        item_brand: d.item_brand,
+        price:      d.price,
+        quantity:   d.quantity
+      }]
+    });
+  });
+})();
 </script>
 
 <link rel="preconnect" href="https://esm.sh" crossorigin>
