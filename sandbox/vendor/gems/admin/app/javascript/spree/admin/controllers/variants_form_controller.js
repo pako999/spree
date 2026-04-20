@@ -831,20 +831,6 @@ export default class extends CheckboxSelectAll {
   }
 
   handleNewOption(_event) {
-    // Auto-commit any text typed in TomSelect inputs but not yet confirmed with Enter
-    this.newOptionValuesSelectContainerTarget
-      .querySelectorAll('[data-multi-tom-select-target="select"]')
-      .forEach((selectTarget) => {
-        const select = selectTarget.querySelector('select')
-        if (!select) return
-        const ts = select.tomselect
-        if (!ts) return
-        const pending = ts.inputValue().trim()
-        if (pending.length > 0) {
-          ts.createItem(pending)
-        }
-      })
-
     const newOptionName = this.newOptionNameInputTarget.options[this.newOptionNameInputTarget.selectedIndex].text
     const newOptionId = String(this.newOptionNameInputTarget.value)
     const newOptionValues = this.newOptionValuesSelectContainerTarget.values()
@@ -919,22 +905,7 @@ export default class extends CheckboxSelectAll {
     let position = this.optionsValue[optionId].position
     let newOptionsPositions = {}
 
-    // Auto-commit any text typed in TomSelect inputs but not yet confirmed with Enter
-    const optionValuesContainer = option.querySelector('[data-slot="optionValuesSelectContainer"]')
-    optionValuesContainer
-      .querySelectorAll('[data-multi-tom-select-target="select"]')
-      .forEach((selectTarget) => {
-        const select = selectTarget.querySelector('select')
-        if (!select) return
-        const ts = select.tomselect
-        if (!ts) return
-        const pending = ts.inputValue().trim()
-        if (pending.length > 0) {
-          ts.createItem(pending)
-        }
-      })
-
-    const optionValues = optionValuesContainer.values()
+    const optionValues = option.querySelector('[data-slot="optionValuesSelectContainer"]').values()
 
     if (optionValues.length === 0) {
       return
@@ -1289,6 +1260,12 @@ export default class extends CheckboxSelectAll {
    * @param {Event} event - The form submit event
    */
   normalizePricesBeforeSubmit(event) {
+    // If the "Add option" form is open when the user clicks Save, auto-submit it first
+    // so variants are generated and included in the form submission
+    if (this.hasNewOptionFormTarget && !this.newOptionFormTarget.classList.contains('hidden')) {
+      this.handleNewOption(event)
+    }
+
     // Find all price inputs in the variants container
     const priceInputs = this.variantsContainerTarget.querySelectorAll(
       'input[data-slot*="[prices_attributes]"][data-slot*="[amount]_input"]'
