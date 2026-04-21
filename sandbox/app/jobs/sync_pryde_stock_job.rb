@@ -118,6 +118,8 @@ class SyncPrydeStockJob < SyncStockBaseJob
       end
     end
 
+    report_sync_stats(matched: matched, updated: updated, skipped: skipped,
+                      unmatched: stock_map.size - matched, total_in_feed: stock_map.size)
     Rails.logger.info "[PrydeStock] Sync complete — Matched: #{matched}, Updated: #{updated}, Unchanged: #{skipped}, Unmatched: #{stock_map.size - matched}"
   end
 end
