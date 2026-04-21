@@ -6,6 +6,21 @@ module Spree
   class TelegramNotifier
     TELEGRAM_API_URL = "https://api.telegram.org/bot"
 
+    def self.send_sync_failure(job_name, error)
+      token = ENV['TELEGRAM_BOT_TOKEN']
+      chat_id = ENV['TELEGRAM_CHAT_ID']
+
+      if token.blank? || chat_id.blank?
+        Rails.logger.warn "[TelegramNotifier] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID. Skipping notification."
+        return
+      end
+
+      message = format_sync_failure_message(job_name, error)
+      send_message(token, chat_id, message)
+    rescue StandardError => e
+      Rails.error.report(e, message: "[TelegramNotifier] Failed to send sync failure notification", handled: true)
+    end
+
     def self.send_order_notification(order)
       token = ENV['TELEGRAM_BOT_TOKEN']
       chat_id = ENV['TELEGRAM_CHAT_ID']
@@ -22,6 +37,20 @@ module Spree
     end
 
     private
+
+    def self.format_sync_failure_message(job_name, error)
+      label = job_name.gsub('SyncStockJob', '').gsub('Sync', '').gsub('StockJob', '').gsub('Stock', '')
+      label = job_name if label.blank?
+      <<~MESSAGE
+        ❌ <b>Stock Sync Failed: #{label}</b>
+
+        <b>Job:</b> #{job_name}
+        <b>Error:</b> #{error.class}: #{error.message.to_s.truncate(300)}
+        <b>Time:</b> #{Time.current.strftime('%Y-%m-%d %H:%M UTC')}
+
+        🔗 <a href="https://www.surf-store.com/admin">Open Admin</a>
+      MESSAGE
+    end
 
     def self.format_order_message(order)
       <<~MESSAGE

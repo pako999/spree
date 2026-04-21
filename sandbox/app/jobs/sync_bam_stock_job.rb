@@ -7,8 +7,7 @@
 
 require "open3"
 
-class SyncBamStockJob < ApplicationJob
-  queue_as :default
+class SyncBamStockJob < SyncStockBaseJob
 
   FTP_HOST     = "hookipa.boards-and-more.com"
   FTP_USER     = "as_int"
@@ -25,8 +24,7 @@ class SyncBamStockJob < ApplicationJob
     )
 
     unless status.success?
-      Rails.logger.error "[BamStock] FTP download failed!"
-      return
+      raise "[BamStock] FTP download failed!"
     end
 
     Rails.logger.info "[BamStock] Downloaded #{csv_data.lines.count} lines from FTP"
@@ -48,8 +46,7 @@ class SyncBamStockJob < ApplicationJob
     # Step 3: Match EANs to Spree variants and update stock
     stock_location = Spree::StockLocation.first
     unless stock_location
-      Rails.logger.error "[BamStock] No stock location found!"
-      return
+      raise "[BamStock] No stock location found!"
     end
 
     matched = 0

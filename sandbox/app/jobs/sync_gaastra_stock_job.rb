@@ -12,8 +12,7 @@
 
 require "open3"
 
-class SyncGaastraStockJob < ApplicationJob
-  queue_as :default
+class SyncGaastraStockJob < SyncStockBaseJob
 
   CSV_URL  = "https://connectshop.gaastra.io/nsstock/ns_shop_in_shop_stocklevel.csv"
   HTTP_USER = "Amodor10574"
@@ -31,8 +30,7 @@ class SyncGaastraStockJob < ApplicationJob
     )
 
     unless status.success? && csv_data.present?
-      Rails.logger.error "[GaastraStock] Download failed!"
-      return
+      raise "[GaastraStock] Download failed!"
     end
 
     Rails.logger.info "[GaastraStock] Downloaded #{csv_data.lines.count} lines"
@@ -59,8 +57,7 @@ class SyncGaastraStockJob < ApplicationJob
     # Step 3: Find the dedicated stock location
     stock_location = Spree::StockLocation.find_by(name: STOCK_LOCATION_NAME)
     unless stock_location
-      Rails.logger.error "[GaastraStock] Stock location '#{STOCK_LOCATION_NAME}' not found!"
-      return
+      raise "[GaastraStock] Stock location '#{STOCK_LOCATION_NAME}' not found!"
     end
 
     # Step 4: Match EANs to Spree variants and update stock

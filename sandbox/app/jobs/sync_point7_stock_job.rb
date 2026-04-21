@@ -12,8 +12,7 @@
 require "csv"
 require "open3"
 
-class SyncPoint7StockJob < ApplicationJob
-  queue_as :default
+class SyncPoint7StockJob < SyncStockBaseJob
 
   API_URL = "https://point-7.com/wp-json/store/v1/export?token=cJs6kEAmWX6Kj2RfJuLBrPaf"
 
@@ -27,8 +26,7 @@ class SyncPoint7StockJob < ApplicationJob
     )
 
     unless status.success? && csv_data.present?
-      Rails.logger.error "[Point7Stock] API download failed!"
-      return
+      raise "[Point7Stock] API download failed!"
     end
 
     Rails.logger.info "[Point7Stock] Downloaded #{csv_data.lines.count} lines from Point7 API"
@@ -68,8 +66,7 @@ class SyncPoint7StockJob < ApplicationJob
     # Step 3: Match SKUs to Spree variants and update stock
     stock_location = Spree::StockLocation.find_by(name: "Point7")
     unless stock_location
-      Rails.logger.error "[Point7Stock] 'Point7' stock location not found!"
-      return
+      raise "[Point7Stock] 'Point7' stock location not found!"
     end
 
     matched = 0

@@ -13,8 +13,7 @@
 
 require "open3"
 
-class SyncPrydeStockJob < ApplicationJob
-  queue_as :default
+class SyncPrydeStockJob < SyncStockBaseJob
 
   FTP_HOST     = "mail.neilpryde.de"
   FTP_USER     = "haendler"
@@ -38,8 +37,7 @@ class SyncPrydeStockJob < ApplicationJob
     )
 
     unless status.success?
-      Rails.logger.error "[PrydeStock] FTP download failed!"
-      return
+      raise "[PrydeStock] FTP download failed!"
     end
 
     Rails.logger.info "[PrydeStock] Downloaded #{csv_data.bytesize} bytes from FTP"
@@ -86,8 +84,7 @@ class SyncPrydeStockJob < ApplicationJob
     # Step 3: Match EANs to Spree variants and update stock
     stock_location = Spree::StockLocation.find_by(name: "Pryde")
     unless stock_location
-      Rails.logger.error "[PrydeStock] 'Pryde' stock location not found!"
-      return
+      raise "[PrydeStock] 'Pryde' stock location not found!"
     end
 
     matched = 0

@@ -1,3 +1,4 @@
+<% if product.has_images? %>
 <script type="application/ld+json" data-test-id="product-json-ld">
   <% first_or_default_variant = product.first_or_default_variant(current_currency) %>
   {
@@ -5,9 +6,7 @@
     "@type": "Product",
     "name": <%= product.name.to_json.html_safe %>,
     "url": <%= spree.product_url(product, host: current_store.url_or_custom_domain, locale: I18n.default_locale).to_json.html_safe %>,
-  <% if product.has_images? %>
     "image": <%= product.images.limit(8).map { |img| spree_image_url(img, variant: :large) }.to_json.html_safe %>,
-  <% end %>
   <% if product.description.present? %>
     "description": <%= strip_tags(product.description).to_json.html_safe %>,
   <% end %>
@@ -37,6 +36,7 @@
   ]
   }
 </script>
+<% end %>
 <script type="application/ld+json">
   <%= product_json_ld_breadcrumbs(product).to_json.html_safe %>
 </script>
