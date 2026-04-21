@@ -9,6 +9,7 @@
 #
 # Matching: EAN (col 8) preferred, falls back to UPC (col 9) → Spree::Variant.barcode
 # NeilPryde/JP items have EAN codes, Cabrinha items typically only have UPC codes.
+# Stock location: "Pryde" (dedicated location for NeilPryde-distributed products)
 
 require "open3"
 
@@ -83,9 +84,9 @@ class SyncPrydeStockJob < ApplicationJob
     Rails.logger.info "[PrydeStock] Parsed #{stock_map.size} EAN entries (#{stock_map.count { |_, q| q > 0 }} with stock)"
 
     # Step 3: Match EANs to Spree variants and update stock
-    stock_location = Spree::StockLocation.first
+    stock_location = Spree::StockLocation.find_by(name: "Pryde")
     unless stock_location
-      Rails.logger.error "[PrydeStock] No stock location found!"
+      Rails.logger.error "[PrydeStock] 'Pryde' stock location not found!"
       return
     end
 
