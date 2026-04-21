@@ -6,7 +6,7 @@
 # Format: CSV with header row
 # Columns: category,name,type,sku,ean,ex sx3 preorder,sx3 single item,eu rrp,eu rrp +vat,inventory,image,description
 #
-# Matching: EAN (col 4) → Spree::Variant.barcode
+# Matching: SKU (col 3) → Spree::Variant.sku (EAN col 4 is empty for most items)
 # Stock location: "Point7" (id 5)
 
 require "csv"
@@ -33,7 +33,7 @@ class SyncPoint7StockJob < ApplicationJob
 
     Rails.logger.info "[Point7Stock] Downloaded #{csv_data.lines.count} lines from Point7 API"
 
-    # Step 2: Parse CSV into EAN → quantity hash
+    # Step 2: Parse CSV into SKU → quantity hash
     # Data rows may have leading whitespace — strip each line before parsing
     stock_map = {}
     first_line = true
@@ -52,20 +52,20 @@ class SyncPoint7StockJob < ApplicationJob
         row = CSV.parse_line(line)
         next unless row && row.length >= 10
 
-        ean = row[4].to_s.strip
+        sku = row[3].to_s.strip
         qty = row[9].to_s.strip.to_i
 
-        next if ean.blank?
+        next if sku.blank?
 
-        stock_map[ean] = qty
+        stock_map[sku] = qty
       rescue CSV::MalformedCSVError
         next
       end
     end
 
-    Rails.logger.info "[Point7Stock] Parsed #{stock_map.size} EAN entries (#{stock_map.count { |_, q| q > 0 }} with stock)"
+    Rails.logger.info "[Point7Stock] Parsed #{stock_map.size} SKU entries (#{stock_map.count { |_, q| q > 0 }} with stock)"
 
-    # Step 3: Match EANs to Spree variants and update stock
+    # Step 3: Match SKUs to Spree variants and update stock
     stock_location = Spree::StockLocation.find_by(name: "Point7")
     unless stock_location
       Rails.logger.error "[Point7Stock] 'Point7' stock location not found!"
@@ -76,13 +76,13 @@ class SyncPoint7StockJob < ApplicationJob
     updated = 0
     skipped = 0
 
-    variants_with_barcodes = Spree::Variant.where(barcode: stock_map.keys).includes(:stock_items)
-    variant_map = variants_with_barcodes.index_by(&:barcode)
+    variants_with_skus = Spree::Variant.where(sku: stock_map.keys).includes(:stock_items)
+    variant_map = variants_with_skus.index_by(&:sku)
 
-    Rails.logger.info "[Point7Stock] Matched #{variant_map.size} of #{stock_map.size} EANs to variants"
+    Rails.logger.info "[Point7Stock] Matched #{variant_map.size} of #{stock_map.size} SKUs to variants"
 
-    stock_map.each do |ean, new_qty|
-      variant = variant_map[ean]
+    stock_map.each do |sku, new_qty|
+      variant = variant_map[sku]
       next unless variant
       matched += 1
 
