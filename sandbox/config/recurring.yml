@@ -36,6 +36,11 @@ production:
     queue: default
     schedule: every 3 hours at minute 45
 
+  sync_point7_stock:
+    class: SyncPoint7StockJob
+    queue: default
+    schedule: every 4 hours at minute 15
+
   # ── Weekly SEO automation ──────────────────────────────────────────────────
   generate_seo_meta:
     class: GenerateSeoMetaJob
