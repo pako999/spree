@@ -16,6 +16,12 @@ class SyncStockBaseJob < ApplicationJob
   end
 
   around_perform do |job, block|
+    # Mark any stale "running" entries for this job as failed (leftover from crashed runs)
+    Spree::StockSyncLog.where(job_name: job.class.name, status: 'running')
+                       .where('started_at < ?', 30.minutes.ago)
+                       .update_all(status: 'failed', finished_at: Time.current,
+                                   error_message: 'Marked failed: job did not complete (process crash or timeout)')
+
     log = Spree::StockSyncLog.create!(
       job_name:   job.class.name,
       status:     'running',

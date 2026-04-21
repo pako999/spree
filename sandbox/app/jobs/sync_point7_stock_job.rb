@@ -21,7 +21,7 @@ class SyncPoint7StockJob < SyncStockBaseJob
 
     # Step 1: Download stock CSV from API
     csv_data, status = Open3.capture2(
-      "curl", "-s", "--connect-timeout", "30",
+      "curl", "-s", "--connect-timeout", "30", "--max-time", "120",
       API_URL
     )
 

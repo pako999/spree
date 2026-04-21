@@ -18,13 +18,15 @@ class SyncBamStockJob < SyncStockBaseJob
     Rails.logger.info "[BamStock] Starting Boards & More stock sync..."
 
     # Step 1: Download stock CSV from FTP
+    # --connect-timeout: max time to establish connection
+    # --max-time: hard cap on total transfer time (prevents infinite hang)
     csv_data, status = Open3.capture2(
-      "curl", "-s", "--connect-timeout", "30",
+      "curl", "-s", "--connect-timeout", "30", "--max-time", "120",
       "ftp://#{FTP_USER}:#{FTP_PASSWORD}@#{FTP_HOST}/#{FTP_FILE}"
     )
 
-    unless status.success?
-      raise "[BamStock] FTP download failed!"
+    unless status.success? && csv_data.present?
+      raise "[BamStock] FTP download failed (exit #{status.exitstatus})!"
     end
 
     Rails.logger.info "[BamStock] Downloaded #{csv_data.lines.count} lines from FTP"
@@ -44,9 +46,9 @@ class SyncBamStockJob < SyncStockBaseJob
     Rails.logger.info "[BamStock] Parsed #{stock_map.size} EAN entries (#{stock_map.count { |_, q| q > 0 }} with stock)"
 
     # Step 3: Match EANs to Spree variants and update stock
-    stock_location = Spree::StockLocation.first
+    stock_location = Spree::StockLocation.find_by(name: "Boards And More")
     unless stock_location
-      raise "[BamStock] No stock location found!"
+      raise "[BamStock] 'Boards And More' stock location not found!"
     end
 
     matched = 0

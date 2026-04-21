@@ -24,7 +24,7 @@ class SyncGaastraStockJob < SyncStockBaseJob
 
     # Step 1: Download CSV via HTTPS with Basic Auth
     csv_data, status = Open3.capture2(
-      "curl", "-s", "--connect-timeout", "30",
+      "curl", "-s", "--connect-timeout", "30", "--max-time", "120",
       "-u", "#{HTTP_USER}:#{HTTP_PASS}",
       CSV_URL
     )
