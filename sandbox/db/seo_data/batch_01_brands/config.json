@@ -1,0 +1,26 @@
+{
+  "entity_type": "taxons",
+  "note": "All 20 taxons already have content imported via taxons.csv. This config is for reference only — API generation not needed.",
+  "rows": [
+    {"keyword": "duotone kiteboarding", "permalink": "brands/duotone-kiteboarding", "name": "Duotone Kiteboarding", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone windsurfing", "permalink": "brands/duotone-windsurfing", "name": "Duotone Windsurfing", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone wingsurfing", "permalink": "brands/duotone-wing-foiling", "name": "Duotone Wing Foiling", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone sup", "permalink": "brands/duotone-sup", "name": "Duotone SUP", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "cabrinha kites", "permalink": "brands/cabrinha", "name": "Cabrinha", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "neilpryde", "permalink": "brands/neilpryde", "name": "NeilPryde", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "jp australia windsurf", "permalink": "brands/jp-australia-sup-windsurf-boards", "name": "JP Australia", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "gaastra windsurfing", "permalink": "brands/gaastra", "name": "Gaastra", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "nobile kiteboarding", "permalink": "brands/nobile", "name": "Nobile Kiteboarding", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "ion wetsuit", "permalink": "brands/ion", "name": "ION", "parent_permalink": "brands", "depth": 2, "template": "brand_hub", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone kites", "permalink": "brands/duotone-kiteboarding/kites", "name": "Duotone Kites", "parent_permalink": "brands/duotone-kiteboarding", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone kite bars", "permalink": "brands/duotone-kiteboarding/kite-bars", "name": "Duotone Kite Bars", "parent_permalink": "brands/duotone-kiteboarding", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone kiteboards", "permalink": "brands/duotone-kiteboarding/kiteboards", "name": "Duotone Kiteboards", "parent_permalink": "brands/duotone-kiteboarding", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone windsurfing sails", "permalink": "brands/duotone-windsurfing/sails", "name": "Duotone Windsurf Sails", "parent_permalink": "brands/duotone-windsurfing", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone windsurf masts", "permalink": "brands/duotone-windsurfing/masts", "name": "Duotone Windsurf Masts", "parent_permalink": "brands/duotone-windsurfing", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone windsurf booms", "permalink": "brands/duotone-windsurfing/booms", "name": "Duotone Windsurf Booms", "parent_permalink": "brands/duotone-windsurfing", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "duotone wings", "permalink": "brands/duotone-wing-foiling/wings", "name": "Duotone Wings", "parent_permalink": "brands/duotone-wing-foiling", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "cabrinha kites", "permalink": "brands/cabrinha/kites", "name": "Cabrinha Kites", "parent_permalink": "brands/cabrinha", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "neilpryde sails", "permalink": "brands/neilpryde/sails", "name": "NeilPryde Sails", "parent_permalink": "brands/neilpryde", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"},
+    {"keyword": "ion wetsuits", "permalink": "brands/ion/wetsuits", "name": "ION Wetsuits", "parent_permalink": "brands/ion", "depth": 3, "template": "brand_product", "batch_id": "batch_01_brands"}
+  ]
+}

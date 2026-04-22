@@ -162,17 +162,18 @@ namespace :seo do
       }
     end
 
-    # Posts with seo_batch_id metafield
-    Spree::Post.published
-               .joins(:public_metafields)
-               .where(spree_metafields: { key: 'seo_batch_id' })
-               .each do |p|
-      urls << {
-        loc:     "#{base_url}/#{I18n.locale}/posts/#{p.slug}",
-        lastmod: p.updated_at.iso8601,
-        changefreq: 'monthly',
-        priority: '0.6'
-      }
+    # Posts — include all published posts in SEO sitemap
+    begin
+      Spree::Post.published.each do |p|
+        urls << {
+          loc:     "#{base_url}/#{I18n.locale}/posts/#{p.slug}",
+          lastmod: p.updated_at.iso8601,
+          changefreq: 'monthly',
+          priority: '0.6'
+        }
+      end
+    rescue => e
+      puts "  Skipped posts: #{e.message.truncate(80)}"
     end
 
     xml = <<~XML
