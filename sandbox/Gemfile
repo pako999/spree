@@ -85,4 +85,5 @@ end
 gem "pg", "~> 1.6"
 gem "sitemap_generator"
 gem "spree_storefront", "~> 5.3"
+gem "spree_klaviyo"
 gem "aws-sdk-s3", require: false

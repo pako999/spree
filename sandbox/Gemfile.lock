@@ -785,6 +785,9 @@ GEM
       rails-i18n
       spree_core (>= 4.2.0.rc3)
       spree_extension
+    spree_klaviyo (1.1.2)
+      spree (>= 5.1.0.beta2)
+      spree_admin (>= 5.1.0.beta2)
     spree_page_builder (5.3.3)
       spree (>= 5.3.3)
       spree_admin (>= 5.3.3)
@@ -936,6 +939,7 @@ DEPENDENCIES
   spree_dev_tools
   spree_emails!
   spree_i18n
+  spree_klaviyo
   spree_sample!
   spree_storefront (~> 5.3)
   sqlite3 (>= 2.1)
