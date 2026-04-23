@@ -17,8 +17,8 @@ module Spree
     private
 
     def find_reimbursement(event)
-      reimbursement_id = event.payload['id']
-      Spree::Reimbursement.find_by(prefix_id: reimbursement_id) || Spree::Reimbursement.find_by(id: reimbursement_id)
+      rid = event.payload['id']
+      Spree::Reimbursement.find_by(prefix_id: rid) || Spree::Reimbursement.find_by(id: rid)
     end
   end
 end
