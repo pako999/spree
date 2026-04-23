@@ -85,7 +85,7 @@ Rails.application.config.after_initialize do
   # Spree.reports << Spree::Reports::MassivelyOvercomplexReportForCfo
 
   # Admin partials
-  # Spree.admin.partials.product_form << 'spree/admin/products/custom_section'
+  Spree.admin.partials.product_form << 'spree/admin/products/bulk_image_assign'
 
   # Role-based permissions
   # Configure which permission sets are assigned to each role
