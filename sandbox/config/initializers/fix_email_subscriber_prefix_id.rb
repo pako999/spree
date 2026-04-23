@@ -1,7 +1,7 @@
 # Fix: event payload contains prefix_id (or_xxx) but email subscribers
 # use find_by(id:) which expects integer DB id. This prepends prefix_id
 # lookup to all 3 email subscribers.
-Rails.application.config.after_initialize do
+Rails.application.config.to_prepare do
   Spree::OrderEmailSubscriber.class_eval do
     private
 
