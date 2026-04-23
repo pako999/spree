@@ -64,6 +64,13 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  # Old Shopify URLs → 301 redirects (preserves SEO)
+  get 'blogs/news/:slug', to: redirect('/en/posts/%{slug}', status: 301)
+  get 'blogs/:category/:slug', to: redirect('/en/posts/%{slug}', status: 301)
+  get ':locale/blogs/news/:slug', to: redirect('/en/posts/%{slug}', status: 301)
+  get ':locale/blogs/:category/:slug', to: redirect('/en/posts/%{slug}', status: 301)
+  get 'pages/about-us', to: redirect('/en/policies/about-us', status: 301)
+
   # Catch-all: redirect any unmatched URL to homepage
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
   # Excludes API, admin, Rails internals, static assets, and product feeds
