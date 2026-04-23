@@ -58,6 +58,7 @@ Rails.application.routes.draw do
   # Google Merchant Center product feed
   # Submit https://surf-store.com/feeds/google-shopping.xml to Google Merchant Center.
   get 'feeds/google-shopping.xml', to: 'feeds#google_shopping', as: :google_shopping_feed, defaults: { format: :xml }
+  get 'sitemap-seo.xml', to: 'feeds#sitemap_seo', as: :seo_sitemap, defaults: { format: :xml }
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
@@ -67,7 +68,7 @@ Rails.application.routes.draw do
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
   # Excludes API, admin, Rails internals, static assets, and product feeds
   match '*path', to: redirect('/'), via: :all,
-        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds)} }
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap)} }
 
   # Defines the root path route ("/")
   # root "posts#index"

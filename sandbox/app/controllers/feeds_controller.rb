@@ -156,4 +156,34 @@ class FeedsController < ApplicationController
   rescue StandardError
     nil
   end
+
+  # GET /feeds/sitemap-seo.xml
+  # SEO sitemap for taxon descriptions and blog posts
+  public
+
+  def sitemap_seo
+    store    = Spree::Store.find(STORE_ID)
+    base_url = "https://#{store.url}"
+
+    urls = []
+
+    # Taxons with SEO descriptions
+    Spree::Taxon.where.not(description: [nil, '']).where('public_metadata IS NOT NULL').find_each do |t|
+      urls << { loc: "#{base_url}/t/#{t.permalink}", lastmod: t.updated_at.iso8601, priority: '0.7' }
+    end
+
+    # Published posts
+    Spree::Post.where.not(published_at: nil).find_each do |p|
+      urls << { loc: "#{base_url}/en/posts/#{p.slug}", lastmod: p.updated_at.iso8601, priority: '0.6' }
+    end
+
+    xml = <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      #{urls.map { |u| "  <url>\n    <loc>#{u[:loc]}</loc>\n    <lastmod>#{u[:lastmod]}</lastmod>\n    <priority>#{u[:priority]}</priority>\n  </url>" }.join("\n")}
+      </urlset>
+    XML
+
+    render xml: xml
+  end
 end
