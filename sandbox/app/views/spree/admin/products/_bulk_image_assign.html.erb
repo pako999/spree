@@ -1,81 +1,94 @@
 <script>
-// Bulk "Assign Image" for selected variants — injected via product_form partial
+// Bulk "Assign Image" for selected variants
+// Self-contained: injects the button AND handles click logic
+// No vendor gem modifications needed
 (function() {
-  const btn = document.querySelector('[data-action="variants-form#assignImageToSelected"]')
-  if (!btn) return
+  function init() {
+    var deleteBtn = document.querySelector('[data-variants-form-target="deleteButton"]')
+    if (!deleteBtn || document.getElementById('bulk-assign-img-btn')) return
 
-  btn.removeAttribute('data-action')
-  btn.addEventListener('click', function(e) {
-    e.preventDefault()
+    // Create button next to Delete Selected
+    var btn = document.createElement('button')
+    btn.type = 'button'
+    btn.id = 'bulk-assign-img-btn'
+    btn.className = 'btn btn-primary btn-sm hidden ml-2'
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1" style="display:inline;vertical-align:-2px"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg> Assign Image'
+    deleteBtn.after(btn)
 
-    const formEl = btn.closest('[data-controller*="variants-form"]')
-    if (!formEl) return
-
-    const checked = Array.from(formEl.querySelectorAll('input[data-variants-form-target="checkbox"]:checked'))
-    if (checked.length === 0) { alert('Select variants first.'); return }
-
-    const variantIds = JSON.parse(formEl.dataset.variantsFormVariantIdsValue || '{}')
-    const variantPrefixIds = JSON.parse(formEl.dataset.variantsFormVariantPrefixIdsValue || '{}')
-    const images = JSON.parse(formEl.dataset.variantsFormAllProductImagesValue || '[]')
-
-    if (images.length === 0) { alert('No product images. Upload images first.'); return }
-
-    const selectedVariants = checked.map(function(cb) {
-      var name = cb.value
-      var row = formEl.querySelector('[data-variant-name="' + name + '"]')
-      return { name: name, row: row, id: variantIds[name], prefixId: variantPrefixIds[name] || variantIds[name] }
-    }).filter(function(v) { return v.id && v.row })
-
-    if (selectedVariants.length === 0) return
-
-    var existing = document.getElementById('bulk-image-modal')
-    if (existing) existing.remove()
-
-    var modal = document.createElement('div')
-    modal.id = 'bulk-image-modal'
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;'
-    modal.onclick = function(ev) { if (ev.target === modal) modal.remove() }
-
-    var grid = images.map(function(img) {
-      return '<div data-img-id="' + img.id + '" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;aspect-ratio:1;transition:all 0.15s;" onmouseenter="this.style.borderColor=\'#3b82f6\';this.style.transform=\'scale(1.03)\'" onmouseleave="this.style.borderColor=\'#e5e7eb\';this.style.transform=\'scale(1)\'"><img src="' + img.url + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy" /></div>'
-    }).join('')
-
-    modal.innerHTML = '<div style="background:white;border-radius:12px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);"><div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><div><h3 style="margin:0;font-size:16px;font-weight:600;">Assign image to ' + selectedVariants.length + ' variant' + (selectedVariants.length > 1 ? 's' : '') + '</h3><p style="margin:4px 0 0;font-size:13px;color:#6b7280;">Click an image to assign it to all selected variants</p></div><button onclick="document.getElementById(\'bulk-image-modal\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af;">&times;</button></div><div style="padding:16px 20px;overflow-y:auto;flex:1;"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">' + grid + '</div></div></div>'
-
-    document.body.appendChild(modal)
-    document.addEventListener('keydown', function esc(ev) { if (ev.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', esc) } })
-
-    modal.querySelectorAll('[data-img-id]').forEach(function(item) {
-      item.onclick = async function() {
-        var imageId = item.dataset.imgId
-        item.style.opacity = '0.5'
-        item.style.pointerEvents = 'none'
-
-        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-        var pathMatch = window.location.pathname.match(/^(\/[^/]+)\/products\/([^/]+)/)
-        if (!pathMatch) { alert('Could not determine product path.'); return }
-
-        var ok = 0
-        for (var v of selectedVariants) {
-          try {
-            var res = await fetch(pathMatch[1] + '/products/' + pathMatch[2] + '/variants/' + v.prefixId + '/assign_image', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrfToken },
-              body: JSON.stringify({ image_id: imageId })
-            })
-            if (res.ok) {
-              var vi = v.row.querySelector('[data-slot="variantImage"]')
-              var ph = v.row.querySelector('[data-slot="variantImagePlaceholder"]')
-              var src = item.querySelector('img')?.src
-              if (vi && src) { vi.src = src; vi.classList.remove('hidden'); if (ph) ph.classList.add('hidden') }
-              ok++
-            }
-          } catch (err) { console.error('Assign failed:', v.name, err) }
-        }
-        modal.remove()
-        if (ok < selectedVariants.length) alert('Assigned to ' + ok + '/' + selectedVariants.length + ' variants.')
-      }
+    // Show/hide with delete button
+    var observer = new MutationObserver(function() {
+      btn.classList.toggle('hidden', deleteBtn.classList.contains('hidden'))
     })
-  })
+    observer.observe(deleteBtn, { attributes: true, attributeFilter: ['class'] })
+
+    btn.addEventListener('click', function(e) {
+      e.preventDefault()
+      var formEl = btn.closest('[data-controller*="variants-form"]')
+      if (!formEl) return
+
+      var checked = Array.from(formEl.querySelectorAll('input[data-variants-form-target="checkbox"]:checked'))
+      if (!checked.length) return
+
+      var variantIds = JSON.parse(formEl.dataset.variantsFormVariantIdsValue || '{}')
+      var variantPrefixIds = JSON.parse(formEl.dataset.variantsFormVariantPrefixIdsValue || '{}')
+      var images = JSON.parse(formEl.dataset.variantsFormAllProductImagesValue || '[]')
+      if (!images.length) { alert('No product images. Upload images first.'); return }
+
+      var selected = checked.map(function(cb) {
+        var n = cb.value
+        return { name: n, row: formEl.querySelector('[data-variant-name="'+n+'"]'), id: variantIds[n], pid: variantPrefixIds[n] || variantIds[n] }
+      }).filter(function(v) { return v.id && v.row })
+      if (!selected.length) return
+
+      var old = document.getElementById('bulk-image-modal')
+      if (old) old.remove()
+
+      var modal = document.createElement('div')
+      modal.id = 'bulk-image-modal'
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center'
+      modal.onclick = function(ev) { if (ev.target === modal) modal.remove() }
+
+      var grid = images.map(function(img) {
+        return '<div data-iid="'+img.id+'" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;aspect-ratio:1;transition:all .15s" onmouseenter="this.style.borderColor=\'#3b82f6\'" onmouseleave="this.style.borderColor=\'#e5e7eb\'"><img src="'+img.url+'" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>'
+      }).join('')
+
+      modal.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0;font-size:16px;font-weight:600">Assign image to '+selected.length+' variant'+(selected.length>1?'s':'')+'</h3><p style="margin:4px 0 0;font-size:13px;color:#6b7280">Click an image to assign it to all selected variants</p></div><button onclick="document.getElementById(\'bulk-image-modal\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#9ca3af">&times;</button></div><div style="padding:16px 20px;overflow-y:auto;flex:1"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+grid+'</div></div></div>'
+
+      document.body.appendChild(modal)
+      document.addEventListener('keydown', function esc(ev) { if (ev.key==='Escape') { modal.remove(); document.removeEventListener('keydown', esc) } })
+
+      modal.querySelectorAll('[data-iid]').forEach(function(item) {
+        item.onclick = async function() {
+          item.style.opacity = '0.5'
+          item.style.pointerEvents = 'none'
+          var csrf = document.querySelector('meta[name="csrf-token"]')
+          var pm = window.location.pathname.match(/^(\/[^/]+)\/products\/([^/]+)/)
+          if (!pm) return
+          var ok = 0
+          for (var v of selected) {
+            try {
+              var r = await fetch(pm[1]+'/products/'+pm[2]+'/variants/'+v.pid+'/assign_image', {
+                method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-Token':csrf&&csrf.content}, body:JSON.stringify({image_id:item.dataset.iid})
+              })
+              if (r.ok) {
+                var vi = v.row.querySelector('[data-slot="variantImage"]')
+                var ph = v.row.querySelector('[data-slot="variantImagePlaceholder"]')
+                var src = item.querySelector('img').src
+                if (vi) { vi.src=src; vi.classList.remove('hidden'); if(ph) ph.classList.add('hidden') }
+                ok++
+              }
+            } catch(err) { console.error('Assign failed:', v.name, err) }
+          }
+          modal.remove()
+          if (ok<selected.length) alert('Assigned to '+ok+'/'+selected.length+' variants.')
+        }
+      })
+    })
+  }
+
+  // Run after page load and after Turbo navigations
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', function() { setTimeout(init, 500) }) }
+  else { setTimeout(init, 500) }
+  document.addEventListener('turbo:load', function() { setTimeout(init, 500) })
 })()
 </script>
