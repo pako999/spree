@@ -6,7 +6,7 @@
   <% width ||= theme_setting('product_listing_image_width') %>
   <figure class="group <%= 'aspect-1' if height == width %> card-product-featured-images-container bg-transparent h-full">
     <% if with_cover_image %>
-      <% object_class = 'object-cover object-center' %>
+      <% object_class = 'object-contain object-center' %>
     <% else %>
       <% object_class = 'object-contain object-top' %>
     <% end %>

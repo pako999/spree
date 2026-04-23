@@ -21,7 +21,7 @@
                     class="relative aspect-1 w-full block "
                     id="thumb-desktop-product-image-<%= image.id %>"
                     data-turbo-permanent>
-                    <%= spree_image_tag(image, variant: :small, alt: image_alt(image), class: 'w-full h-full', width: 256, height: 256, loading: 'lazy') %>
+                    <%= spree_image_tag(image, variant: :small, alt: image_alt(image), class: 'w-full h-full object-contain', width: 256, height: 256, loading: 'lazy') %>
                   </div>
                 </div>
               <% end %>
@@ -43,7 +43,7 @@
                     <div class="zoom-icon hidden absolute bottom-2 right-2 p-4 bg-background rounded-full opacity-75 hover:opacity-100">
                       <%= render 'spree/shared/icons/zoom' %>
                     </div>
-                    <%= spree_image_tag(image, variant: :xlarge, alt: image_alt(image), class: 'w-full h-full', width: 800, height: 800, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
+                    <%= spree_image_tag(image, variant: :xlarge, alt: image_alt(image), class: 'w-full h-full object-contain', width: 800, height: 800, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
                   <% end %>
                 </div>
               </div>
@@ -74,7 +74,7 @@
                 <%= render 'spree/shared/icons/zoom' %>
               <% end %>
               <%= render 'spree/products/label', product: product, mobile_pdp: true %>
-              <%= spree_image_tag(image, variant: :large, alt: image_alt(image), class: 'h-full w-full object-cover object-center', style: 'min-height: 358px', width: 720, height: 720, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
+              <%= spree_image_tag(image, variant: :large, alt: image_alt(image), class: 'h-full w-full object-contain object-center', style: 'min-height: 358px', width: 720, height: 720, fetchpriority: (idx == 0 ? 'high' : nil), loading: (idx == 0 ? nil : 'lazy')) %>
             </div>
           <% end %>
         </div>
