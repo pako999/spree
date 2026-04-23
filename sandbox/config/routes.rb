@@ -69,8 +69,7 @@ Rails.application.routes.draw do
   get 'blogs/:category/:slug', to: redirect('/en/posts/%{slug}', status: 301)
   get ':locale/blogs/news/:slug', to: redirect('/en/posts/%{slug}', status: 301)
   get ':locale/blogs/:category/:slug', to: redirect('/en/posts/%{slug}', status: 301)
-  get 'pages/about-us', to: redirect('/en/posts/about-us', status: 301)
-  get 'policies/about-us', to: redirect('/en/posts/about-us', status: 301)
+  get 'pages/about-us', to: redirect('/en/policies/about-us', status: 301)
 
   # Old Shopify product URLs → smart redirect to matching Spree product or category
   get 'products/:slug', to: 'shopify_redirects#product'
