@@ -56,8 +56,8 @@ module Spree
     end
 
     def find_order(event)
-      oid = event.payload['id']
-      Spree::Order.find_by(prefix_id: oid) || Spree::Order.find_by(id: oid)
+      order_id = event.payload['id']
+      Spree::Order.find_by(id: order_id)
     end
   end
 end

@@ -1,3 +1,4 @@
+# v2 - prefix_id fix + email sending
 module Spree
   class OrderCompletedSubscriber < Spree::Subscriber
     subscribes_to 'order.completed'

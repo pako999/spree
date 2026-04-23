@@ -19,7 +19,6 @@ export default class extends CheckboxSelectAll {
     'variantTemplate',
     'variantsTable',
     'deleteButton',
-    'assignImageButton',
     'checkboxAll',
     'checkbox',
     'stockItemsCount'
@@ -133,10 +132,8 @@ export default class extends CheckboxSelectAll {
   toggleDeleteButton() {
     if (this.checked.length > 0) {
       this.deleteButtonTarget.classList.remove('hidden', 'd-none')
-      if (this.hasAssignImageButtonTarget) this.assignImageButtonTarget.classList.remove('hidden', 'd-none')
     } else {
       this.deleteButtonTarget.classList.add('hidden')
-      if (this.hasAssignImageButtonTarget) this.assignImageButtonTarget.classList.add('hidden')
     }
   }
 
@@ -187,106 +184,6 @@ export default class extends CheckboxSelectAll {
     this.checkboxAllTarget.checked = false
     this.refresh()
     this.refreshParentInputs()
-  }
-
-  assignImageToSelected() {
-    const selectedVariants = this.checked.map((checkbox) => {
-      const internalName = checkbox.value
-      const variantTarget = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
-      const variantId = this.variantIdsValue?.[internalName]
-      return { internalName, variantTarget, variantId }
-    }).filter(v => v.variantId && v.variantTarget)
-
-    if (selectedVariants.length === 0) return
-
-    const images = this.allProductImagesValue || []
-    if (images.length === 0) {
-      alert('No product images available. Upload images first.')
-      return
-    }
-
-    const existingModal = document.getElementById('variant-image-picker-modal')
-    if (existingModal) existingModal.remove()
-
-    const modal = document.createElement('div')
-    modal.id = 'variant-image-picker-modal'
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;'
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove() })
-
-    const imagesHTML = images.map(img => `
-      <div class="image-picker-item" data-image-id="${img.id}"
-           style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;aspect-ratio:1;position:relative;transition:all 0.15s;"
-           onmouseover="this.style.borderColor='#3b82f6';this.style.transform='scale(1.03)'"
-           onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='scale(1)'"
-      >
-        <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />
-      </div>
-    `).join('')
-
-    modal.innerHTML = `
-      <div style="background:white;border-radius:12px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-        <div style="padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <h3 style="margin:0;font-size:16px;font-weight:600;">Assign image to ${selectedVariants.length} variant${selectedVariants.length > 1 ? 's' : ''}</h3>
-            <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">Click an image to assign it to all selected variants</p>
-          </div>
-          <button id="image-picker-close" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px 8px;">&times;</button>
-        </div>
-        <div style="padding:16px 20px;overflow-y:auto;flex:1;">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-            ${imagesHTML}
-          </div>
-        </div>
-      </div>
-    `
-    document.body.appendChild(modal)
-
-    modal.querySelector('#image-picker-close').addEventListener('click', () => modal.remove())
-    const escHandler = (e) => { if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escHandler) } }
-    document.addEventListener('keydown', escHandler)
-
-    modal.querySelectorAll('.image-picker-item').forEach(item => {
-      item.addEventListener('click', async () => {
-        const imageId = item.dataset.imageId
-        item.style.opacity = '0.5'
-        item.style.pointerEvents = 'none'
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-        const pathMatch = window.location.pathname.match(/^(\/[^/]+)\/products\/([^/]+)/)
-        if (!pathMatch) { alert('Could not determine product path.'); return }
-        const adminPath = pathMatch[1]
-        const productSlug = pathMatch[2]
-
-        let successCount = 0
-        for (const variant of selectedVariants) {
-          const variantPrefixId = this.variantPrefixIdsValue?.[variant.internalName] || variant.variantId
-          try {
-            const response = await fetch(`${adminPath}/products/${productSlug}/variants/${variantPrefixId}/assign_image`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrfToken },
-              body: JSON.stringify({ image_id: imageId })
-            })
-            if (response.ok) {
-              const variantImage = variant.variantTarget.querySelector('[data-slot="variantImage"]')
-              const variantImagePlaceholder = variant.variantTarget.querySelector('[data-slot="variantImagePlaceholder"]')
-              const clickedImg = item.querySelector('img')
-              if (variantImage && clickedImg) {
-                variantImage.src = clickedImg.src
-                variantImage.classList.remove('hidden')
-                if (variantImagePlaceholder) variantImagePlaceholder.classList.add('hidden')
-              }
-              successCount++
-            }
-          } catch (e) {
-            console.error(`Failed to assign image to ${variant.internalName}:`, e)
-          }
-        }
-        modal.remove()
-        if (successCount < selectedVariants.length) {
-          alert(`Assigned to ${successCount}/${selectedVariants.length} variants.`)
-        }
-      })
-    })
   }
 
   reorderOptions(event) {
