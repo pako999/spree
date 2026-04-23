@@ -71,11 +71,15 @@ Rails.application.routes.draw do
   get ':locale/blogs/:category/:slug', to: redirect('/en/posts/%{slug}', status: 301)
   get 'pages/about-us', to: redirect('/en/policies/about-us', status: 301)
 
+  # Old Shopify product URLs → smart redirect to matching Spree product or category
+  get 'products/:slug', to: 'shopify_redirects#product'
+  get 'collections/:slug', to: 'shopify_redirects#product'
+
   # Catch-all: redirect any unmatched URL to homepage
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
   # Excludes API, admin, Rails internals, static assets, and product feeds
   match '*path', to: redirect('/'), via: :all,
-        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap)} }
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap|blogs|pages)} }
 
   # Defines the root path route ("/")
   # root "posts#index"
