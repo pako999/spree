@@ -192,7 +192,7 @@ export default class extends CheckboxSelectAll {
   assignImageToSelected() {
     const selectedVariants = this.checked.map((checkbox) => {
       const internalName = checkbox.value
-      const variantTarget = this.variantsContainerTarget.querySelector(`[data-variant-name="${this.cssSafeAttrValue(internalName)}"]`)
+      const variantTarget = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
       const variantId = this.variantIdsValue?.[internalName]
       return { internalName, variantTarget, variantId }
     }).filter(v => v.variantId && v.variantTarget)
@@ -201,11 +201,10 @@ export default class extends CheckboxSelectAll {
 
     const images = this.allProductImagesValue || []
     if (images.length === 0) {
-      alert('No product images available. Upload images on the product page first.')
+      alert('No product images available. Upload images first.')
       return
     }
 
-    // Build modal
     const existingModal = document.getElementById('variant-image-picker-modal')
     if (existingModal) existingModal.remove()
 
@@ -246,7 +245,6 @@ export default class extends CheckboxSelectAll {
     const escHandler = (e) => { if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escHandler) } }
     document.addEventListener('keydown', escHandler)
 
-    // Image click — assign to ALL selected variants
     modal.querySelectorAll('.image-picker-item').forEach(item => {
       item.addEventListener('click', async () => {
         const imageId = item.dataset.imageId
@@ -263,14 +261,12 @@ export default class extends CheckboxSelectAll {
         for (const variant of selectedVariants) {
           const variantPrefixId = this.variantPrefixIdsValue?.[variant.internalName] || variant.variantId
           try {
-            const url = `${adminPath}/products/${productSlug}/variants/${variantPrefixId}/assign_image`
-            const response = await fetch(url, {
+            const response = await fetch(`${adminPath}/products/${productSlug}/variants/${variantPrefixId}/assign_image`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrfToken },
               body: JSON.stringify({ image_id: imageId })
             })
             if (response.ok) {
-              // Update thumbnail
               const variantImage = variant.variantTarget.querySelector('[data-slot="variantImage"]')
               const variantImagePlaceholder = variant.variantTarget.querySelector('[data-slot="variantImagePlaceholder"]')
               const clickedImg = item.querySelector('img')
@@ -285,10 +281,9 @@ export default class extends CheckboxSelectAll {
             console.error(`Failed to assign image to ${variant.internalName}:`, e)
           }
         }
-
         modal.remove()
         if (successCount < selectedVariants.length) {
-          alert(`Assigned image to ${successCount}/${selectedVariants.length} variants. Some failed — check console.`)
+          alert(`Assigned to ${successCount}/${selectedVariants.length} variants.`)
         }
       })
     })
