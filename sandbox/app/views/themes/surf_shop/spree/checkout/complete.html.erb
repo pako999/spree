@@ -81,4 +81,21 @@
   <% end %>
 </div>
 
+<% if order_just_completed? %>
+<script>
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'purchase', <%= {
+      transaction_id: @order.number,
+      value: @order.total.to_f,
+      currency: @order.currency,
+      items: @order.line_items.map { |item| {
+        item_id: item.variant&.sku.to_s,
+        item_name: item.name,
+        price: item.price.to_f,
+        quantity: item.quantity
+      }}
+    }.to_json.html_safe %>);
+  }
+</script>
+<% end %>
 <%= render_storefront_partials(:checkout_complete_partials) if order_just_completed? %>

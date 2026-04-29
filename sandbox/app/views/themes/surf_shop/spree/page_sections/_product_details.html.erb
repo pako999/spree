@@ -272,6 +272,25 @@
     </div>
   </div>
   <%= render 'spree/products/json_ld', product: product, selected_variant: @selected_variant %>
+  <script>
+    (function() {
+      if (typeof gtag === 'undefined') return;
+      var itemData = <%= {
+        item_id: product.sku.to_s,
+        item_name: product.name,
+        price: current_variant&.price.to_f
+      }.to_json.html_safe %>;
+      var eventData = { currency: '<%= current_currency %>', value: <%= current_variant&.price.to_f %>, items: [itemData] };
+      gtag('event', 'view_item', eventData);
+      var frame = document.getElementById('main-product-<%= product.id %>');
+      var form = frame && frame.querySelector('[data-product-form-target="form"]');
+      if (form) {
+        form.addEventListener('submit', function() {
+          gtag('event', 'add_to_cart', eventData);
+        });
+      }
+    })();
+  </script>
 </turbo-frame>
 
 <%# Description rendered OUTSIDE turbo-frame so AI crawlers and SEO bots always see it %>
