@@ -3,12 +3,12 @@
 <% selected_variant ||= product.first_or_default_variant(current_currency) %>
 
 <div class="swiper-slide w-full">
-  <% cache [product.cache_key_with_version, selected_variant&.cache_key_with_version, current_currency, I18n.locale, 'card-v1'] do %>
+  <% cache [product.cache_key_with_version, selected_variant&.cache_key_with_version, current_currency, I18n.locale, 'card-v2'] do %>
   <div
     class="product-card flex h-full flex-col w-full gap-2 relative"
     data-controller="plp-variant-picker"
     id="product-card-<%= product&.id %>">
-    <%= link_to spree.product_path(product), id: "product-#{product&.id}", class: "group w-full flex flex-col", data: { turbo_frame: "_top", "plp-variant-picker-target": "link" } do %>
+    <%= link_to spree.product_path(product), id: "product-#{product&.id}", class: "group w-full", data: { turbo_frame: "_top", "plp-variant-picker-target": "link" } do %>
       <div
         class="mb-3 relative w-full product-card-featured-image"
         <% if image_height %>
@@ -24,12 +24,18 @@
         </div>
         <%= render 'spree/products/label', product: product %>
       </div>
-      <div class="product-card-inner">
-        <% if product.brand_taxon.present? %>
-          <h3 class="text-xs font-semibold uppercase inline-block product-card-brand">
-            <%= product.brand_taxon.name %>
-          </h3>
+    <% end %>
+    <div class="product-card-inner">
+      <% if product.brand_taxon.present? %>
+        <%= link_to spree.nested_taxons_path(product.brand_taxon), title: product.brand_taxon.name, class: "inline-block mb-1", data: { turbo_frame: "_top" } do %>
+          <% if (logo = brand_logo_path_for(product.brand_taxon)) %>
+            <img src="<%= logo %>" alt="<%= product.brand_taxon.name %>" class="h-5 w-auto object-contain" loading="lazy" />
+          <% else %>
+            <span class="text-xs font-semibold uppercase product-card-brand"><%= product.brand_taxon.name %></span>
+          <% end %>
         <% end %>
+      <% end %>
+      <%= link_to spree.product_path(product), class: "block", data: { turbo_frame: "_top" } do %>
         <h3 class="line-clamp-2 product-card-title">
           <% if product %>
             <%= product.name %>
@@ -39,7 +45,6 @@
             </div>
           <% end %>
         </h3>
-
         <% if product %>
           <div data-plp-variant-picker-target="priceContainer">
             <%= render 'spree/products/price',
@@ -53,8 +58,8 @@
             <div class="h-7 bg-accent rounded-sm col-span-1"></div>
           </div>
         <% end %>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
     <div class="absolute right-1 top-1 z-10" data-plp-variant-picker-target="addToWishlist">
       <%= render 'spree/products/add_to_wishlist', variant: selected_variant %>
     </div>

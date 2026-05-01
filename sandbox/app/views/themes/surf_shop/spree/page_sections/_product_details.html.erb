@@ -60,49 +60,10 @@
                         <%= link_to spree.nested_taxons_path(product.brand_taxon), title: product.brand_taxon.name, class: "inline-block mb-1" do %>
                           <% if product.brand_taxon.image.attached? %>
                             <%= image_tag product.brand_taxon.image, alt: product.brand_taxon.name, class: "h-8 lg:h-10 w-auto object-contain", loading: "lazy" %>
+                          <% elsif (logo = brand_logo_path_for(product.brand_taxon)) %>
+                            <img src="<%= logo %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
                           <% else %>
-                            <% brand_name = product.brand_taxon.name.downcase %>
-                            <% brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "") %>
-                            <%# Look for exact or fuzzy match in public/brand-logos/ %>
-                            <%
-                              # Even more robust lookup
-                              brand_name = product.brand_taxon.name.downcase
-                              brand_slug = brand_name.gsub(/[^a-z0-9]+/, "-").gsub(/^-|-$/, "")
-                              
-                              # Start with slug-based lookup
-                              potential_logos = ["webp", "svg", "png"].map { |ext| "brand-logos/#{brand_slug}.#{ext}" }
-                              
-                              if brand_name.include?("duotone")
-                                # Always ensure the professional generic logo is a primary fallback
-                                potential_logos.push("brand-logos/duotone.webp")
-                                
-                                # Search for specific Duotone category logos based on product and taxon names
-                                product_search_text = (product.taxons.map(&:name).join(" ") + " " + product.name).downcase
-                                
-                                # Add specific logos to the front of the list if keywords match
-                                if product_search_text.include?("wing") || product_search_text.include?("foil")
-                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.webp")
-                                  potential_logos.unshift("brand-logos/duotone-wing-foiling.svg")
-                                elsif product_search_text.include?("kite")
-                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.webp")
-                                  potential_logos.unshift("brand-logos/duotone-kiteboarding.svg")
-                                elsif product_search_text.include?("windsurf")
-                                  potential_logos.unshift("brand-logos/duotone-windsurfing.webp")
-                                  potential_logos.unshift("brand-logos/duotone-windsurfing.svg")
-                                end
-                              end
-
-                              # Find the first existing file in the public directory
-                              logo_path = potential_logos.uniq.find { |p| File.exist?(Rails.root.join("public", p)) }
-                            %>
-                            
-                            <% if logo_path %>
-                              <img src="/<%= logo_path %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
-                            <% else %>
-                              <h3 class="text-sm lg:mt-0 inline-block font-bold">
-                                <%= product.brand_taxon.name %>
-                              </h3>
-                            <% end %>
+                            <h3 class="text-sm lg:mt-0 inline-block font-bold"><%= product.brand_taxon.name %></h3>
                           <% end %>
                         <% end %>
                       <% end %>
@@ -320,11 +281,11 @@
     </div>
   </div>
   <%= render 'spree/products/json_ld', product: product, selected_variant: @selected_variant %>
-  <%# GA4 view_item — fires every time a product page (or variant) is rendered %>
+  <%# GA4 view_item — fires on render. add_to_cart fires on form submit. %>
   <script>
   (function() {
     if (typeof gtag !== 'function') return;
-    gtag('event', 'view_item', {
+    var eventData = {
       currency: '<%= current_variant&.currency || "EUR" %>',
       value:    <%= current_variant&.price.to_f || 0 %>,
       items: [{
@@ -333,7 +294,16 @@
         item_brand: '<%= j(product.brand_taxon&.name.to_s) %>',
         price:      <%= current_variant&.price.to_f || 0 %>
       }]
-    });
+    };
+    gtag('event', 'view_item', eventData);
+
+    var frame = document.getElementById('main-product-<%= product.id %>');
+    var form = frame && frame.querySelector('[data-product-form-target="form"]');
+    if (form) {
+      form.addEventListener('submit', function() {
+        gtag('event', 'add_to_cart', eventData);
+      });
+    }
   })();
   </script>
 </turbo-frame>
