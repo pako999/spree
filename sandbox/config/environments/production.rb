@@ -67,11 +67,18 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "www.surf-store.com", protocol: "https" }
   config.action_mailer.asset_host = "https://www.surf-store.com"
-  # Transactional emails are sent via Klaviyo flows triggered by events
-  # (Placed Order, Shipment Confirmed, etc.). Spree's mailer is disabled —
-  # Klaviyo handles all customer-facing email from the marketing platform.
-  config.action_mailer.perform_deliveries = false
-  config.action_mailer.delivery_method = :test
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+
+  # Brevo (formerly Sendinblue) SMTP relay for transactional emails.
+  config.action_mailer.smtp_settings = {
+    user_name: ENV['BREVO_SMTP_LOGIN'],
+    password: ENV['BREVO_API_KEY'],
+    address: 'smtp-relay.brevo.com',
+    port: 587,
+    authentication: :plain,
+    enable_starttls: true
+  }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
