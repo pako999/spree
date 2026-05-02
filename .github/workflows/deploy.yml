@@ -9,44 +9,51 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 51.195.110.240 >> ~/.ssh/known_hosts
-
       - name: Deploy to VPS
-        run: |
-          ssh ubuntu@51.195.110.240 'bash -s' << 'DEPLOY'
-          set -e
-          echo ">>> Deploy started at $(date)"
-          free -h
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 51.195.110.240
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+            echo ">>> Deploy started at $(date)"
+            free -h
 
-          # ---- Clean up Docker leftovers from Kamal ----
-          docker stop $(docker ps -q) 2>/dev/null || true
-          docker rm $(docker ps -aq) 2>/dev/null || true
+            docker stop $(docker ps -q) 2>/dev/null || true
+            docker rm $(docker ps -aq) 2>/dev/null || true
 
-          # ---- Pull latest code ----
-          cd /home/ubuntu/kite_shop
-          git fetch origin
-          git reset --hard origin/main
+            cd /home/ubuntu/kite_shop
+            git fetch origin
+            git reset --hard origin/main
 
-          # ---- Install deps (Bundler 4 syntax) ----
-          cd sandbox
-          export RAILS_ENV=production
-          ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
-          ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
-          ~/.rbenv/bin/rbenv exec bundle install
+            cd sandbox
+            export RAILS_ENV=production
+            ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
+            ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
+            ~/.rbenv/bin/rbenv exec bundle install
 
-          # ---- Migrate & assets ----
-          ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-          ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
+            ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
+            ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
 
-          # ---- Restart services ----
-          sudo systemctl start nginx || true
-          sudo systemctl restart puma
+            pkill -f "puma.*3000" 2>/dev/null || true
+            sleep 2
+            rm -rf tmp/cache/bootsnap 2>/dev/null || true
 
-          echo ">>> Deploy completed at $(date)"
-          free -h
-          DEPLOY
+            RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
+              setsid ~/.rbenv/bin/rbenv exec bundle exec puma \
+              -C config/puma.rb -b tcp://127.0.0.1:3000 \
+              </dev/null > /tmp/puma.log 2>&1 &
+
+            sleep 10
+            if ss -tlnp | grep -q ':3000'; then
+              echo ">>> ✅ Puma is running"
+            else
+              echo ">>> ❌ Puma failed!"
+              tail -20 /tmp/puma.log
+              exit 1
+            fi
+
+            echo ">>> Deploy completed at $(date)"
+            free -h
