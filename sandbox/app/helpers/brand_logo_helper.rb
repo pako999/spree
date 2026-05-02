@@ -27,22 +27,7 @@ module BrandLogoHelper
     "neil pryde"           => "/brand-logos/neilpryde.webp",
     "neilpryde sails & wetsuits 2026" => "/brand-logos/neilpryde.webp",
     "neilpryde windsurf sails 2026"   => "/brand-logos/neilpryde.webp",
-    "cabrinha"             => "/brand-logos/cabrinha.png",
-    "cabrinha kites & kiteboards 2026" => "/brand-logos/cabrinha.png",
-    "cabrinha kites 2026"  => "/brand-logos/cabrinha.png",
-    "fanatic"              => "/brand-logos/fanatic.png",
-    "fanatic sup"          => "/brand-logos/fanatic.png",
-    "fanatic windsurfing"  => "/brand-logos/fanatic.png",
-    "fanatic x"            => "/brand-logos/fanatic.png",
-    "gaastra"              => "/brand-logos/gaastra.png",
-    "gaastra windsurf sails & kites 2026" => "/brand-logos/gaastra.png",
-    "jp australia"         => "/brand-logos/jp-australia.png",
-    "jp australia sup & windsurf boards" => "/brand-logos/jp-australia.png",
-    "nobile"               => "/brand-logos/nobile.png",
-    "nobile kiteboards & foils 2026" => "/brand-logos/nobile.png",
-    "point7"               => "/brand-logos/point7.png",
-    "point-7"              => "/brand-logos/point7.png",
-    "tabou"                => "/brand-logos/tabou.png",
+    # Add more brands here when real logo files are added to public/brand-logos/
   }.freeze
 
   def brand_logo_path_for(brand_taxon)
