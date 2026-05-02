@@ -19,27 +19,27 @@ jobs:
           script: |
             set -e
             echo ">>> Deploy started at $(date)"
-            free -h
 
-            docker stop $(docker ps -q) 2>/dev/null || true
-            docker rm $(docker ps -aq) 2>/dev/null || true
-
+            # ---- Pull latest code ----
             cd /home/ubuntu/kite_shop
             git fetch origin
             git reset --hard origin/main
 
+            # ---- Install deps ----
             cd sandbox
             export RAILS_ENV=production
             ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
             ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
             ~/.rbenv/bin/rbenv exec bundle install
 
+            # ---- Migrate & assets ----
             ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
             ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
 
-            pkill -f "puma.*3000" 2>/dev/null || true
-            sleep 2
+            # ---- Graceful Puma restart ----
             rm -rf tmp/cache/bootsnap 2>/dev/null || true
+            pkill -f "puma.*3000" 2>/dev/null || true
+            sleep 3
 
             RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
               setsid ~/.rbenv/bin/rbenv exec bundle exec puma \
@@ -48,12 +48,17 @@ jobs:
 
             sleep 10
             if ss -tlnp | grep -q ':3000'; then
-              echo ">>> ✅ Puma is running"
+              echo ">>> ✅ Puma running on port 3000"
             else
               echo ">>> ❌ Puma failed!"
               tail -20 /tmp/puma.log
               exit 1
             fi
 
-            echo ">>> Deploy completed at $(date)"
-            free -h
+            # ---- Ensure nginx Docker proxy is running ----
+            if ! docker ps --format '{{.Names}}' | grep -q nginx-proxy; then
+              echo ">>> Starting nginx proxy..."
+              docker start nginx-proxy 2>/dev/null || true
+            fi
+
+            echo ">>> ✅ Deploy completed at $(date)"
