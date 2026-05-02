@@ -7,41 +7,46 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 51.195.110.240 >> ~/.ssh/known_hosts
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 51.195.110.240
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 10m
-          script: |
-            set -e
-            echo ">>> Deploy started at $(date)"
-            free -h
+        run: |
+          ssh ubuntu@51.195.110.240 'bash -s' << 'DEPLOY'
+          set -e
+          echo ">>> Deploy started at $(date)"
+          free -h
 
-            # ---- Clean up Docker leftovers from Kamal ----
-            docker stop $(docker ps -q) 2>/dev/null || true
-            docker rm $(docker ps -aq) 2>/dev/null || true
+          # ---- Clean up Docker leftovers from Kamal ----
+          docker stop $(docker ps -q) 2>/dev/null || true
+          docker rm $(docker ps -aq) 2>/dev/null || true
 
-            # ---- Pull latest code ----
-            cd /home/ubuntu/kite_shop
-            git fetch origin
-            git reset --hard origin/main
+          # ---- Pull latest code ----
+          cd /home/ubuntu/kite_shop
+          git fetch origin
+          git reset --hard origin/main
 
-            # ---- Install deps (Bundler 4 syntax) ----
-            cd sandbox
-            export RAILS_ENV=production
-            ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
-            ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
-            ~/.rbenv/bin/rbenv exec bundle install
+          # ---- Install deps (Bundler 4 syntax) ----
+          cd sandbox
+          export RAILS_ENV=production
+          ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
+          ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
+          ~/.rbenv/bin/rbenv exec bundle install
 
-            # ---- Migrate & assets ----
-            ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-            ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
+          # ---- Migrate & assets ----
+          ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
+          ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
 
-            # ---- Restart services ----
-            sudo systemctl start nginx || true
-            sudo systemctl restart puma
-            echo ">>> Deploy completed at $(date)"
-            free -h
+          # ---- Restart services ----
+          sudo systemctl start nginx || true
+          sudo systemctl restart puma
+
+          echo ">>> Deploy completed at $(date)"
+          free -h
+          DEPLOY
