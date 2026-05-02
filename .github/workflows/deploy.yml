@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1
@@ -14,13 +15,92 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
+            set -e
+            echo "========================================="
+            echo "Deploy started at $(date)"
+            echo "========================================="
+
+            # ---- Memory & system info ----
+            echo ""
+            echo ">>> System memory before deploy:"
+            free -h
+            echo ""
+            echo ">>> Disk usage:"
+            df -h / | tail -1
+            echo ""
+
+            # ---- Ensure swap exists (2GB) for low-memory servers ----
+            if [ ! -f /swapfile ]; then
+              echo ">>> Creating 2GB swap file..."
+              sudo fallocate -l 2G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              echo ">>> Swap created"
+            else
+              echo ">>> Swap already exists"
+              sudo swapon /swapfile 2>/dev/null || true
+            fi
+
+            # ---- Clean up Docker leftovers from Kamal ----
+            if command -v docker &> /dev/null; then
+              echo ""
+              echo ">>> Cleaning up Docker containers/resources..."
+              sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
+              sudo docker rm $(sudo docker ps -aq) 2>/dev/null || true
+              sudo docker system prune -f 2>/dev/null || true
+              echo ">>> Docker cleanup done"
+            fi
+
+            # ---- Free memory: drop caches ----
+            echo ""
+            echo ">>> Freeing cached memory..."
+            sudo sync && sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
+
+            echo ""
+            echo ">>> Memory after cleanup:"
+            free -h
+            echo ""
+
+            # ---- Pull latest code ----
+            echo ">>> Pulling latest code..."
             cd /home/ubuntu/kite_shop
             git pull origin main
+
+            # ---- Deploy app ----
             cd sandbox
             export RAILS_ENV=production
+
+            echo ">>> Installing dependencies..."
             ~/.rbenv/bin/rbenv exec bundle install --deployment --without development test
+
+            echo ">>> Running database migrations..."
             ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
+
+            echo ">>> Precompiling assets..."
             ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
+
+            # ---- Restart app ----
+            echo ">>> Restarting Puma..."
             sudo systemctl restart puma
-            echo "Deploy completed at $(date)"
+
+            # ---- Verify ----
+            sleep 3
+            if sudo systemctl is-active --quiet puma; then
+              echo ">>> ✅ Puma is running"
+            else
+              echo ">>> ❌ Puma failed to start! Checking logs..."
+              sudo journalctl -u puma --no-pager -n 30
+              exit 1
+            fi
+
+            echo ""
+            echo ">>> Final memory status:"
+            free -h
+            echo ""
+            echo "========================================="
+            echo "✅ Deploy completed at $(date)"
+            echo "========================================="
