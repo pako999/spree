@@ -36,4 +36,49 @@ namespace :maintenance do
 
     puts "Done. Total updates: #{updated_count}"
   end
+  desc "Assign product primary image to all variants missing images"
+  task assign_variant_images: :environment do
+    updated = 0
+    skipped = 0
+    no_image = 0
+
+    puts "Finding variants without images..."
+
+    Spree::Product.includes(:variants, :images).find_each do |product|
+      # Get the product's primary image (first image)
+      primary_image = product.images.first
+      unless primary_image
+        no_image += 1
+        next
+      end
+
+      product.variants.each do |variant|
+        if variant.images.any?
+          skipped += 1
+          next
+        end
+
+        # Duplicate the primary image's blob for the variant
+        begin
+          original_blob = primary_image.attachment.blob
+          new_image = variant.images.build(
+            alt: primary_image.alt || product.name,
+            position: 1
+          )
+          new_image.attachment.attach(
+            io: StringIO.new(original_blob.download),
+            filename: original_blob.filename.to_s,
+            content_type: original_blob.content_type
+          )
+          new_image.save!
+          updated += 1
+          puts "  ✅ #{product.name} / variant #{variant.options_text} — image assigned"
+        rescue => e
+          puts "  ❌ #{product.name} / variant #{variant.options_text} — #{e.message}"
+        end
+      end
+    end
+
+    puts "\nDone! Assigned: #{updated}, Skipped (already had image): #{skipped}, Products without images: #{no_image}"
+  end
 end
