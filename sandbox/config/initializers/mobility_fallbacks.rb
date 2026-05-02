@@ -4,6 +4,6 @@
 # admin views, and any non-translated UI.
 Rails.application.config.to_prepare do
   Mobility.configure do |config|
-    config.defaults[:fallbacks] = { sl: :en, de: :en, es: :en, hr: :en }
+    config.plugin :fallbacks, { sl: :en, de: :en, es: :en, hr: :en }
   end
 end
