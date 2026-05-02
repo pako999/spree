@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1
@@ -18,113 +17,31 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            echo "========================================="
-            echo "Deploy started at $(date)"
-            echo "========================================="
-
-            # ---- Memory & system info ----
-            echo ""
-            echo ">>> System memory before deploy:"
+            echo ">>> Deploy started at $(date)"
             free -h
-            echo ""
-            echo ">>> Disk usage:"
-            df -h / | tail -1
-            echo ""
-
-            # ---- Ensure swap exists (2GB) for low-memory servers ----
-            if [ ! -f /swapfile ]; then
-              echo ">>> Creating 2GB swap file..."
-              sudo fallocate -l 2G /swapfile
-              sudo chmod 600 /swapfile
-              sudo mkswap /swapfile
-              sudo swapon /swapfile
-              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-              echo ">>> Swap created"
-            else
-              echo ">>> Swap already exists"
-              sudo swapon /swapfile 2>/dev/null || true
-            fi
 
             # ---- Clean up Docker leftovers from Kamal ----
-            if command -v docker &> /dev/null; then
-              echo ""
-              echo ">>> Cleaning up Docker containers/resources..."
-              sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
-              sudo docker rm $(sudo docker ps -aq) 2>/dev/null || true
-              sudo docker system prune -f 2>/dev/null || true
-              echo ">>> Docker cleanup done"
-            fi
-
-            # ---- Free memory: drop caches ----
-            echo ""
-            echo ">>> Freeing cached memory..."
-            sudo sync && sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
-
-            echo ""
-            echo ">>> Memory after cleanup:"
-            free -h
-            echo ""
+            docker stop $(docker ps -q) 2>/dev/null || true
+            docker rm $(docker ps -aq) 2>/dev/null || true
 
             # ---- Pull latest code ----
-            echo ">>> Pulling latest code..."
             cd /home/ubuntu/kite_shop
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
 
-            # ---- Deploy app ----
+            # ---- Install deps (Bundler 4 syntax) ----
             cd sandbox
             export RAILS_ENV=production
-
-            echo ">>> Installing dependencies..."
             ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
             ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
             ~/.rbenv/bin/rbenv exec bundle install
 
-            echo ">>> Running database migrations..."
+            # ---- Migrate & assets ----
             ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-
-            echo ">>> Precompiling assets..."
             ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
 
-            # ---- Restart app (no sudo needed) ----
-            echo ">>> Stopping old Puma..."
-            pkill -f "puma.*3000" 2>/dev/null || true
-            sleep 2
-
-            echo ">>> Clearing bootsnap cache..."
-            rm -rf tmp/cache/bootsnap 2>/dev/null || true
-
-            echo ">>> Starting Puma..."
-            RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
-              nohup ~/.rbenv/bin/rbenv exec bundle exec puma \
-              -C config/puma.rb -b tcp://127.0.0.1:3000 \
-              > /tmp/puma.log 2>&1 &
-            PUMA_PID=$!
-            echo ">>> Puma started with PID=$PUMA_PID"
-
-            # ---- Start nginx if not running (docker group can stop containers) ----
-            echo ">>> Cleaning Docker leftovers..."
-            docker stop $(docker ps -q) 2>/dev/null || true
-            docker rm $(docker ps -aq) 2>/dev/null || true
-
-            echo ">>> Starting nginx..."
-            sudo systemctl start nginx 2>/dev/null || echo ">>> Note: nginx needs manual start (sudo required)"
-            sudo systemctl enable nginx 2>/dev/null || true
-
-            # ---- Verify ----
-            sleep 10
-            if ss -tlnp | grep -q ':3000'; then
-              echo ">>> ✅ Puma is running on port 3000"
-            else
-              echo ">>> ❌ Puma failed to start! Checking logs..."
-              tail -30 /tmp/puma.log
-              exit 1
-            fi
-
-            echo ""
-            echo ">>> Final memory status:"
+            # ---- Restart services ----
+            sudo systemctl start nginx || true
+            sudo systemctl restart puma
+            echo ">>> Deploy completed at $(date)"
             free -h
-            echo ""
-            echo "========================================="
-            echo "✅ Deploy completed at $(date)"
-            echo "========================================="
-
