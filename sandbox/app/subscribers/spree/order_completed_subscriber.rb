@@ -19,6 +19,12 @@ module Spree
       # Telegram notification to shop owner
       Spree::TelegramNotifier.send_order_notification(order)
 
+      # Auto-subscribe to Klaviyo newsletter if customer ticked "accept marketing"
+      if order.respond_to?(:accept_marketing?) && order.accept_marketing? && order.email.present?
+        klaviyo = order.store&.integrations&.active&.find_by(type: 'Spree::Integrations::Klaviyo')
+        klaviyo&.subscribe_user(order.email)
+      end
+
       # Customer order confirmation email
       unless order.confirmation_delivered?
         if order.store&.prefers_send_consumer_transactional_emails?
