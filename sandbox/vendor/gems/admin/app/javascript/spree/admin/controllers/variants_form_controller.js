@@ -144,7 +144,7 @@ export default class extends CheckboxSelectAll {
       const internalName = checkbox.value
 
       this.ignoredVariants.add(internalName)
-      const variant = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
+      const variant = this.variantsContainerTarget.querySelector(`[data-variant-name="${(window.CSS&&CSS.escape)?CSS.escape(internalName):internalName.replace(/(["\\])/g,'\\$1')}"]`)
 
       const nestingLevel = internalName.split('/').length
       if (nestingLevel === 1) {
@@ -167,7 +167,7 @@ export default class extends CheckboxSelectAll {
               }
             }
 
-            this.optionsContainerTarget.querySelector(`#option-${firstOptionKey} [data-name="${internalName}"]`).remove()
+            this.optionsContainerTarget.querySelector(`#option-${firstOptionKey} [data-name="${(window.CSS&&CSS.escape)?CSS.escape(internalName):internalName.replace(/(["\\])/g,'\\$1')}"]`).remove()
           }
           checkbox.checked = false
         }
@@ -419,7 +419,7 @@ export default class extends CheckboxSelectAll {
 
   updateParentPriceRange(variantName, currency) {
     const parentPriceEl = this.variantsContainerTarget.querySelector(
-      `div:not(.nested)[data-variant-name="${variantName}"] [data-slot="[prices_attributes][${currency}][amount]_input"]`
+      `div:not(.nested)[data-variant-name="${(window.CSS&&CSS.escape)?CSS.escape(variantName):variantName.replace(/(["\\])/g,'\\$1')}"] [data-slot="[prices_attributes][${currency}][amount]_input"]`
     )
     if (!parentPriceEl) return
 
@@ -454,7 +454,7 @@ export default class extends CheckboxSelectAll {
 
   updateParentStockSum(variantName, stockLocationId) {
     const parentStockEl = this.variantsContainerTarget.querySelector(
-      `div:not(.nested)[data-variant-name="${variantName}"] [data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
+      `div:not(.nested)[data-variant-name="${(window.CSS&&CSS.escape)?CSS.escape(variantName):variantName.replace(/(["\\])/g,'\\$1')}"] [data-slot="[stock_items_attributes][${stockLocationId}][count_on_hand]_input"]`
     )
     if (!parentStockEl) return
 
@@ -506,7 +506,7 @@ export default class extends CheckboxSelectAll {
           }
           currentVariants.add(internalName)
 
-          const existingVariant = this.variantsContainerTarget.querySelector(`[data-variant-name="${internalName}"]`)
+          const existingVariant = this.variantsContainerTarget.querySelector(`[data-variant-name="${(window.CSS&&CSS.escape)?CSS.escape(internalName):internalName.replace(/(["\\])/g,'\\$1')}"]`)
           if (existingVariant) {
             if (i === 0) {
               if (nestingLevel > 1) {
@@ -570,7 +570,7 @@ export default class extends CheckboxSelectAll {
             } else {
               // Otherwise we want to render this variant after the parent variant
               previousVariant = this.variantsContainerTarget.querySelector(
-                `[data-variant-name="${parentInternalName}"]`
+                `[data-variant-name="${(window.CSS&&CSS.escape)?CSS.escape(parentInternalName):parentInternalName.replace(/(["\\])/g,'\\$1')}"]`
               )
             }
             variantTarget.classList.add('nested')
