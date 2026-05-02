@@ -79,7 +79,7 @@ Rails.application.routes.draw do
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
   # Excludes API, admin, Rails internals, static assets, and product feeds
   match '*path', to: redirect('/'), via: :all,
-        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap|blogs|pages)} }
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap|blogs|pages|login|logout|signup|users|account|cart|checkout|orders|wishlist|posts|policies|t/|products|locale)} }
 
   # Defines the root path route ("/")
   # root "posts#index"
