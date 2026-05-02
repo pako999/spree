@@ -75,7 +75,9 @@ jobs:
             export RAILS_ENV=production
 
             echo ">>> Installing dependencies..."
-            ~/.rbenv/bin/rbenv exec bundle install --deployment --without development test
+            ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
+            ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
+            ~/.rbenv/bin/rbenv exec bundle install
 
             echo ">>> Running database migrations..."
             ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
