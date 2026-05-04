@@ -1,23 +1,78 @@
-<h1>
+<%# Order confirmed heading %>
+<p style="margin: 0 0 6px;">
+  <span class="status-badge">&#10003; Order Confirmed</span>
+</p>
+
+<h1 style="margin-top: 14px; margin-bottom: 6px;">
   <%= Spree.t('order_mailer.confirm_email.dear_customer', name: name_for(@order)) %>
 </h1>
-<p>
+
+<p style="margin-bottom: 24px;">
   <%= Spree.t('order_mailer.confirm_email.instructions') %>
 </p>
+
+<%# Order info box %>
+<div class="info-box">
+  <p>
+    <strong>Order <%= @order.number %></strong> &nbsp;&bull;&nbsp;
+    Placed <%= @order.completed_at.strftime("%B %-d, %Y") rescue "" %>
+    &nbsp;&bull;&nbsp;
+    <a href="<%= spree.account_orders_url(host: current_store.url) %>" style="color: #1E40AF; font-weight: 600;">View order &rarr;</a>
+  </p>
+</div>
+
+<%# Items table %>
+<h3>Order Summary</h3>
+
 <table class="purchase" role="presentation">
-  <tr>
-    <td>
-      <h3><%= Spree.t('order_mailer.confirm_email.order_summary', number: @order.number) %></h3>
-    </td>
-  </tr>
   <tr>
     <td colspan="2">
       <%= render 'spree/shared/purchased_items_table', line_items: @order.line_items, order: @order %>
     </td>
   </tr>
 </table>
-<p>
-  <%= Spree.t('order_mailer.confirm_email.thanks') %>
-  <br />
-  <%= Spree.t('order_mailer.store_team', store_name: current_store.name) %>
+
+<%# Shipping address %>
+<% if @order.ship_address.present? %>
+<hr class="section-divider">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+  <tr>
+    <td width="50%" style="vertical-align: top; padding-right: 16px;">
+      <h3>Ship To</h3>
+      <p style="margin: 0; line-height: 1.7;">
+        <%= @order.ship_address.full_name %><br>
+        <%= @order.ship_address.address1 %><br>
+        <% if @order.ship_address.address2.present? %><%= @order.ship_address.address2 %><br><% end %>
+        <%= @order.ship_address.city %>, <%= @order.ship_address.zipcode %><br>
+        <%= @order.ship_address.country.name %>
+      </p>
+    </td>
+    <td width="50%" style="vertical-align: top; padding-left: 16px;">
+      <h3>Payment</h3>
+      <p style="margin: 0; line-height: 1.7;">
+        <% @order.payments.completed.each do |payment| %>
+          <%= payment.payment_method.name %><br>
+          <span style="color: #10B981; font-weight: 600;">&#10003; Paid</span>
+        <% end %>
+      </p>
+    </td>
+  </tr>
+</table>
+<% end %>
+
+<%# CTA %>
+<hr class="section-divider">
+<table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+  <tr>
+    <td align="center">
+      <a href="<%= spree.account_orders_url(host: current_store.url) %>" class="button button--green">
+        Track Your Order
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="text-align: center; margin-top: 16px; margin-bottom: 0;">
+  Questions? Reply to this email or visit our
+  <a href="https://www.surf-store.com/en/pages/contact" style="color: #0062FF; font-weight: 500;">Help Centre</a>.
 </p>

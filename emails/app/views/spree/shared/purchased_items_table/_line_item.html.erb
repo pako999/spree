@@ -2,23 +2,26 @@
   <td class="purchase_image">
     <% image = line_item.variant.default_image %>
     <% if image.present? && image.attached? %>
-      <%= link_to(spree_image_tag(image, variant: :mini, alt: line_item.name), spree_storefront_resource_url(line_item.product)) %>
-    <% else %>
-      <%= link_to(image_tag('noimage/small.png', alt: line_item.name), spree_storefront_resource_url(line_item.product)) %>
+      <a href="<%= spree_storefront_resource_url(line_item.product) %>">
+        <%= spree_image_tag(image, variant: :mini, alt: line_item.name, style: "width:72px;height:72px;object-fit:contain;border-radius:8px;border:1px solid #E5E7EB;background:#F9FAFB;") %>
+      </a>
     <% end %>
   </td>
   <td class="purchase_item">
     <strong>
-      <span class="f-fallback">
-        <%= link_to raw(line_item.name), spree_storefront_resource_url(line_item.product) %>
-      </span>
+      <a href="<%= spree_storefront_resource_url(line_item.product) %>" style="color: #111827; text-decoration: none; font-size: 14px;">
+        <%= raw(line_item.name) %>
+      </a>
     </strong>
-    <p class="purchase_item--additional"><%= line_item.variant.options_text -%></p>
+    <% if line_item.variant.options_text.present? %>
+      <p class="purchase_item--additional"><%= line_item.variant.options_text %></p>
+    <% end %>
+    <p style="margin: 4px 0 0; font-size: 12px; color: #9CA3AF;">Qty: <%= line_item.quantity %></p>
   </td>
-  <td class="align-right" width="30%">
-    <span class="f-fallback purchase_item_price">
-      <%= line_item.quantity %> x <%= line_item.single_money %><br>
-      <%= line_item.display_amount %>
-    </span>
+  <td class="align-right" style="vertical-align: top; padding: 16px 8px; white-space: nowrap;">
+    <span style="font-size: 14px; font-weight: 600; color: #111827;"><%= line_item.display_amount %></span>
+    <% if line_item.quantity > 1 %>
+      <br><span style="font-size: 11px; color: #9CA3AF;"><%= line_item.single_money %> each</span>
+    <% end %>
   </td>
 </tr>
