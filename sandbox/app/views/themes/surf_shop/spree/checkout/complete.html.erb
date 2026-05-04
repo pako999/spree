@@ -86,7 +86,8 @@
 <script>
 (function() {
   if (typeof gtag !== 'function') return;
-  gtag('event', 'purchase', {
+
+  var orderData = {
     transaction_id: '<%= j(@order.number) %>',
     value:          <%= @order.total.to_f %>,
     tax:            <%= @order.tax_total.to_f %>,
@@ -103,6 +104,17 @@
       }<%= ',' if idx < @order.line_items.size - 1 %>
       <% end %>
     ]
+  };
+
+  // GA4 purchase event
+  gtag('event', 'purchase', orderData);
+
+  // Google Ads conversion event
+  gtag('event', 'conversion', {
+    send_to:        'AW-11446870184/purchase',
+    value:          orderData.value,
+    currency:       orderData.currency,
+    transaction_id: orderData.transaction_id
   });
 })();
 </script>

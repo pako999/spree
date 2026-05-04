@@ -42,7 +42,8 @@ Rails.application.configure do
                         'https://www.googletagmanager.com',
                         'https://www.google.com',
                         'https://a.klaviyo.com',
-                        'https://static.klaviyo.com'
+                        'https://static.klaviyo.com',
+                        'https://ga.jspm.io'
 
     # Frames: allow YouTube embeds in product descriptions / TinyMCE
     policy.frame_src   :self,
