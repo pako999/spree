@@ -72,20 +72,23 @@ class CreateEracuniOrderJob < ApplicationJob
   #   - Integer vatPercentage (22, not 22.0)
   #
   def build_order_payload(order)
-    bill = order.bill_address
+    # Fall back to ship_address when bill_address is nil (guest / PayPal orders)
+    bill = order.bill_address || order.ship_address
     ship = order.ship_address || bill
     country_iso = bill&.country&.iso.to_s.upcase
 
     {
       "SalesOrder" => {
-        "date" => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
+        "date" => Date.current.to_s,
         "dateOfSupplyFrom" => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
+        "dateOfSupplyTo" => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
         "referenceDocumentNumber" => order.number,
         "currency" => order.currency || "EUR",
         "documentLanguage" => "Slovene",
         "vatTransactionType" => vat_transaction_type(country_iso),
         "remarks" => "Spletno naročilo #{order.number}",
         "buyerName" => buyer_name(bill, order),
+        "buyerEmail" => order.email.to_s,
         "buyerStreet" => bill&.address1.to_s.presence || "N/A",
         "buyerPostalCode" => bill&.zipcode.to_s.presence || "0000",
         "buyerCity" => bill&.city.to_s.presence || "N/A",
