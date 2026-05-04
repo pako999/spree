@@ -8,7 +8,7 @@
 </h1>
 
 <p style="margin-bottom: 24px;">
-  <%= Spree.t('order_mailer.confirm_email.instructions') %>
+  Thank you for your order. Please find below a summary of your purchase for your records.
 </p>
 
 <%# Order info box %>
@@ -17,7 +17,7 @@
     <strong>Order <%= @order.number %></strong> &nbsp;&bull;&nbsp;
     Placed <%= @order.completed_at.strftime("%B %-d, %Y") rescue "" %>
     &nbsp;&bull;&nbsp;
-    <a href="<%= spree.account_orders_url(host: current_store.url) %>" style="color: #1E40AF; font-weight: 600;">View order &rarr;</a>
+    <a href="<%= "#{current_store.formatted_url}/#{I18n.locale}/account/orders/#{@order.number}" %>" style="color: #1E40AF; font-weight: 600;">View order &rarr;</a>
   </p>
 </div>
 
@@ -60,19 +60,19 @@
 </table>
 <% end %>
 
-<%# CTA %>
+<%# Shipping notice — no tracking yet %>
 <hr class="section-divider">
-<table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
-  <tr>
-    <td align="center">
-      <a href="<%= spree.account_orders_url(host: current_store.url) %>" class="button button--green">
-        Track Your Order
-      </a>
-    </td>
-  </tr>
-</table>
+<div class="attributes_content">
+  <p style="margin: 0; font-size: 14px; color: #374151; line-height: 1.7;">
+    <strong>What happens next?</strong><br>
+    Our team is now preparing your order for dispatch. Once your order has been shipped,
+    you will receive a separate confirmation email containing your tracking number
+    and carrier details.
+  </p>
+</div>
 
-<p style="text-align: center; margin-top: 16px; margin-bottom: 0;">
-  Questions? Reply to this email or visit our
-  <a href="https://www.surf-store.com/en/pages/contact" style="color: #0062FF; font-weight: 500;">Help Centre</a>.
+<p style="text-align: center; margin-top: 24px; margin-bottom: 0; font-size: 14px; color: #6B7280;">
+  Should you have any questions regarding your order, please do not hesitate to contact us at
+  <a href="mailto:info@surf-store.com" style="color: #0062FF; font-weight: 500;">info@surf-store.com</a>
+  or visit our <a href="<%= "#{current_store.formatted_url}/en/pages/contact" %>" style="color: #0062FF; font-weight: 500;">Help Centre</a>.
 </p>
