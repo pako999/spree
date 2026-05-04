@@ -27,6 +27,18 @@ module BrandLogoHelper
     "neil pryde"           => "/brand-logos/neilpryde.webp",
     "neilpryde sails & wetsuits 2026" => "/brand-logos/neilpryde.webp",
     "neilpryde windsurf sails 2026"   => "/brand-logos/neilpryde.webp",
+    "cabrinha"                        => "/brand-logos/cabrinha-2 _1_.png.webp",
+    "cabrinha kites"                  => "/brand-logos/cabrinha-2 _1_.png.webp",
+    "cabrinha kiteboards"             => "/brand-logos/cabrinha-2 _1_.png.webp",
+    "cabrinha bars"                   => "/brand-logos/cabrinha-2 _1_.png.webp",
+    "cabrinha foil"                   => "/brand-logos/cabrinha-2 _1_.png.webp",
+    "gaastra"                         => "/brand-logos/gaastra.svg",
+    "ga sails"                        => "/brand-logos/gaastra.svg",
+    "gaastra kites"                   => "/brand-logos/gaastra.svg",
+    "gaastra sails"                   => "/brand-logos/gaastra.svg",
+    "tabou"                           => "/brand-logos/gaastra.svg",
+    "jp australia"                    => "/brand-logos/jp-australia.png",
+    "jp"                              => "/brand-logos/jp-australia.png",
     # Add more brands here when real logo files are added to public/brand-logos/
   }.freeze
 
