@@ -49,6 +49,10 @@ env:
     - ERACUNI_API_USERNAME
     - ERACUNI_API_SECRET_KEY
     - ERACUNI_API_TOKEN
+    - SMTP_ADDRESS
+    - SMTP_PORT
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
   clear:
     SOLID_QUEUE_IN_PUMA: true
     DATABASE_URL: "postgresql://ubuntu:kite@172.17.0.1/my_kite_shop_production"

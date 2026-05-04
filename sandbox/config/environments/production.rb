@@ -67,11 +67,24 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "www.surf-store.com", protocol: "https" }
   config.action_mailer.asset_host = "https://www.surf-store.com"
-  # All transactional emails are sent via Klaviyo flows triggered by events
-  # (Placed Order, Password Reset Requested, Account Confirmation, etc.).
-  # Spree's mailer is disabled — Klaviyo handles all customer-facing email.
-  config.action_mailer.perform_deliveries = false
-  config.action_mailer.delivery_method = :test
+  # Send transactional emails via SMTP (configured via environment variables).
+  if ENV['SMTP_ADDRESS'].present?
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address:              ENV['SMTP_ADDRESS'],
+      port:                 ENV.fetch('SMTP_PORT', 587).to_i,
+      domain:               'surf-store.com',
+      user_name:            ENV['SMTP_USERNAME'],
+      password:             ENV['SMTP_PASSWORD'],
+      authentication:       ENV.fetch('SMTP_AUTH', 'plain').to_sym,
+      enable_starttls_auto: ENV.fetch('SMTP_TLS', 'true') == 'true'
+    }
+  else
+    # No SMTP configured — disable delivery to avoid errors
+    config.action_mailer.perform_deliveries = false
+    config.action_mailer.delivery_method = :test
+  end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

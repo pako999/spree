@@ -1,8 +1,7 @@
 # Order completed subscriber.
 # - Telegram: shop owner notification (kept — instant push to phone)
-# - Customer order confirmation: Klaviyo flow on "Placed Order" event
+# - Customer order confirmation: sent by Spree's OrderEmailSubscriber (native email)
 # - Newsletter signup: Klaviyo subscribe if accept_marketing checked
-# All email sending goes through Klaviyo — no SMTP needed.
 module Spree
   class OrderCompletedSubscriber < Spree::Subscriber
     subscribes_to 'order.completed'
@@ -25,13 +24,13 @@ module Spree
         klaviyo&.subscribe_user(order.email)
       end
 
-      # Order confirmation email is sent by Klaviyo flow on "Placed Order" event
-      # (event already fired by spree_klaviyo gem's order_decorator).
-      # Mark as delivered so the broken vendor OrderEmailSubscriber skips it.
-      order.update_column(:confirmation_delivered, true) unless order.confirmation_delivered?
+      # Do NOT mark confirmation_delivered — Spree's OrderEmailSubscriber will send
+      # the native order confirmation email to the customer.
+      # Mark store_owner_notification_delivered to avoid duplicate shop owner email
+      # (Telegram already handles that notification).
       order.update_column(:store_owner_notification_delivered, true) unless order.store_owner_notification_delivered?
     rescue StandardError => e
-      Rails.error.report(e, message: "[OrderCompletedSubscriber] Error: #{e.message}", handled: true)
+      Rails.error.report(e, handled: true, context: { subscriber: 'OrderCompletedSubscriber', order_id: oid })
     end
   end
 end
