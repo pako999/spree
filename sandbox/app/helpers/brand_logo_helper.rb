@@ -44,10 +44,10 @@ module BrandLogoHelper
     "cabrinha kite bars"                      => "/brand-logos/cabrinha-2 _1_.png.webp",
     "cabrinha"                                => "/brand-logos/cabrinha-2 _1_.png.webp",
     # Gaastra
-    "gaastra windsurf sails & kites 2026"     => "/brand-logos/gaastra.svg",
-    "gaastra windsurf sails"                  => "/brand-logos/gaastra.svg",
-    "gaastra"                                 => "/brand-logos/gaastra.svg",
-    "tabou"                                   => "/brand-logos/gaastra.svg",
+    "gaastra windsurf sails & kites 2026"     => "/brand-logos/gaastra.png",
+    "gaastra windsurf sails"                  => "/brand-logos/gaastra.png",
+    "gaastra"                                 => "/brand-logos/gaastra.png",
+    "tabou"                                   => "/brand-logos/gaastra.png",
     # JP Australia
     "jp australia sup & windsurf boards 2026" => "/brand-logos/jp-australia.png",
     "jp australia sup & windsurf boards"      => "/brand-logos/jp-australia.png",

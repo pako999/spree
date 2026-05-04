@@ -12,7 +12,7 @@
         <span class="group-hover:border-b-[1.5px] group-hover:border-b-accent"><%= main_link.label %></span>
       <% end %>
       <% if presenter.columns.any? %>
-        <div class="w-full bg-transparent invisible absolute translate-y-[10%] group-hover:translate-y-0 left-0 group-hover:opacity-100 opacity-0 group-hover:visible transition-none border-default border-b duration-150 ease-in block pointer-events-none group-hover:pointer-events-auto z-10 header--mega-nav-container" style="--bottom-padding: <%= section.preferred_bottom_padding %>px; --top-without-bottom-padding: calc(100% - var(--bottom-padding)); padding-top: calc(var(--bottom-padding) + var(--section--border-bottom-width)); top: var(--top-without-bottom-padding);">
+        <div class="w-full bg-transparent invisible absolute translate-y-[10%] group-hover:translate-y-0 left-0 group-hover:opacity-100 opacity-0 group-hover:visible transition-none border-default border-b duration-150 ease-in block z-10 header--mega-nav-container" style="--bottom-padding: <%= section.preferred_bottom_padding %>px; --top-without-bottom-padding: calc(100% - var(--bottom-padding)); padding-top: calc(var(--bottom-padding) + var(--section--border-bottom-width)); top: var(--top-without-bottom-padding);">
           <div class="bg-white border-t border-gray-100 shadow-xl">
             <div class="page-container">
               <div class="flex gap-0">
