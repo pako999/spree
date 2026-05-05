@@ -201,7 +201,8 @@ namespace :seo do
       config_path = Rails.root.join('db/seo_data', batch, 'config.json')
       next unless config_path.exist?
 
-      config_rows = JSON.parse(File.read(config_path))
+      raw = JSON.parse(File.read(config_path))
+      config_rows = raw.is_a?(Array) ? raw : (raw['rows'] || [])
       rows = CSV.read(csv_path.to_s, headers: true, encoding: 'UTF-8')
       changed = false
 
@@ -213,7 +214,10 @@ namespace :seo do
 
         puts "  Regenerating: #{row['slug']}"
         template  = config['template'] || 'buying_guide'
+        # Build variables: explicit 'variables' hash + top-level fields templates need
         variables = (config['variables'] || {}).transform_keys(&:to_sym)
+        variables[:name]  ||= config['name']  || row['title']
+        variables[:brand] ||= config['brand'] if config['brand'].present?
 
         result = generator.generate(
           keyword:   config['keyword'] || row['title'],
