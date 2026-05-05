@@ -93,7 +93,11 @@ class SyncPrydeStockJob < SyncStockBaseJob
 
     # Get all variants with matching barcodes in one query
     variants_with_barcodes = Spree::Variant.where(barcode: stock_map.keys).includes(:stock_items)
-    variant_map = variants_with_barcodes.index_by(&:barcode)
+    variant_map = {}
+    variants_with_barcodes.each do |v|
+      existing = variant_map[v.barcode]
+      variant_map[v.barcode] = v if existing.nil? || existing.is_master?
+    end
 
     Rails.logger.info "[PrydeStock] Matched #{variant_map.size} of #{stock_map.size} EANs to variants"
 

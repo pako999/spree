@@ -74,7 +74,11 @@ class SyncPoint7StockJob < SyncStockBaseJob
     skipped = 0
 
     variants_with_skus = Spree::Variant.where(sku: stock_map.keys).includes(:stock_items)
-    variant_map = variants_with_skus.index_by(&:sku)
+    variant_map = {}
+    variants_with_skus.each do |v|
+      existing = variant_map[v.sku]
+      variant_map[v.sku] = v if existing.nil? || existing.is_master?
+    end
 
     Rails.logger.info "[Point7Stock] Matched #{variant_map.size} of #{stock_map.size} SKUs to variants"
 
