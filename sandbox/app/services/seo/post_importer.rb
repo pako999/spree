@@ -139,9 +139,9 @@ module Seo
         master_ids = Spree::Variant.where(product_id: product_ids, is_master: true).pluck(:id)
         next if master_ids.empty?
 
-        # Rotate through available images, skipping placeholders (raw join avoids has_one_attached naming quirks)
+        # Rotate through available images, skipping placeholders
         img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
-                              .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_images.id AND asa.record_type = 'Spree::Image' AND asa.name = 'attachment'")
+                              .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_assets.id AND asa.record_type = 'Spree::Image' AND asa.name = 'attachment'")
                               .joins('INNER JOIN active_storage_blobs asb ON asb.id = asa.blob_id')
                               .where.not('asb.filename ILIKE ?', '%coming_soon%')
                               .where.not('asb.filename ILIKE ?', '%placeholder%')
