@@ -187,6 +187,61 @@ namespace :seo do
     puts "Written #{urls.size} URLs to #{path}"
   end
 
+  # ── Regenerate posts with empty body_html ───────────────────────────────────
+  desc 'Find posts with empty body_html in CSVs and regenerate them via Claude API'
+  task regenerate_empty: :environment do
+    require 'csv'
+    generator = Seo::ContentGenerator.new
+    total_fixed = 0
+
+    BATCH_DIRS.each do |batch|
+      csv_path = Rails.root.join('db/seo_data', batch, 'posts.csv')
+      next unless csv_path.exist?
+
+      config_path = Rails.root.join('db/seo_data', batch, 'config.json')
+      next unless config_path.exist?
+
+      config_rows = JSON.parse(File.read(config_path))
+      rows = CSV.read(csv_path.to_s, headers: true, encoding: 'UTF-8')
+      changed = false
+
+      rows.each do |row|
+        next if row['body_html'].present?
+
+        config = config_rows.find { |c| c['slug'] == row['slug'] }
+        next unless config
+
+        puts "  Regenerating: #{row['slug']}"
+        template  = config['template'] || 'buying_guide'
+        variables = (config['variables'] || {}).transform_keys(&:to_sym)
+
+        result = generator.generate(
+          keyword:   config['keyword'] || row['title'],
+          template:  template,
+          variables: variables
+        )
+
+        row['body_html']        = result[:body_html]
+        row['meta_title']       = result[:meta_title]       if row['meta_title'].blank?
+        row['meta_description'] = result[:meta_description] if row['meta_description'].blank?
+        row['excerpt']          = result[:excerpt]          if row['excerpt'].blank?
+        changed = true
+        total_fixed += 1
+        sleep(1)
+      end
+
+      if changed
+        CSV.open(csv_path.to_s, 'w') do |csv|
+          csv << rows.headers
+          rows.each { |r| csv << r }
+        end
+        puts "  Updated #{csv_path}"
+      end
+    end
+
+    puts "\nRegenerated #{total_fixed} posts. Run seo:import_all to re-import."
+  end
+
   # ── Generate full batch from config.json via Claude API ─────────────────────
   desc 'Generate CSV from config.json using Claude API — rake "seo:generate_from_config[batch_09_brand_products2]"'
   task :generate_from_config, [:batch_name] => :environment do |_, args|

@@ -121,42 +121,64 @@ module Seo
       Rails.logger.warn("[Seo::PostImporter] Product image attach failed for #{post.slug}: #{e.message}")
     end
 
+    # Keywords that identify headline product taxons (good images)
+    PREFERRED_TAXON_TERMS = %w[kites boards sails wings foils wetsuits].freeze
+    # Keywords that identify accessory taxons (bad images — small items on white bg)
+    EXCLUDED_TAXON_TERMS  = %w[accessories accessory leash strap handle bag pad pump spare parts helmets safety].freeze
+
     def attach_image_from_taxons(post, permalinks_str)
       return if permalinks_str.blank?
-      permalinks = permalinks_str.split(',').map(&:strip)
 
-      # Use post slug checksum to pick a different offset per post — avoids all posts getting the same image
       slug_offset = post.slug.bytes.sum
 
-      permalinks.each do |permalink|
+      permalinks_str.split(',').map(&:strip).each do |permalink|
         taxon = Spree::Taxon.find_by(permalink: permalink)
         next unless taxon
 
-        # Collect master variant IDs for up to 100 products in this taxon
-        product_ids = taxon.products.limit(100).pluck(:id)
-        next if product_ids.empty?
+        # Prefer focused child taxons (kites, boards, sails) over generic parent
+        candidate_taxons = relevant_child_taxons(taxon)
+        candidate_taxons = [taxon] if candidate_taxons.empty?
 
-        master_ids = Spree::Variant.where(product_id: product_ids, is_master: true).pluck(:id)
-        next if master_ids.empty?
+        candidate_taxons.each do |t|
+          img_id = image_id_from_taxon(t, slug_offset)
+          next unless img_id
 
-        # Rotate through available images, skipping placeholders
-        # Note: Spree::Image inherits from Spree::Asset, so record_type in active_storage is 'Spree::Asset'
-        img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
-                              .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_assets.id AND asa.record_type = 'Spree::Asset' AND asa.name = 'attachment'")
-                              .joins('INNER JOIN active_storage_blobs asb ON asb.id = asa.blob_id')
-                              .where.not('asb.filename ILIKE ?', '%coming_soon%')
-                              .where.not('asb.filename ILIKE ?', '%placeholder%')
-                              .pluck(:id)
-        next if img_ids.empty?
+          img = Spree::Image.find(img_id)
+          next unless img.attachment.attached?
 
-        img = Spree::Image.find(img_ids[slug_offset % img_ids.size])
-        next unless img.attachment.attached?
-
-        post.image.attach(img.attachment.blob)
-        return
+          post.image.attach(img.attachment.blob)
+          return
+        end
       end
     rescue => e
       Rails.logger.warn("[Seo::PostImporter] Taxon image attach failed for #{post.slug}: #{e.message}")
+    end
+
+    def relevant_child_taxons(taxon)
+      children = taxon.children.to_a
+      preferred = children.select { |c| PREFERRED_TAXON_TERMS.any? { |kw| c.permalink.include?(kw) } }
+      return preferred if preferred.any?
+
+      children.reject { |c| EXCLUDED_TAXON_TERMS.any? { |kw| c.permalink.include?(kw) } }
+    end
+
+    def image_id_from_taxon(taxon, offset)
+      product_ids = taxon.products.limit(80).pluck(:id)
+      return nil if product_ids.empty?
+
+      master_ids = Spree::Variant.where(product_id: product_ids, is_master: true).pluck(:id)
+      return nil if master_ids.empty?
+
+      img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
+                            .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_assets.id AND asa.record_type = 'Spree::Asset' AND asa.name = 'attachment'")
+                            .joins('INNER JOIN active_storage_blobs asb ON asb.id = asa.blob_id')
+                            .where.not('asb.filename ILIKE ?', '%coming_soon%')
+                            .where.not('asb.filename ILIKE ?', '%placeholder%')
+                            .where.not('asb.filename ILIKE ?', '%comming_soon%')
+                            .pluck(:id)
+      return nil if img_ids.empty?
+
+      img_ids[offset % img_ids.size]
     end
 
     def attach_hero_image(post, filename)
