@@ -139,8 +139,12 @@ module Seo
 
         next if master_ids.empty?
 
-        # Rotate through available images based on slug checksum
-        img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids).pluck(:id)
+        # Rotate through available images, skipping placeholders
+        img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
+                              .joins(:attachment)
+                              .where.not('active_storage_blobs.filename ILIKE ?', '%coming_soon%')
+                              .where.not('active_storage_blobs.filename ILIKE ?', '%placeholder%')
+                              .pluck(:id)
         next if img_ids.empty?
 
         img = Spree::Image.find(img_ids[slug_offset % img_ids.size])
