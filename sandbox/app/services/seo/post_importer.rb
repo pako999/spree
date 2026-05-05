@@ -135,13 +135,13 @@ module Seo
           return
         end
 
-        # Fall back to first product in this taxon
-        product = taxon.products.includes(:images, master: :images).first
+        # Fall back to first product image in this taxon
+        product = taxon.products.first
         next unless product
-        source_img = product.images.first || product.master.images.first
-        next unless source_img&.attachment&.attached?
+        img = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: product.master_id).first
+        next unless img&.attachment&.attached?
 
-        post.image.attach(source_img.attachment.blob)
+        post.image.attach(img.attachment.blob)
         return
       end
     rescue => e
