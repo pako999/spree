@@ -35,6 +35,7 @@ module Seo
           post.save!
 
           attach_hero_image(post, row['hero_image_filename']) if row['hero_image_filename'].present?
+          attach_image_from_products(post, row['related_product_skus']) unless post.image.attached?
           set_metafields(post, row)
 
           is_new ? (created += 1; print 'C') : (updated += 1; print 'U')
@@ -105,6 +106,22 @@ module Seo
       end
     rescue => e
       Rails.logger.warn("[Seo::PostImporter] Metafield error for #{row['slug']}: #{e.message}")
+    end
+
+    def attach_image_from_products(post, skus_str)
+      return if skus_str.blank?
+      skus = skus_str.split(',').map(&:strip)
+      product_ids = Spree::Variant.where(sku: skus).pluck(:product_id).uniq
+      return if product_ids.empty?
+
+      product = Spree::Product.includes(master: :images).find(product_ids.first)
+      source_img = product.images.first || product.master.images.first
+      return unless source_img&.attachment&.attached?
+
+      blob = source_img.attachment.blob
+      post.image.attach(blob)
+    rescue => e
+      Rails.logger.warn("[Seo::PostImporter] Product image attach failed for #{post.slug}: #{e.message}")
     end
 
     def attach_hero_image(post, filename)
