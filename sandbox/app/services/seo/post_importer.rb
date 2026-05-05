@@ -84,25 +84,21 @@ module Seo
     end
 
     def set_metafields(post, row)
-      # Batch tracking for rollback
-      post.set_metafield('seo_batch_id', @batch_id, namespace: 'seo')
+      post.set_metafield('seo.seo_batch_id', @batch_id)
+      post.set_metafield('seo.schema_type', row['schema_type'].presence || 'Article')
+      post.set_metafield('seo.meta_keywords', row['meta_keywords'].presence) if row['meta_keywords'].present?
+      post.set_metafield('seo.schema_json', row['schema_json'].presence) if row['schema_json'].present?
 
-      # Schema
-      post.set_metafield('schema_type', row['schema_type'].presence || 'Article', namespace: 'seo')
-      post.set_metafield('schema_json', row['schema_json'].presence, namespace: 'seo') if row['schema_json'].present?
-
-      # Related taxon permalinks — stored as JSON array
       if row['related_taxon_permalinks'].present?
         permalinks = row['related_taxon_permalinks'].split(',').map(&:strip)
         taxon_ids  = Spree::Taxon.where(permalink: permalinks).pluck(:id)
-        post.set_metafield('related_taxon_ids', taxon_ids.to_json, namespace: 'seo')
+        post.set_metafield('seo.related_taxon_ids', taxon_ids.to_json)
       end
 
-      # Related product SKUs — stored as JSON array
       if row['related_product_skus'].present?
         skus        = row['related_product_skus'].split(',').map(&:strip)
         product_ids = Spree::Variant.where(sku: skus).select(:product_id).map(&:product_id).uniq
-        post.set_metafield('related_product_ids', product_ids.to_json, namespace: 'seo')
+        post.set_metafield('seo.related_product_ids', product_ids.to_json)
       end
     rescue => e
       Rails.logger.warn("[Seo::PostImporter] Metafield error for #{row['slug']}: #{e.message}")

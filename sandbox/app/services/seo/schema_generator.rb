@@ -15,7 +15,7 @@ module Seo
 
     # Route to the correct schema type based on post public_metadata
     def self.for_post(post)
-      schema_type = post.get_metafield('schema_type')&.value || 'Article'
+      schema_type = post.get_metafield('seo.schema_type')&.value || 'Article'
 
       case schema_type
       when 'HowTo'    then how_to_schema(post)

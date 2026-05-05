@@ -7,8 +7,8 @@
   <%# Primary meta — title set via content_for :title so Spree's head partial uses it %>
   <% content_for :title, "#{effective_title} | Surf Store" %>
   <meta name="description" content="<%= effective_desc %>">
-  <% if @post.get_metafield('meta_keywords')&.value.present? %>
-    <meta name="keywords" content="<%= @post.get_metafield('meta_keywords').value %>">
+  <% if @post.get_metafield('seo.meta_keywords')&.value.present? %>
+    <meta name="keywords" content="<%= @post.get_metafield('seo.meta_keywords').value %>">
   <% end %>
   <link rel="canonical" href="<%= canonical_url %>">
 
@@ -54,7 +54,7 @@
 <%= render_page(current_page, post: @post) %>
 
 <%# ── Related categories (SEO taxons from metafield) ───────────────────── %>
-<% related_taxon_ids_json = @post.get_metafield('related_taxon_ids')&.value %>
+<% related_taxon_ids_json = @post.get_metafield('seo.related_taxon_ids')&.value %>
 <% if related_taxon_ids_json.present? %>
   <% related_taxon_ids = JSON.parse(related_taxon_ids_json) rescue [] %>
   <% related_taxons = Spree::Taxon.where(id: related_taxon_ids).limit(6) if related_taxon_ids.any? %>
@@ -78,7 +78,7 @@
 <% end %>
 
 <%# ── Related products (from metafield) ────────────────────────────────── %>
-<% related_product_ids_json = @post.get_metafield('related_product_ids')&.value %>
+<% related_product_ids_json = @post.get_metafield('seo.related_product_ids')&.value %>
 <% if related_product_ids_json.present? %>
   <% related_product_ids = JSON.parse(related_product_ids_json) rescue [] %>
   <% related_products = Spree::Product.active.where(id: related_product_ids).includes(:master, :images).limit(4) if related_product_ids.any? %>
