@@ -41,6 +41,11 @@ production:
     queue: default
     schedule: every 4 hours at minute 15
 
+  sync_nobile_stock:
+    class: SyncNobileStockJob
+    queue: default
+    schedule: every 6 hours at minute 0
+
   # ── Weekly SEO automation ──────────────────────────────────────────────────
   generate_seo_meta:
     class: GenerateSeoMetaJob
