@@ -11,7 +11,8 @@ Rails.application.configure do
                         'https://cdn.jsdelivr.net',
                         'https://www.googletagmanager.com',
                         'https://www.google-analytics.com',
-                        'https://esm.sh'
+                        'https://esm.sh',
+                        'https://static.hotjar.com'
 
     # Images: allow self, https, data URIs (for inline images and Active Storage)
     policy.img_src     :self, :https, :data, :blob
@@ -43,7 +44,11 @@ Rails.application.configure do
                         'https://www.google.com',
                         'https://a.klaviyo.com',
                         'https://static.klaviyo.com',
-                        'https://ga.jspm.io'
+                        'https://ga.jspm.io',
+                        'https://static.hotjar.com',
+                        'https://vc.hotjar.io',
+                        'https://in.hotjar.com',
+                        'https://vars.hotjar.com'
 
     # Frames: allow YouTube embeds in product descriptions / TinyMCE
     policy.frame_src   :self,
