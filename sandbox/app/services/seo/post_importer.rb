@@ -141,7 +141,7 @@ module Seo
 
         # Rotate through available images, skipping placeholders
         img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
-                              .joins(:attachment)
+                              .joins(attachment: :blob)
                               .where.not('active_storage_blobs.filename ILIKE ?', '%coming_soon%')
                               .where.not('active_storage_blobs.filename ILIKE ?', '%placeholder%')
                               .pluck(:id)
