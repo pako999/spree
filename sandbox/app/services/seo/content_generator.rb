@@ -17,92 +17,142 @@ require 'json'
 module Seo
   class ContentGenerator
     API_URL     = 'https://api.anthropic.com/v1/messages'
-    MODEL       = 'claude-sonnet-4-6'
+    MODEL       = ENV.fetch('SEO_MODEL', 'claude-haiku-4-5-20251001')
     MAX_TOKENS  = 4096
     API_VERSION = '2023-06-01'
 
+    # Cached system prompt — shared across all template types.
+    # Sent as a system message with cache_control so it's reused after the first call.
+    SYSTEM_PROMPT = <<~PROMPT.freeze
+      You are an expert SEO content writer for surf-store.com, a European water sports shop based in Slovenia specialising in kitesurfing, windsurfing, wing foiling, wetsuits, and SUP.
+
+      About the shop:
+      - Carries top brands: Duotone, Cabrinha, NeilPryde, ION, Gaastra, JP Australia, Fanatic, Nobile, Point7, Tabou
+      - Ships across Europe; prices in EUR
+      - Expert staff with real on-water experience
+      - Target audience: serious water sports enthusiasts, beginners looking for expert guidance
+
+      Content standards:
+      - European English spelling (colour, favourite, specialise, etc.)
+      - Lead with outcomes for the customer, not product specifications
+      - Mention specific technologies, materials, and model names where relevant
+      - Include natural calls-to-action pointing to surf-store.com
+      - Write as a knowledgeable shop owner and water sports instructor, not a copywriter
+      - Target keyword should appear naturally 2–4 times in body_html
+      - All HTML must be valid: use <h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>, <thead>, <tbody>, <tr>, <th>, <td> tags only
+
+      JSON response requirements:
+      - meta_title: max 60 characters — include keyword + year (2026) where natural
+      - meta_description: max 155 characters — end with a CTA ("Shop now at Surf Store" or "Find it at Surf Store")
+      - title: H1 text for the page — max 70 characters
+      - body_html: valid HTML, length as specified per template
+      - excerpt: one sentence, max 160 characters
+      - faq: array of {"q": "...", "a": "..."} objects
+
+      IMPORTANT: Respond ONLY with a valid JSON object. No prose, no markdown fences, no explanation — just the JSON.
+    PROMPT
+
     TEMPLATES = {
       'brand_category' => <<~PROMPT,
-        You are an expert SEO content writer for surf-store.com, a European water sports shop specialising in kitesurfing, windsurfing, wing foiling, wetsuits, and SUP.
-
-        Write a complete brand/category page for: **%{name}** (URL: surf-store.com/%{permalink})
-
+        Write a brand/category page for: **%{name}**
+        URL: surf-store.com/%{permalink}
         Target keyword: %{keyword}
 
-        Requirements:
-        - meta_title: max 60 chars, include brand + year (2026) + category
-        - meta_description: max 155 chars, end with a clear CTA ("Shop now at Surf Store")
-        - title: H1 for the page (max 70 chars)
-        - body_html: 650–800 words, HTML with <h2> subheadings, <p> paragraphs
-          • H2 sections: "About [Brand]", "Why Buy [Category] at Surf Store", "Our [Brand] Range", "Expert Advice"
-          • Include specific product benefits, materials, technology names
-          • One FAQ block with 3 Q:/A: pairs at the end
-        - excerpt: 1-sentence summary (max 160 chars)
+        Required body_html sections (650–800 words total):
+        - <h2>About %{name}</h2> — brand story, heritage, what makes them stand out
+        - <h2>Why Buy %{name} at Surf Store?</h2> — our expertise, stock depth, after-sales
+        - <h2>Our %{name} Range</h2> — product categories with specific model mentions
+        - <h2>Expert Advice</h2> — buying tips specific to this brand/category
+        - <h2>FAQ</h2> — 3 inline Q/A pairs formatted as <p><strong>Q: ...</strong><br>A: ...</p>
 
-        Respond ONLY with valid JSON matching this exact structure:
-        {
-          "meta_title": "...",
-          "meta_description": "...",
-          "title": "...",
-          "body_html": "...",
-          "excerpt": "...",
-          "faq": [{"q": "...", "a": "..."}, ...]
-        }
+        faq: 3 Q/A pairs
       PROMPT
 
       'buying_guide' => <<~PROMPT,
-        You are an expert SEO content writer for surf-store.com, a European water sports shop.
-
-        Write a complete buying guide for: **%{name}**
-
+        Write a buying guide for: **%{name}**
         Target keyword: %{keyword}
 
-        Requirements:
-        - meta_title: max 60 chars
-        - meta_description: max 155 chars, end with CTA
-        - title: H1 (max 70 chars)
-        - body_html: 800–1000 words HTML with <h2> sections including:
-          • "What to Look For", "Beginner vs Advanced", "Budget Guide", "Our Top Picks"
-          • HowTo steps formatted as: <h2>Step 1: ...</h2><p>...</p>
-        - excerpt: 1-sentence (max 160 chars)
-        - faq: 5 Q:/A: pairs relevant to the topic
+        Required body_html sections (800–1000 words total):
+        - <h2>What to Look For</h2> — key buying criteria
+        - <h2>Beginner vs Advanced</h2> — how needs differ by skill level
+        - <h2>Budget Guide</h2> — entry/mid/premium price bands with examples
+        - <h2>Our Top Picks</h2> — 3–4 specific product recommendations with reasons
+        - <h2>Common Mistakes to Avoid</h2>
 
-        Respond ONLY with valid JSON:
-        {
-          "meta_title": "...",
-          "meta_description": "...",
-          "title": "...",
-          "body_html": "...",
-          "excerpt": "...",
-          "faq": [{"q": "...", "a": "..."}, ...]
-        }
+        faq: 5 Q/A pairs relevant to the buying decision
       PROMPT
 
       'location' => <<~PROMPT,
-        You are an expert SEO content writer for surf-store.com.
-
-        Write a local SEO page for water sports at: **%{name}**
-
+        Write a local water sports spot guide for: **%{name}**
         Target keyword: %{keyword}
 
-        Requirements:
-        - meta_title: max 60 chars, include location + sport + year
-        - meta_description: max 155 chars, include location, end with CTA
-        - title: H1 (max 70 chars)
-        - body_html: 600–800 words HTML with <h2> sections:
-          • "Kitesurfing/Windsurfing in [Location]", "Best Spots", "When to Go", "What to Pack", "Rent or Buy?"
-        - excerpt: 1-sentence (max 160 chars)
-        - faq: 3 Q:/A: pairs
+        Required body_html sections (650–800 words total):
+        - <h2>Why %{name} Is Worth the Trip</h2> — unique selling points of the spot
+        - <h2>Best Spots & Access</h2> — specific launch points, parking, hazards
+        - <h2>Wind & Weather by Season</h2> — monthly wind chart as HTML table (Month | Avg Wind | Direction | Water Temp | Rating)
+        - <h2>What Gear to Bring</h2> — kite/sail sizes, board type, wetsuit thickness
+        - <h2>Rent or Buy? Advice from Surf Store</h2>
 
-        Respond ONLY with valid JSON:
-        {
-          "meta_title": "...",
-          "meta_description": "...",
-          "title": "...",
-          "body_html": "...",
-          "excerpt": "...",
-          "faq": [{"q": "...", "a": "..."}, ...]
-        }
+        faq: 3 Q/A pairs (travel logistics, best season, gear questions)
+      PROMPT
+
+      'comparison' => <<~PROMPT,
+        Write a comparison page for: **%{name}**
+        Target keyword: %{keyword}
+
+        Required body_html sections (750–900 words total):
+        - <h2>Quick Verdict</h2> — 2–3 sentences declaring a winner and who should pick each
+        - <h2>Side-by-Side Comparison</h2> — HTML table (Feature | Option A | Option B) with 6–8 rows
+        - <h2>Option A — Full Review</h2> — strengths and weaknesses
+        - <h2>Option B — Full Review</h2> — strengths and weaknesses
+        - <h2>Who Should Choose Each?</h2> — clear rider profiles for each option
+        - <h2>Our Recommendation</h2> — direct advice from Surf Store experts
+
+        faq: 4 Q/A pairs about the comparison topic
+      PROMPT
+
+      'model_review' => <<~PROMPT,
+        Write a 2026 product review page for: **%{name}** by %{brand}
+        Target keyword: %{keyword}
+
+        Required body_html sections (750–950 words total):
+        - <h2>What's New for 2026</h2> — changes from previous year
+        - <h2>Key Features & Technology</h2> — specific tech names, materials, construction
+        - <h2>Who Is It For?</h2> — rider profile, skill level, use case
+        - <h2>On the Water — Performance</h2> — detailed riding characteristics
+        - <h2>Specs & Sizing Guide</h2> — size range, weight recommendations as table
+        - <h2>Verdict: Worth Buying in 2026?</h2> — honest summary with score
+
+        faq: 4 Q/A pairs about this specific model
+      PROMPT
+
+      'qna' => <<~PROMPT,
+        Write a question-and-answer page for: **%{name}**
+        Target keyword: %{keyword}
+
+        Required body_html structure (600–800 words total):
+        - Opening <p>: direct 2–3 sentence answer to the question
+        - <h2>The Full Answer</h2> — detailed explanation with context
+        - <h2>Practical Guide</h2> — step-by-step or scenario-based actionable advice
+        - <h2>Common Mistakes</h2> — what beginners get wrong
+        - <h2>Surf Store Recommendation</h2> — specific product or service suggestions
+
+        excerpt: the direct one-sentence answer to the question
+        faq: 5 related Q/A pairs on the same topic
+      PROMPT
+
+      'conditions' => <<~PROMPT,
+        Write a wind/conditions guide for: **%{name}**
+        Target keyword: %{keyword}
+
+        Required body_html sections (650–850 words total):
+        - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario
+        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes, board type, wetsuit with specific model recommendations
+        - <h2>Technique Tips</h2> — how to adjust riding technique for this scenario
+        - <h2>Safety Checklist</h2> — specific risks and how to manage them
+        - <h2>Our Gear Recommendations at Surf Store</h2> — 2–3 specific products with links
+
+        faq: 3 Q/A pairs about this wind/conditions scenario
       PROMPT
     }.freeze
 
@@ -124,14 +174,13 @@ module Seo
       { meta_title: '', meta_description: '', title: keyword, body_html: '', excerpt: '', faq: [] }
     end
 
-    # Generate content for multiple pages, respecting rate limit (10 req/min).
+    # Generate content for multiple pages, respecting rate limit.
     # Yields each result with its index.
     def generate_batch(items, &block)
       items.each_with_index do |item, i|
         result = generate(**item)
         block.call(result, i) if block
 
-        # Rate limiting: 10 requests per minute → 6 second gap
         sleep(6) if (i + 1) % 10 == 0
       end
     end
@@ -142,18 +191,26 @@ module Seo
       uri  = URI.parse(API_URL)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl      = true
-      http.read_timeout = 60
+      http.read_timeout = 90
       http.open_timeout = 10
 
       req = Net::HTTP::Post.new(uri.path)
       req['x-api-key']         = @api_key
       req['anthropic-version'] = API_VERSION
+      req['anthropic-beta']    = 'prompt-caching-2024-07-31'
       req['Content-Type']      = 'application/json'
 
       req.body = {
         model:      MODEL,
         max_tokens: MAX_TOKENS,
-        messages:   [{ role: 'user', content: prompt }]
+        system: [
+          {
+            type:          'text',
+            text:          SYSTEM_PROMPT,
+            cache_control: { type: 'ephemeral' }
+          }
+        ],
+        messages: [{ role: 'user', content: prompt }]
       }.to_json
 
       res = http.request(req)
@@ -165,7 +222,6 @@ module Seo
     def parse_response(api_response)
       text = api_response.dig('content', 0, 'text').to_s.strip
 
-      # Extract JSON from response (Claude may add prose around it)
       json_match = text.match(/\{.*\}/m)
       raise 'No JSON found in API response' unless json_match
 

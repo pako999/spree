@@ -187,6 +187,21 @@ namespace :seo do
     puts "Written #{urls.size} URLs to #{path}"
   end
 
+  # ── Generate full batch from config.json via Claude API ─────────────────────
+  desc 'Generate CSV from config.json using Claude API — rake "seo:generate_from_config[batch_09_brand_products2]"'
+  task :generate_from_config, [:batch_name] => :environment do |_, args|
+    batch = args[:batch_name].presence || abort('Provide batch_name')
+    dir   = Rails.root.join('db/seo_data', batch)
+    abort "Batch directory not found: #{dir}" unless File.directory?(dir)
+    abort "No config.json found in #{batch}" unless dir.join('config.json').exist?
+
+    puts "\n══ Generating #{batch} from config.json ══"
+    puts "  Model: #{ENV.fetch('SEO_MODEL', 'claude-haiku-4-5-20251001')}"
+
+    Seo::BatchGenerator.new(batch).run
+    puts "  Done — CSV written. Run seo:import_batch[#{batch}] to import."
+  end
+
   # ── Generate content via Claude API ─────────────────────────────────────────
   desc 'Generate content for a batch using Claude API — rake "seo:generate_content[batch_01_brands]"'
   task :generate_content, [:batch_name] => :environment do |_, args|
