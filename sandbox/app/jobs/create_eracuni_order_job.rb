@@ -118,7 +118,7 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
-      vat_rate = is_domestic ? 22 : (is_eu ? vat_percentage(li) : 0)
+      vat_rate = is_domestic ? 22 : (is_eu ? vat_percentage(li, country_iso) : 0)
       net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
@@ -146,7 +146,7 @@ class CreateEracuniOrderJob < ApplicationJob
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      shipping_vat = is_domestic ? 22 : (is_eu ? vat_percentage(order.line_items.first) : 0)
+      shipping_vat = is_domestic ? 22 : (is_eu ? vat_percentage(order.line_items.first, country_iso) : 0)
       net_shipping = (shipping_total / (1 + shipping_vat / 100.0)).round(2)
       items << {
         "description" => shipping_method_name,
@@ -183,16 +183,34 @@ class CreateEracuniOrderJob < ApplicationJob
     "2" # Non-EU countries = export, 0% VAT
   end
 
+  # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
+  EU_STANDARD_VAT_RATES = {
+    'AT' => 20, 'BE' => 21, 'BG' => 20, 'CY' => 19, 'CZ' => 21,
+    'DE' => 19, 'DK' => 25, 'EE' => 22, 'ES' => 21, 'FI' => 25,
+    'FR' => 20, 'GR' => 24, 'HR' => 25, 'HU' => 27, 'IE' => 23,
+    'IT' => 22, 'LT' => 21, 'LU' => 17, 'LV' => 21, 'MT' => 18,
+    'NL' => 21, 'PL' => 23, 'PT' => 23, 'RO' => 19, 'SE' => 25,
+    'SK' => 20, 'XI' => 20
+  }.freeze
+
   # Determine the VAT percentage from the line item's tax adjustments.
-  # e-Računi has OSS configured for all EU countries, so we send the
-  # actual VAT rate charged to the customer.
+  # Falls back to EU standard VAT rates table so we never send 0% by mistake.
   # e-Računi requires integer percentages (22, not 22.0).
-  def vat_percentage(line_item)
-    tax_adj = line_item.adjustments.tax.first
-    if tax_adj&.source.is_a?(Spree::TaxRate)
-      (tax_adj.source.amount.to_f * 100).round
-    else
-      22 # Default Slovenian standard VAT
+  def vat_percentage(line_item, country_iso = nil)
+    # Try reading from the tax adjustment (handles both included & excluded tax)
+    tax_adj = line_item.adjustments
+                       .select { |a| a.source_type == 'Spree::TaxRate' }
+                       .max_by { |a| a.amount.abs }
+
+    if tax_adj&.source.is_a?(Spree::TaxRate) && tax_adj.source.amount.to_f > 0
+      return (tax_adj.source.amount.to_f * 100).round
     end
+
+    # Fall back to EU standard rate for the destination country
+    if country_iso.present? && EU_STANDARD_VAT_RATES.key?(country_iso)
+      return EU_STANDARD_VAT_RATES[country_iso]
+    end
+
+    22 # Final fallback: Slovenian standard VAT
   end
 end
