@@ -132,11 +132,11 @@ module Seo
         taxon = Spree::Taxon.find_by(permalink: permalink)
         next unless taxon
 
-        # Collect all master_ids for products in this taxon that have images
-        master_ids = taxon.products.pluck(:id).map do |pid|
-          Spree::Variant.where(product_id: pid, is_master: true).pick(:id)
-        end.compact
+        # Collect master variant IDs for up to 100 products in this taxon
+        product_ids = taxon.products.limit(100).pluck(:id)
+        next if product_ids.empty?
 
+        master_ids = Spree::Variant.where(product_id: product_ids, is_master: true).pluck(:id)
         next if master_ids.empty?
 
         # Rotate through available images, skipping placeholders
