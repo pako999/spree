@@ -125,21 +125,26 @@ module Seo
       return if permalinks_str.blank?
       permalinks = permalinks_str.split(',').map(&:strip)
 
+      # Use post slug checksum to pick a different offset per post — avoids all posts getting the same image
+      slug_offset = post.slug.bytes.sum
+
       permalinks.each do |permalink|
         taxon = Spree::Taxon.find_by(permalink: permalink)
         next unless taxon
 
-        # First try taxon's own image
-        if taxon.image.attached?
-          post.image.attach(taxon.image.blob)
-          return
-        end
+        # Collect all master_ids for products in this taxon that have images
+        master_ids = taxon.products.pluck(:id).map do |pid|
+          Spree::Variant.where(product_id: pid, is_master: true).pick(:id)
+        end.compact
 
-        # Fall back to first product image in this taxon
-        product = taxon.products.first
-        next unless product
-        img = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: product.master_id).first
-        next unless img&.attachment&.attached?
+        next if master_ids.empty?
+
+        # Rotate through available images based on slug checksum
+        img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids).pluck(:id)
+        next if img_ids.empty?
+
+        img = Spree::Image.find(img_ids[slug_offset % img_ids.size])
+        next unless img.attachment.attached?
 
         post.image.attach(img.attachment.blob)
         return
