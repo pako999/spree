@@ -55,9 +55,23 @@ class SyncBamStockJob < SyncStockBaseJob
     updated = 0
     skipped = 0
 
-    # Get all variants with matching barcodes in one query
-    variants_with_barcodes = Spree::Variant.where(barcode: stock_map.keys).includes(:stock_items)
-    variant_map = variants_with_barcodes.index_by(&:barcode)
+    # Get all variants with matching barcodes in one query.
+    # IMPORTANT: group by barcode and always prefer non-master variants.
+    # When a product has real variants (sizes/colors), both the master and the
+    # variant share the same EAN — we must update the sellable variant, not the master.
+    variants_with_barcodes = Spree::Variant
+                               .where(barcode: stock_map.keys)
+                               .includes(:stock_items)
+
+    # Build EAN → best_variant map: prefer non-master over master
+    variant_map = {}
+    variants_with_barcodes.each do |v|
+      existing = variant_map[v.barcode]
+      # Prefer non-master; only fall back to master if nothing better found
+      if existing.nil? || existing.is_master?
+        variant_map[v.barcode] = v
+      end
+    end
 
     Rails.logger.info "[BamStock] Matched #{variant_map.size} of #{stock_map.size} EANs to variants"
 
