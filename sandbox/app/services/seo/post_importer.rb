@@ -21,7 +21,7 @@ module Seo
       @csv_path = csv_path
       @batch_id = batch_id
       @store    = Spree::Store.find(2)
-      @author   = Spree.user_class.first
+      @author   = Spree.admin_user_class.first
     end
 
     def import
