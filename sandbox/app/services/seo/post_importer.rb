@@ -140,8 +140,9 @@ module Seo
         next if master_ids.empty?
 
         # Rotate through available images, skipping placeholders
+        # Note: Spree::Image inherits from Spree::Asset, so record_type in active_storage is 'Spree::Asset'
         img_ids = Spree::Image.where(viewable_type: 'Spree::Variant', viewable_id: master_ids)
-                              .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_assets.id AND asa.record_type = 'Spree::Image' AND asa.name = 'attachment'")
+                              .joins("INNER JOIN active_storage_attachments asa ON asa.record_id = spree_assets.id AND asa.record_type = 'Spree::Asset' AND asa.name = 'attachment'")
                               .joins('INNER JOIN active_storage_blobs asb ON asb.id = asa.blob_id')
                               .where.not('asb.filename ILIKE ?', '%coming_soon%')
                               .where.not('asb.filename ILIKE ?', '%placeholder%')
