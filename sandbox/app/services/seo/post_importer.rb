@@ -36,6 +36,7 @@ module Seo
 
           attach_hero_image(post, row['hero_image_filename']) if row['hero_image_filename'].present?
           attach_image_from_products(post, row['related_product_skus']) unless post.image.attached?
+          attach_image_from_taxons(post, row['related_taxon_permalinks']) unless post.image.attached?
           set_metafields(post, row)
 
           is_new ? (created += 1; print 'C') : (updated += 1; print 'U')
@@ -118,6 +119,33 @@ module Seo
       post.image.attach(blob)
     rescue => e
       Rails.logger.warn("[Seo::PostImporter] Product image attach failed for #{post.slug}: #{e.message}")
+    end
+
+    def attach_image_from_taxons(post, permalinks_str)
+      return if permalinks_str.blank?
+      permalinks = permalinks_str.split(',').map(&:strip)
+
+      permalinks.each do |permalink|
+        taxon = Spree::Taxon.find_by(permalink: permalink)
+        next unless taxon
+
+        # First try taxon's own image
+        if taxon.image.attached?
+          post.image.attach(taxon.image.blob)
+          return
+        end
+
+        # Fall back to first product in this taxon
+        product = taxon.products.includes(:images, master: :images).first
+        next unless product
+        source_img = product.images.first || product.master.images.first
+        next unless source_img&.attachment&.attached?
+
+        post.image.attach(source_img.attachment.blob)
+        return
+      end
+    rescue => e
+      Rails.logger.warn("[Seo::PostImporter] Taxon image attach failed for #{post.slug}: #{e.message}")
     end
 
     def attach_hero_image(post, filename)
