@@ -33,27 +33,77 @@
 </script>
 <% end %>
 
-<!-- Google tag (gtag.js) — GA4 G-MLSPRGVMGD + Google Ads AW-11446870184 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MLSPRGVMGD"></script>
+<!-- Google Consent Mode v2 — must run BEFORE gtag.js loads -->
 <script>
+  // Default: all consent denied. GA4/Ads still load but in restricted mode.
+  // Google uses these signals for conversion modeling even without full consent.
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+
+  gtag('consent', 'default', {
+    'ad_storage':              'denied',
+    'ad_user_data':            'denied',
+    'ad_personalization':      'denied',
+    'analytics_storage':       'denied',
+    'functionality_storage':   'denied',
+    'personalization_storage': 'denied',
+    'security_storage':        'granted', // always needed
+    'wait_for_update':         500        // ms to wait for consent update before firing
+  });
+
+  // If user already consented on a previous visit — upgrade immediately
+  (function() {
+    try {
+      var c = JSON.parse(localStorage.getItem('surf_store_cookie_consent') || 'null');
+      if (!c) return;
+      gtag('consent', 'update', {
+        'ad_storage':              c.marketing    ? 'granted' : 'denied',
+        'ad_user_data':            c.marketing    ? 'granted' : 'denied',
+        'ad_personalization':      c.marketing    ? 'granted' : 'denied',
+        'analytics_storage':       c.analytics    ? 'granted' : 'denied',
+        'functionality_storage':   'granted',
+        'personalization_storage': c.personalization ? 'granted' : 'denied'
+      });
+    } catch(e) {}
+  })();
+</script>
+
+<!-- Google tag (gtag.js) — GA4 G-MLSPRGVMGD + Google Ads AW-11446870184 -->
+<!-- Loads AFTER consent defaults are set — runs in restricted mode until consent granted -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MLSPRGVMGD"></script>
+<script>
   gtag('js', new Date());
   gtag('config', 'G-MLSPRGVMGD', { send_page_view: true });
   gtag('config', 'AW-11446870184');
 </script>
 
-
-<!-- Hotjar Tracking Code for https://www.surf-store.com -->
+<!-- Hotjar — loaded only after analytics consent via cookieConsentUpdate event -->
 <script>
+(function() {
+  function loadHotjar() {
+    if (window._hjLoaded) return;
+    window._hjLoaded = true;
     (function(h,o,t,j,a,r){
-        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-        h._hjSettings={hjid:5062304,hjsv:6};
-        a=o.getElementsByTagName("head")[0];
-        r=o.createElement("script");r.async=1;
-        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-        a.appendChild(r);
-    })(window,document,"https://static.hotjar.com/c/hotjar-",".js?sv=");
+      h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+      h._hjSettings={hjid:5062304,hjsv:6};
+      a=o.getElementsByTagName('head')[0];
+      r=o.createElement('script');r.async=1;
+      r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+      a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+  }
+
+  // Load Hotjar immediately if analytics already consented on previous visit
+  try {
+    var c = JSON.parse(localStorage.getItem('surf_store_cookie_consent') || 'null');
+    if (c && c.analytics) loadHotjar();
+  } catch(e) {}
+
+  // Load Hotjar when user consents during this session
+  window.addEventListener('cookieConsentUpdate', function(e) {
+    if (e.detail && e.detail.analytics) loadHotjar();
+  });
+})();
 </script>
 
 <!-- GA4 add_to_cart event — listens for successful Turbo form submissions on product forms -->

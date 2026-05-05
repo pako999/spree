@@ -326,6 +326,19 @@
   function saveConsent(consent) {
     var full = Object.assign({ necessary: true, timestamp: new Date().toISOString() }, consent);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(full));
+
+    // Update Google Consent Mode v2 immediately — no page reload needed
+    if (typeof gtag === 'function') {
+      gtag('consent', 'update', {
+        'ad_storage':              full.marketing       ? 'granted' : 'denied',
+        'ad_user_data':            full.marketing       ? 'granted' : 'denied',
+        'ad_personalization':      full.marketing       ? 'granted' : 'denied',
+        'analytics_storage':       full.analytics       ? 'granted' : 'denied',
+        'functionality_storage':   'granted',
+        'personalization_storage': full.personalization ? 'granted' : 'denied'
+      });
+    }
+
     window.dispatchEvent(new CustomEvent('cookieConsentUpdate', { detail: full }));
     return full;
   }
