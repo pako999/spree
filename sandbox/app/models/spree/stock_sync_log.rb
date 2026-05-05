@@ -4,7 +4,8 @@ module Spree
       'SyncBamStockJob'     => 'Boards & More',
       'SyncPoint7StockJob'  => 'Point7',
       'SyncPrydeStockJob'   => 'NeilPryde / Cabrinha / JP',
-      'SyncGaastraStockJob' => 'Gaastra / Tabou'
+      'SyncGaastraStockJob' => 'Gaastra / Tabou',
+      'SyncNobileStockJob'  => 'Nobile'
     }.freeze
 
     scope :latest_per_job, -> {

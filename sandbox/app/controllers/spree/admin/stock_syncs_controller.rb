@@ -1,7 +1,7 @@
 module Spree
   module Admin
     class StockSyncsController < Spree::Admin::BaseController
-      SYNC_JOBS = %w[SyncBamStockJob SyncPoint7StockJob SyncPrydeStockJob SyncGaastraStockJob].freeze
+      SYNC_JOBS = %w[SyncBamStockJob SyncPoint7StockJob SyncPrydeStockJob SyncGaastraStockJob SyncNobileStockJob].freeze
 
       def index
         latest_ids = Spree::StockSyncLog.where(job_name: SYNC_JOBS)
