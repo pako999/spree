@@ -117,13 +117,21 @@ class CreateEracuniOrderJob < ApplicationJob
 
   def build_line_items(order, country_iso, is_b2b: false)
     is_non_eu = country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
+    is_eu_oss = !is_b2b && !is_non_eu && country_iso.present? && EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
     items = []
 
-    # VAT rate logic:
-    #  - B2B with VAT ID (EU reverse charge) → 0%
-    #  - Non-EU export                        → 0%
-    #  - SI domestic + all EU B2C            → 22% Slovenian DDV (valid below OSS threshold)
-    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
+    # VAT rate:
+    #  - B2B EU reverse charge → 0%
+    #  - Non-EU export         → 0%
+    #  - SI domestic           → 22% Slovenian DDV
+    #  - EU B2C OSS (type 106) → destination country standard rate
+    vat_rate = if is_b2b || is_non_eu
+                 0
+               elsif is_eu_oss
+                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
+               else
+                 22 # SI domestic
+               end
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
@@ -131,20 +139,32 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
-      net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
       description += " (SKU: #{variant.sku})" if variant.sku.present?
 
-      item = {
-        "description" => description,
-        "quantity" => li.quantity.to_f,
-        "netPrice" => net_price,
-        "vatPercentage" => vat_rate,
-        "unit" => "kos" # piece
-      }
+      if is_eu_oss
+        # EU B2C OSS: send gross price ('price' field) — e-Računi extracts VAT from it
+        item = {
+          "description"        => description,
+          "quantity"           => li.quantity.to_f,
+          "price"              => gross_price,
+          "vatPercentage"      => vat_rate,
+          "unit"               => "kos"
+        }
+      else
+        # SI domestic / B2B / non-EU: send net price
+        net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
+        item = {
+          "description"        => description,
+          "quantity"           => li.quantity.to_f,
+          "netPrice"           => net_price,
+          "vatPercentage"      => vat_rate,
+          "unit"               => "kos"
+        }
+      end
 
-      # Apply per-line-item discount if any
+      # Per-line-item discount
       promo_total = li.promo_total.to_f.abs
       if promo_total > 0 && gross_price > 0
         discount_pct = (promo_total / (gross_price * li.quantity.to_f) * 100).round(2)
@@ -154,19 +174,28 @@ class CreateEracuniOrderJob < ApplicationJob
       items << item
     end
 
-    # Shipping as a line item
+    # Shipping line item
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      shipping_vat = vat_rate
-      net_shipping = (shipping_total / (1 + shipping_vat / 100.0)).round(2)
-      items << {
-        "description" => shipping_method_name,
-        "quantity" => 1.0,
-        "netPrice" => net_shipping,
-        "vatPercentage" => shipping_vat,
-        "unit" => "storitev" # service
-      }
+      if is_eu_oss
+        items << {
+          "description"   => shipping_method_name,
+          "quantity"      => 1.0,
+          "price"         => shipping_total,
+          "vatPercentage" => vat_rate,
+          "unit"          => "storitev"
+        }
+      else
+        net_shipping = (shipping_total / (1 + vat_rate / 100.0)).round(2)
+        items << {
+          "description"   => shipping_method_name,
+          "quantity"      => 1.0,
+          "netPrice"      => net_shipping,
+          "vatPercentage" => vat_rate,
+          "unit"          => "storitev"
+        }
+      end
     end
 
     items
@@ -186,15 +215,18 @@ class CreateEracuniOrderJob < ApplicationJob
   ].freeze
 
   # Determine vatTransactionType for e-Računi:
-  #   "0" = domestic SI + EU B2C (22% Slovenian DDV, valid below OSS threshold)
-  #   "1" = EU B2B reverse charge (buyer provides VAT ID, 0% VAT)
-  #   "2" = export / non-EU (0% VAT)
+  #   "0"   = Domestic SI (22% Slovenian DDV)
+  #   "1"   = EU B2B reverse charge (0%) — not used here (handled separately)
+  #   "2"   = Non-EU export (0% no deduction right)
+  #   "106" = Distance sales to EU consumers OSS (destination country rate)
   def vat_transaction_type(country_iso, is_b2b: false)
-    # EU B2B: buyer provided VAT ID → reverse charge
+    # EU B2B: reverse charge
     return "1" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
-    # Non-EU export → 0% VAT
+    # Non-EU export
     return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
-    "0" # Domestic SI + all EU B2C → 22% Slovenian DDV
+    # EU B2C non-SI → OSS with destination country VAT rate
+    return "106" if country_iso.present? && EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
+    "0" # Domestic SI
   end
 
   # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.

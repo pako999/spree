@@ -1,0 +1,17 @@
+<%# Override Devise's default shared links to use direct Rails route helpers.
+    Devise's built-in new_session_path/new_password_path etc. fail in the
+    Spree engine context because the URL proxy can't resolve resource_name.
+    We use spree_* helpers (defined in lib/spree/authentication_helpers.rb)
+    which call Rails.application.routes.url_helpers directly. %>
+
+<%- if controller_name != 'sessions' %>
+  <p><%= link_to Spree.t(:login), spree_login_path %></p>
+<% end %>
+
+<%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+  <p><%= link_to Spree.t(:sign_up), spree_signup_path %></p>
+<% end %>
+
+<%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+  <p><%= link_to Spree.t(:forgot_password), spree_forgot_password_path %></p>
+<% end %>
