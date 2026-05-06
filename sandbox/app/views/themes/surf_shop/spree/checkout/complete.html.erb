@@ -82,39 +82,33 @@
 </div>
 
 <% if order_just_completed? %>
-<%# GA4 purchase event — fires once when the order is freshly completed, not on page refresh %>
+<%# Purchase event — fires once on fresh order completion, pushed to GTM dataLayer %>
+<%# GTM handles both GA4 purchase tag and Google Ads conversion tag from this single event %>
 <script>
 (function() {
-  if (typeof gtag !== 'function') return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ ecommerce: null }); // clear any previous ecommerce data
 
-  var orderData = {
-    transaction_id: '<%= j(@order.number) %>',
-    value:          <%= @order.total.to_f %>,
-    tax:            <%= @order.tax_total.to_f %>,
-    shipping:       <%= @order.shipment_total.to_f %>,
-    currency:       '<%= @order.currency %>',
-    items: [
-      <% @order.line_items.each_with_index do |item, idx| %>
-      {
-        item_id:    '<%= j(item.variant.sku.to_s) %>',
-        item_name:  '<%= j(item.name) %>',
-        item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s) %>',
-        price:      <%= item.price.to_f %>,
-        quantity:   <%= item.quantity %>
-      }<%= ',' if idx < @order.line_items.size - 1 %>
-      <% end %>
-    ]
-  };
-
-  // GA4 purchase event
-  gtag('event', 'purchase', orderData);
-
-  // Google Ads conversion event
-  gtag('event', 'conversion', {
-    send_to:        'AW-11446870184/purchase',
-    value:          orderData.value,
-    currency:       orderData.currency,
-    transaction_id: orderData.transaction_id
+  window.dataLayer.push({
+    event: 'purchase',
+    ecommerce: {
+      transaction_id: '<%= j(@order.number) %>',
+      value:          <%= @order.total.to_f %>,
+      tax:            <%= @order.tax_total.to_f %>,
+      shipping:       <%= @order.shipment_total.to_f %>,
+      currency:       '<%= @order.currency %>',
+      items: [
+        <% @order.line_items.each_with_index do |item, idx| %>
+        {
+          item_id:    '<%= j(item.variant.sku.to_s) %>',
+          item_name:  '<%= j(item.name) %>',
+          item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s) %>',
+          price:      <%= item.price.to_f %>,
+          quantity:   <%= item.quantity %>
+        }<%= ',' if idx < @order.line_items.size - 1 %>
+        <% end %>
+      ]
+    }
   });
 })();
 </script>

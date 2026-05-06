@@ -68,13 +68,14 @@
   })();
 </script>
 
-<!-- Google tag (gtag.js) — GA4 G-MLSPRGVMGD + Google Ads AW-11446870184 -->
-<!-- Loads AFTER consent defaults are set — runs in restricted mode until consent granted -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-MLSPRGVMGD"></script>
+<!-- Google Tag Manager — GT-K54MS7QS (routes to GA4 + Google Ads) -->
+<!-- Loads AFTER Consent Mode v2 defaults are set — runs in restricted mode until consent granted -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GT-K54MS7QS"></script>
 <script>
   gtag('js', new Date());
-  gtag('config', 'G-MLSPRGVMGD', { send_page_view: true });
-  gtag('config', 'AW-11446870184');
+  gtag('config', 'GT-K54MS7QS');
+  gtag('config', 'G-MLSPRGVMGD');   // GA4 — required by Tag Diagnostics
+  gtag('config', 'AW-11446870184'); // Google Ads — required by Tag Diagnostics
 </script>
 
 <!-- Hotjar — loaded only after analytics consent via cookieConsentUpdate event -->
@@ -106,7 +107,7 @@
 })();
 </script>
 
-<!-- GA4 add_to_cart event — listens for successful Turbo form submissions on product forms -->
+<!-- add_to_cart — pushes ecommerce dataLayer event for GTM to pick up -->
 <script>
 (function() {
   var _pending = null;
@@ -125,24 +126,29 @@
     };
   });
 
-  // Fire the event only on success
+  // Push to dataLayer on success — GTM triggers GA4 + Ads tags from here
   document.addEventListener('turbo:submit-end', function(e) {
     var form = e.target;
     if (form.dataset.gaEvent !== 'add_to_cart') { _pending = null; return; }
     if (!e.detail.success)                       { _pending = null; return; }
     var d = _pending;
     _pending = null;
-    if (!d || typeof gtag !== 'function') return;
-    gtag('event', 'add_to_cart', {
-      currency: 'EUR',
-      value:    d.price * d.quantity,
-      items: [{
-        item_id:    d.item_id,
-        item_name:  d.item_name,
-        item_brand: d.item_brand,
-        price:      d.price,
-        quantity:   d.quantity
-      }]
+    if (!d) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ ecommerce: null }); // clear previous ecommerce object
+    window.dataLayer.push({
+      event:    'add_to_cart',
+      ecommerce: {
+        currency: 'EUR',
+        value:    d.price * d.quantity,
+        items: [{
+          item_id:    d.item_id,
+          item_name:  d.item_name,
+          item_brand: d.item_brand,
+          price:      d.price,
+          quantity:   d.quantity
+        }]
+      }
     });
   });
 })();
