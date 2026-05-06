@@ -76,8 +76,9 @@ class CreateEracuniOrderJob < ApplicationJob
     bill = order.bill_address || order.ship_address
     ship = order.ship_address || bill
     country_iso = bill&.country&.iso.to_s.upcase
+    is_b2b = order.vat_number.present?
 
-    {
+    payload = {
       "SalesOrder" => {
         "date" => Date.current.to_s,
         "dateOfSupplyFrom" => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
@@ -85,7 +86,7 @@ class CreateEracuniOrderJob < ApplicationJob
         "referenceDocumentNumber" => order.number,
         "currency" => order.currency || "EUR",
         "documentLanguage" => "Slovene",
-        "vatTransactionType" => vat_transaction_type(country_iso),
+        "vatTransactionType" => vat_transaction_type(country_iso, is_b2b: is_b2b),
         "remarks" => "Spletno naročilo #{order.number}",
         "buyerName" => buyer_name(bill, order),
         "buyerEmail" => order.email.to_s,
@@ -93,9 +94,16 @@ class CreateEracuniOrderJob < ApplicationJob
         "buyerPostalCode" => bill&.zipcode.to_s.presence || "0000",
         "buyerCity" => bill&.city.to_s.presence || "N/A",
         "buyerCountry" => country_iso.presence || "SI",
-        "Items" => build_line_items(order, country_iso)
+        "Items" => build_line_items(order, country_iso, is_b2b: is_b2b)
       }
     }
+
+    # Include VAT ID for B2B orders (enables reverse charge in eRačuni)
+    if is_b2b
+      payload["SalesOrder"]["buyerVatId"] = order.vat_number
+    end
+
+    payload
   end
 
   def buyer_name(address, order)
@@ -107,9 +115,15 @@ class CreateEracuniOrderJob < ApplicationJob
     name
   end
 
-  def build_line_items(order, country_iso)
+  def build_line_items(order, country_iso, is_b2b: false)
     is_non_eu = country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
     items = []
+
+    # VAT rate logic:
+    #  - B2B with VAT ID (EU reverse charge) → 0%
+    #  - Non-EU export                        → 0%
+    #  - All other (SI domestic + EU B2C)     → 22% Slovenian DDV
+    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
@@ -117,9 +131,6 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
-      # Always use Slovenian 22% DDV for all SI + EU B2C orders.
-      # Non-EU (export) = 0% VAT.
-      vat_rate = is_non_eu ? 0 : 22
       net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
@@ -147,7 +158,7 @@ class CreateEracuniOrderJob < ApplicationJob
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      shipping_vat = is_non_eu ? 0 : 22
+      shipping_vat = vat_rate
       net_shipping = (shipping_total / (1 + shipping_vat / 100.0)).round(2)
       items << {
         "description" => shipping_method_name,
@@ -175,13 +186,13 @@ class CreateEracuniOrderJob < ApplicationJob
   ].freeze
 
   # Determine vatTransactionType for e-Računi:
-  #   "0" = domestic / EU B2C transaction (Slovenian DDV 22% applies)
-  #   "2" = export / non-EU transaction (0% VAT)
-  #
-  # NOTE: vatTransactionType "1" in e-Računi = EU B2B reverse charge (0% VAT).
-  # For EU B2C orders we use "0" (Slovenian 22% DDV), which is correct
-  # for stores below the €10,000 EU cross-border OSS threshold.
-  def vat_transaction_type(country_iso)
+  #   "0" = domestic / EU B2C (Slovenian DDV 22%)
+  #   "1" = EU B2B reverse charge (buyer provides VAT ID, 0% VAT)
+  #   "2" = export / non-EU (0% VAT)
+  def vat_transaction_type(country_iso, is_b2b: false)
+    # EU B2B: buyer provided VAT ID → reverse charge (vatType 1)
+    return "1" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
+    # Non-EU export → 0% VAT
     return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
     "0" # Domestic SI + all EU B2C → Slovenian 22% DDV
   end

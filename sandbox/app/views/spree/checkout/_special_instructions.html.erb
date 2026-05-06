@@ -1,0 +1,33 @@
+<%# VAT number field for EU B2B customers %>
+<div class="mt-6 mb-4">
+  <div class="border border-default rounded-md p-4 bg-accent/30">
+    <h5 class="font-body mb-1 text-sm font-semibold">
+      <%= Spree.t('storefront.checkout.business_purchase', default: 'Business Purchase (Optional)') %>
+    </h5>
+    <p class="text-xs text-muted mb-3">
+      <%= Spree.t('storefront.checkout.vat_number_hint', default: 'If you are purchasing as a business with a valid EU VAT ID, enter it below for B2B invoicing (reverse charge).') %>
+    </p>
+    <div class="form-group has-float-label">
+      <%= form.text_field :vat_number,
+          class: 'w-full text-input',
+          placeholder: 'e.g. HR12345678901',
+          id: 'order_vat_number',
+          autocomplete: 'off',
+          value: @order.vat_number %>
+      <label for="order_vat_number" class="text-sm">
+        <%= Spree.t('storefront.checkout.vat_number_label', default: 'EU VAT ID / Company Number') %>
+      </label>
+    </div>
+  </div>
+</div>
+
+<% if current_store.prefers_special_instructions_enabled? %>
+  <div class="mt-8 mb-4">
+    <h5 class="font-body mb-3">
+      <%= I18n.t('activerecord.attributes.spree/order.special_instructions') %>
+    </h5>
+    <div class="form-group">
+      <%= form.text_area :special_instructions, class: 'w-full text-input', rows: 2, placeholder: Spree.t('storefront.checkout.special_instructions_placeholder'), data: { controller: 'textarea-autogrow' } %>
+    </div>
+  </div>
+<% end %>

@@ -59,6 +59,9 @@ end
 
 # Spree::Api::Dependencies.storefront_cart_serializer = 'MyRailsApp::CartSerializer'
 
+# Allow vat_number to be submitted during checkout (EU B2B reverse charge)
+Spree::PermittedAttributes.checkout_attributes << :vat_number
+
 # Register custom event subscribers so Spree's event bus activates them
 Rails.application.config.to_prepare do
   Spree.subscribers.concat [
