@@ -193,15 +193,18 @@ class CreateEracuniOrderJob < ApplicationJob
   ].freeze
 
   # Determine vatTransactionType for e-Računi:
-  #   "0" = domestic / EU B2C (Slovenian DDV 22%)
+  #   "0" = domestic SI transaction (22% Slovenian DDV)
   #   "1" = EU B2B reverse charge (buyer provides VAT ID, 0% VAT)
   #   "2" = export / non-EU (0% VAT)
+  #   "3" = EU B2C OSS (destination country's standard rate)
   def vat_transaction_type(country_iso, is_b2b: false)
     # EU B2B: buyer provided VAT ID → reverse charge (vatType 1)
     return "1" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
     # Non-EU export → 0% VAT
     return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
-    "0" # Domestic SI + all EU B2C → Slovenian 22% DDV
+    # EU B2C non-Slovenian → OSS (destination country rate)
+    return "3" if country_iso.present? && EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
+    "0" # Domestic SI → 22% Slovenian DDV
   end
 
   # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
