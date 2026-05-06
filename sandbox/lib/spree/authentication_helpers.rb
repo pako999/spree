@@ -17,32 +17,34 @@ module Spree
       send("current_#{Spree.user_class.model_name.singular_route_key}")
     end
 
+    # Use direct Rails route helpers to avoid Devise URL proxy issues
+    # when called from within the Spree engine view/controller context.
     def spree_login_path(opts = {})
-      new_session_path(Spree.user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.new_user_session_path(opts)
     end
 
     def spree_signup_path(opts = {})
-      new_registration_path(Spree.user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.new_user_registration_path(opts)
     end
 
     def spree_logout_path(opts = {})
-      destroy_session_path(Spree.user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.destroy_user_session_path(opts)
     end
 
     def spree_forgot_password_path(opts = {})
-      new_password_path(Spree.user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.new_user_password_path(opts)
     end
 
     def spree_edit_password_path(opts = {})
-      edit_registration_path(Spree.user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.edit_user_registration_path(opts)
     end
 
     def spree_admin_login_path(opts = {})
-      new_session_path(Spree.admin_user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.new_admin_user_session_path(opts)
     end
 
     def spree_admin_logout_path(opts = {})
-      destroy_session_path(Spree.admin_user_class.model_name.singular_route_key, opts)
+      Rails.application.routes.url_helpers.destroy_admin_user_session_path(opts)
     end
   end
 end
