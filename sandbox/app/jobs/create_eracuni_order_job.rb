@@ -122,15 +122,8 @@ class CreateEracuniOrderJob < ApplicationJob
     # VAT rate logic:
     #  - B2B with VAT ID (EU reverse charge) → 0%
     #  - Non-EU export                        → 0%
-    #  - SI domestic                          → 22% Slovenian DDV
-    #  - EU B2C (OSS)                         → destination country's standard rate
-    vat_rate = if is_b2b || is_non_eu
-                 0
-               elsif country_iso == 'SI' || country_iso.blank?
-                 22
-               else
-                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
-               end
+    #  - SI domestic + all EU B2C            → 22% Slovenian DDV (valid below OSS threshold)
+    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
@@ -193,18 +186,15 @@ class CreateEracuniOrderJob < ApplicationJob
   ].freeze
 
   # Determine vatTransactionType for e-Računi:
-  #   "0" = domestic SI transaction (22% Slovenian DDV)
+  #   "0" = domestic SI + EU B2C (22% Slovenian DDV, valid below OSS threshold)
   #   "1" = EU B2B reverse charge (buyer provides VAT ID, 0% VAT)
   #   "2" = export / non-EU (0% VAT)
-  #   "3" = EU B2C OSS (destination country's standard rate)
   def vat_transaction_type(country_iso, is_b2b: false)
-    # EU B2B: buyer provided VAT ID → reverse charge (vatType 1)
+    # EU B2B: buyer provided VAT ID → reverse charge
     return "1" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
     # Non-EU export → 0% VAT
     return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
-    # EU B2C non-Slovenian → OSS (destination country rate)
-    return "3" if country_iso.present? && EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
-    "0" # Domestic SI → 22% Slovenian DDV
+    "0" # Domestic SI + all EU B2C → 22% Slovenian DDV
   end
 
   # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
