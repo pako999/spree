@@ -107,7 +107,7 @@
 })();
 </script>
 
-<!-- add_to_cart — pushes ecommerce dataLayer event for GTM to pick up -->
+<!-- GA4 add_to_cart event — fires directly via gtag on successful Turbo form submissions -->
 <script>
 (function() {
   var _pending = null;
@@ -126,29 +126,24 @@
     };
   });
 
-  // Push to dataLayer on success — GTM triggers GA4 + Ads tags from here
+  // Fire directly via gtag on success
   document.addEventListener('turbo:submit-end', function(e) {
     var form = e.target;
     if (form.dataset.gaEvent !== 'add_to_cart') { _pending = null; return; }
     if (!e.detail.success)                       { _pending = null; return; }
     var d = _pending;
     _pending = null;
-    if (!d) return;
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ ecommerce: null }); // clear previous ecommerce object
-    window.dataLayer.push({
-      event:    'add_to_cart',
-      ecommerce: {
-        currency: 'EUR',
-        value:    d.price * d.quantity,
-        items: [{
-          item_id:    d.item_id,
-          item_name:  d.item_name,
-          item_brand: d.item_brand,
-          price:      d.price,
-          quantity:   d.quantity
-        }]
-      }
+    if (!d || typeof gtag !== 'function') return;
+    gtag('event', 'add_to_cart', {
+      currency: 'EUR',
+      value:    d.price * d.quantity,
+      items: [{
+        item_id:    d.item_id,
+        item_name:  d.item_name,
+        item_brand: d.item_brand,
+        price:      d.price,
+        quantity:   d.quantity
+      }]
     });
   });
 })();
