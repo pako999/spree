@@ -139,30 +139,19 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
+      # SalesOrder API requires netPrice (price without VAT) regardless of order type
+      net_price = vat_rate.zero? ? gross_price : (gross_price / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
       description += " (SKU: #{variant.sku})" if variant.sku.present?
 
-      if is_eu_oss
-        # EU B2C OSS: send gross price ('price' field) — e-Računi extracts VAT from it
-        item = {
-          "description"        => description,
-          "quantity"           => li.quantity.to_f,
-          "price"              => gross_price,
-          "vatPercentage"      => vat_rate,
-          "unit"               => "kos"
-        }
-      else
-        # SI domestic / B2B / non-EU: send net price
-        net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
-        item = {
-          "description"        => description,
-          "quantity"           => li.quantity.to_f,
-          "netPrice"           => net_price,
-          "vatPercentage"      => vat_rate,
-          "unit"               => "kos"
-        }
-      end
+      item = {
+        "description"   => description,
+        "quantity"      => li.quantity.to_f,
+        "netPrice"      => net_price,
+        "vatPercentage" => vat_rate,
+        "unit"          => "kos"
+      }
 
       # Per-line-item discount
       promo_total = li.promo_total.to_f.abs
@@ -178,24 +167,14 @@ class CreateEracuniOrderJob < ApplicationJob
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      if is_eu_oss
-        items << {
-          "description"   => shipping_method_name,
-          "quantity"      => 1.0,
-          "price"         => shipping_total,
-          "vatPercentage" => vat_rate,
-          "unit"          => "storitev"
-        }
-      else
-        net_shipping = (shipping_total / (1 + vat_rate / 100.0)).round(2)
-        items << {
-          "description"   => shipping_method_name,
-          "quantity"      => 1.0,
-          "netPrice"      => net_shipping,
-          "vatPercentage" => vat_rate,
-          "unit"          => "storitev"
-        }
-      end
+      net_shipping = vat_rate.zero? ? shipping_total : (shipping_total / (1 + vat_rate / 100.0)).round(2)
+      items << {
+        "description"   => shipping_method_name,
+        "quantity"      => 1.0,
+        "netPrice"      => net_shipping,
+        "vatPercentage" => vat_rate,
+        "unit"          => "storitev"
+      }
     end
 
     items
