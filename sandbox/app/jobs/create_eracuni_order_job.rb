@@ -124,14 +124,8 @@ class CreateEracuniOrderJob < ApplicationJob
     #  - B2B EU reverse charge → 0%
     #  - Non-EU export         → 0%
     #  - SI domestic           → 22% Slovenian DDV
-    #  - EU B2C OSS (type 106) → destination country standard rate
-    vat_rate = if is_b2b || is_non_eu
-                 0
-               elsif is_eu_oss
-                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
-               else
-                 22 # SI domestic
-               end
+    #  - EU B2C OSS (type 106) → 22% (e-Računi only accepts SI rates; OSS obligation filed via quarterly OSS return)
+    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
