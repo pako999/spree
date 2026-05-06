@@ -198,7 +198,7 @@ class CreateEracuniOrderJob < ApplicationJob
   # Set to true AFTER enabling OSS module in e-Računi account settings.
   # When true: EU B2C orders use vatTransactionType "106" + destination country VAT rate.
   # When false: EU B2C orders use vatTransactionType "0" + 22% Slovenian DDV (safe fallback).
-  OSS_ENABLED = false
+  OSS_ENABLED = true
 
   # Determine vatTransactionType for e-Računi:
   #   "0"  = Domestic SI taxable (22% DDV)
