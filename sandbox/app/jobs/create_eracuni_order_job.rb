@@ -122,8 +122,15 @@ class CreateEracuniOrderJob < ApplicationJob
     # VAT rate logic:
     #  - B2B with VAT ID (EU reverse charge) → 0%
     #  - Non-EU export                        → 0%
-    #  - All other (SI domestic + EU B2C)     → 22% Slovenian DDV
-    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
+    #  - SI domestic                          → 22% Slovenian DDV
+    #  - EU B2C (OSS)                         → destination country's standard rate
+    vat_rate = if is_b2b || is_non_eu
+                 0
+               elsif country_iso == 'SI' || country_iso.blank?
+                 22
+               else
+                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
+               end
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
