@@ -8,7 +8,7 @@ require 'cgi'
 # Cached for 4 hours. To force refresh:
 #   Rails.cache.delete('feeds/google_shopping_v1')
 class FeedsController < ApplicationController
-  CACHE_TTL  = 4.hours
+  CACHE_TTL  = 30.minutes
   STORE_URL  = 'https://surf-store.com'
   STORE_ID   = 2  # the main surf-store (matches store used during imports)
 
