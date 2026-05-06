@@ -108,8 +108,7 @@ class CreateEracuniOrderJob < ApplicationJob
   end
 
   def build_line_items(order, country_iso)
-    is_eu = EU_COUNTRY_CODES.include?(country_iso)
-    is_domestic = country_iso.blank? || country_iso == "SI"
+    is_non_eu = country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
     items = []
 
     # Product line items
@@ -118,7 +117,9 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
-      vat_rate = is_domestic ? 22 : (is_eu ? vat_percentage(li, country_iso) : 0)
+      # Always use Slovenian 22% DDV for all SI + EU B2C orders.
+      # Non-EU (export) = 0% VAT.
+      vat_rate = is_non_eu ? 0 : 22
       net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
@@ -146,7 +147,7 @@ class CreateEracuniOrderJob < ApplicationJob
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      shipping_vat = is_domestic ? 22 : (is_eu ? vat_percentage(order.line_items.first, country_iso) : 0)
+      shipping_vat = is_non_eu ? 0 : 22
       net_shipping = (shipping_total / (1 + shipping_vat / 100.0)).round(2)
       items << {
         "description" => shipping_method_name,
@@ -174,13 +175,15 @@ class CreateEracuniOrderJob < ApplicationJob
   ].freeze
 
   # Determine vatTransactionType for e-Računi:
-  #   "0" = domestic transaction (Slovenian VAT 22%)
-  #   "1" = EU OSS transaction (destination country VAT rate)
+  #   "0" = domestic / EU B2C transaction (Slovenian DDV 22% applies)
   #   "2" = export / non-EU transaction (0% VAT)
+  #
+  # NOTE: vatTransactionType "1" in e-Računi = EU B2B reverse charge (0% VAT).
+  # For EU B2C orders we use "0" (Slovenian 22% DDV), which is correct
+  # for stores below the €10,000 EU cross-border OSS threshold.
   def vat_transaction_type(country_iso)
-    return "0" if country_iso.blank? || country_iso == "SI"
-    return "1" if EU_COUNTRY_CODES.include?(country_iso)
-    "2" # Non-EU countries = export, 0% VAT
+    return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
+    "0" # Domestic SI + all EU B2C → Slovenian 22% DDV
   end
 
   # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
