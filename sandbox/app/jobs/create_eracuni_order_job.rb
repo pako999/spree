@@ -121,11 +121,19 @@ class CreateEracuniOrderJob < ApplicationJob
     items = []
 
     # VAT rate:
-    #  - B2B EU reverse charge → 0%
-    #  - Non-EU export         → 0%
-    #  - SI domestic           → 22% Slovenian DDV
-    #  - EU B2C OSS (type 106) → 22% (e-Računi only accepts SI rates; OSS obligation filed via quarterly OSS return)
-    vat_rate = (is_b2b || is_non_eu) ? 0 : 22
+    #  - B2B EU / non-EU  → 0% (reverse charge / export)
+    #  - EU B2C OSS       → destination country rate when OSS_ENABLED, else 22% SI DDV
+    #  - SI domestic      → 22% Slovenian DDV
+    #
+    # NOTE: To use destination country rates (HR=25%, FR=20%, DE=19%...) you must
+    # enable the OSS module in e-Računi account settings first, then set OSS_ENABLED=true.
+    vat_rate = if is_b2b || is_non_eu
+                 0
+               elsif is_eu_oss && OSS_ENABLED
+                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
+               else
+                 22
+               end
 
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
@@ -187,19 +195,25 @@ class CreateEracuniOrderJob < ApplicationJob
     LT LU LV MT NL PL PT RO SE SK XI
   ].freeze
 
+  # Set to true AFTER enabling OSS module in e-Računi account settings.
+  # When true: EU B2C orders use vatTransactionType "106" + destination country VAT rate.
+  # When false: EU B2C orders use vatTransactionType "0" + 22% Slovenian DDV (safe fallback).
+  OSS_ENABLED = false
+
   # Determine vatTransactionType for e-Računi:
-  #   "0" = Domestic SI taxable (22% DDV) — only confirmed working type
-  #   "1" = EU B2B reverse charge (0%) — not used, handled separately
-  #   "2" = Non-EU export (0% no input VAT deduction)
-  #
-  # NOTE: vatTransactionType "106" (OSS) requires OSS module in e-Računi account.
-  # If OSS is later enabled, change EU B2C to "106" for correct OSS classification.
+  #   "0"  = Domestic SI taxable (22% DDV)
+  #   "2"  = Non-EU export (0%, no input VAT deduction)
+  #   "11" = EU B2B reverse charge (recipient pays VAT)
+  #   "106"= EU B2C OSS distance sales (destination country rate) — requires OSS in account
   def vat_transaction_type(country_iso, is_b2b: false)
-    # EU B2B: reverse charge
-    return "1" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
-    # Non-EU export
+    # EU B2B: reverse charge — buyer pays VAT in their country
+    return "11" if is_b2b && EU_COUNTRY_CODES.include?(country_iso)
+    # Non-EU export: 0% exempt
     return "2" if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
-    "0" # SI domestic + EU B2C (both use 22% DDV)
+    # EU B2C: OSS (needs OSS enabled in e-Računi) or fallback to domestic
+    is_eu_b2c = country_iso.present? && EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI" && !is_b2b
+    return "106" if is_eu_b2c && OSS_ENABLED
+    "0" # SI domestic + EU B2C fallback
   end
 
   # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
