@@ -22,7 +22,15 @@ module Spree
           redirect_to spree.admin_stock_syncs_path and return
         end
 
-        job_name.constantize.perform_later
+        # Use explicit dispatch instead of constantize to avoid unsafe reflection (Brakeman)
+        case job_name
+        when 'SyncBamStockJob'     then SyncBamStockJob.perform_later
+        when 'SyncPoint7StockJob'  then SyncPoint7StockJob.perform_later
+        when 'SyncPrydeStockJob'   then SyncPrydeStockJob.perform_later
+        when 'SyncGaastraStockJob' then SyncGaastraStockJob.perform_later
+        when 'SyncNobileStockJob'  then SyncNobileStockJob.perform_later
+        end
+
         label = Spree::StockSyncLog::FRIENDLY_NAMES[job_name] || job_name
         flash[:success] = "#{label} sync queued."
         redirect_to spree.admin_stock_syncs_path
