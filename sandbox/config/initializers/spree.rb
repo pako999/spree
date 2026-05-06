@@ -59,6 +59,15 @@ end
 
 # Spree::Api::Dependencies.storefront_cart_serializer = 'MyRailsApp::CartSerializer'
 
+# Register custom event subscribers so Spree's event bus activates them
+Rails.application.config.to_prepare do
+  Spree.subscribers.concat [
+    Spree::OrderCompletedSubscriber,
+    Spree::EracuniOrderSubscriber,
+    Spree::KlaviyoOrderSubscriber
+  ]
+end
+
 # uncomment lines below to add your own custom business logic
 # such as promotions, shipping methods, etc
 Rails.application.config.after_initialize do
