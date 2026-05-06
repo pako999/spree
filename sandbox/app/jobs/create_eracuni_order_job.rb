@@ -141,7 +141,16 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
 
       gross_price = li.price.to_f
-      net_price = vat_rate.zero? ? gross_price : (gross_price / (1 + vat_rate / 100.0)).round(2)
+      # For OSS (type 106): e-Računi shows 0% VAT on document; send gross price as netPrice
+      # so invoice total = what customer actually paid. OSS VAT tracked in OSS quarterly return.
+      # For non-OSS: divide out the included VAT to get the true net price.
+      net_price = if is_eu_oss && OSS_ENABLED
+                   gross_price
+                 elsif vat_rate.zero?
+                   gross_price
+                 else
+                   (gross_price / (1 + vat_rate / 100.0)).round(2)
+                 end
 
       description = product_description(product, variant)
       description += " (SKU: #{variant.sku})" if variant.sku.present?
@@ -175,7 +184,13 @@ class CreateEracuniOrderJob < ApplicationJob
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      net_shipping = vat_rate.zero? ? shipping_total : (shipping_total / (1 + vat_rate / 100.0)).round(2)
+      net_shipping = if is_eu_oss && OSS_ENABLED
+                       shipping_total
+                     elsif vat_rate.zero?
+                       shipping_total
+                     else
+                       (shipping_total / (1 + vat_rate / 100.0)).round(2)
+                     end
       shipping_item = {
         "description" => shipping_method_name,
         "quantity"    => 1.0,
