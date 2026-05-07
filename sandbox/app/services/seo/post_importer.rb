@@ -63,8 +63,9 @@ module Seo
       post.author       = @author
       post.title        = row['title']
       post.slug         = row['slug']
-      post.meta_title   = row['meta_title'].presence
+      post.meta_title       = row['meta_title'].presence
       post.meta_description = row['meta_description'].presence
+      post.excerpt          = row['excerpt'].presence
 
       # Assign post category
       category_slug = row['category_slug'].presence || 'articles'
