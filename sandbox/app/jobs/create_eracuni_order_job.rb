@@ -30,8 +30,8 @@ class CreateEracuniOrderJob < ApplicationJob
     client = EracuniClient.new
     order_data = build_order_payload(order)
 
-    Rails.logger.info "[CreateEracuniOrderJob] Creating Račun for order #{order.number}..."
-    result = client.create_sales_invoice(order_data)
+    Rails.logger.info "[CreateEracuniOrderJob] Creating Naročilo kupca for order #{order.number}..."
+    result = client.create_sales_order(order_data)
 
     # Store the e-Računi invoice number on the Spree order for reference
     eracuni_number = result.dig("result", "number") || result.dig("number") || "created"
@@ -45,7 +45,7 @@ class CreateEracuniOrderJob < ApplicationJob
       )
     )
 
-    Rails.logger.info "[CreateEracuniOrderJob] Račun #{eracuni_number} created for order #{order.number}"
+    Rails.logger.info "[CreateEracuniOrderJob] Naročilo #{eracuni_number} created for order #{order.number}"
   rescue EracuniClient::ApiError => e
     Rails.error.report(e, context: { job: "CreateEracuniOrderJob", order_id: order_id }, handled: true)
     raise # Let retry_on handle it
@@ -85,7 +85,7 @@ class CreateEracuniOrderJob < ApplicationJob
                        OSS_ENABLED
 
     payload = {
-      "SalesInvoice" => {
+      "SalesOrder" => {
         "date"                    => Date.current.to_s,
         "dateOfSupplyFrom"        => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
         "dateOfSupplyTo"          => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
@@ -103,9 +103,16 @@ class CreateEracuniOrderJob < ApplicationJob
       }
     }
 
+    # OSS: vatCountryIsoCode tells e-Računi which destination country VAT applies.
+    # Required for vatTransactionType 106. Needs OSS country rates configured in
+    # e-Računi Settings → OSS module before Naročilo kupca documents can be viewed in UI.
+    if is_eu_oss_order
+      payload["SalesOrder"]["vatCountryIsoCode"] = country_iso
+    end
+
     # B2B: include VAT ID to enable reverse charge in e-Računi
     if is_b2b
-      payload["SalesInvoice"]["buyerVatId"] = order.vat_number
+      payload["SalesOrder"]["buyerVatId"] = order.vat_number
     end
 
     payload
