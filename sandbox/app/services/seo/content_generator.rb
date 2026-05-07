@@ -229,11 +229,19 @@ module Seo
 
     def parse_response(api_response)
       text = api_response.dig('content', 0, 'text').to_s.strip
+      text = text.gsub(/```json\s*/i, '').gsub(/```/, '')
 
       json_match = text.match(/\{.*\}/m)
       raise 'No JSON found in API response' unless json_match
 
-      data = JSON.parse(json_match[0])
+      # Sanitize: replace Unicode smart quotes/apostrophes with ASCII equivalents
+      # so JSON.parse doesn't choke on them inside string values
+      json_str = json_match[0]
+        .gsub("‘", "'").gsub("’", "'")
+        .gsub("“", '"').gsub("”", '"')
+        .gsub("–", '-').gsub("—", '--')
+
+      data = JSON.parse(json_str)
 
       {
         meta_title:       data['meta_title'].to_s.truncate(60),
