@@ -40,10 +40,10 @@ Rails.application.routes.draw do
   #
   # We ask that you don't use the :as option here, as Spree relies on it being
   # the default of "spree".
-  # Redirect dead /de/ locale paths → /en/ (de locale was removed)
-  # Google has cached 400+ /de/ URLs — 301s will clear them from the index
-  get '/de',        to: redirect('/en', status: 301)
-  get '/de/*path',  to: redirect('/en/%{path}', status: 301)
+  # Redirect dead /de/ locale paths → root (English is default, no prefix)
+  # e.g. /de/products/cabrinha-leash → /products/cabrinha-leash
+  get '/de',        to: redirect('/', status: 301)
+  get '/de/*path',  to: redirect('/%{path}', status: 301)
 
   mount Spree::Core::Engine, at: '/'
   devise_for :admin_users, class_name: "Spree::AdminUser"
