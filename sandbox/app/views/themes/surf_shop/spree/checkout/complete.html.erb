@@ -98,7 +98,7 @@
       {
         item_id:    '<%= j(item.variant.sku.to_s) %>',
         item_name:  '<%= j(item.name) %>',
-        item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s) %>',
+        item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s.presence || item.product.name.split.first) %>',
         price:      <%= item.price.to_f %>,
         quantity:   <%= item.quantity %>
       }<%= ',' if idx < @order.line_items.size - 1 %>
