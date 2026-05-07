@@ -21,6 +21,7 @@ xml.rss(version: '2.0', 'xmlns:g' => 'http://base.google.com/ns/1.0') do
         xml.tag! 'g:gtin',                    item[:gtin]                    if item[:gtin].present?
         xml.tag! 'g:mpn',                     item[:mpn]                     if item[:mpn].present?
         xml.tag! 'g:google_product_category', item[:google_product_category] if item[:google_product_category].present?
+        xml.tag! 'g:product_type',            item[:product_type]            if item[:product_type].present?
         xml.tag! 'g:color',                   item[:color]                   if item[:color].present?
         xml.tag! 'g:size',                    item[:size]                    if item[:size].present?
         xml.tag! 'g:gender',                  item[:gender]                  if item[:gender].present?

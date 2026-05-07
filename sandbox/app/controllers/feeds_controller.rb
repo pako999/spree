@@ -85,8 +85,10 @@ class FeedsController < ApplicationController
 
     products.find_each do |product|
       taxon_perms = product.taxons.map(&:permalink)
-      brand       = product.taxons.find { |t| t.permalink.start_with?('brands/') }&.name
+      brand = product.taxons.find { |t| t.permalink.start_with?('brands/') }&.name
+      brand ||= extract_brand_from_name(product.name)
       google_cat  = google_category_for(taxon_perms)
+      product_type = product_type_for(taxon_perms)
       is_apparel  = taxon_perms.any? { |p| APPAREL_TAXON_PREFIXES.any? { |pf| p.start_with?(pf) } }
 
       real_variants   = product.variants.reject { |v| v.deleted_at.present? }
@@ -122,6 +124,7 @@ class FeedsController < ApplicationController
           gtin:                    variant.barcode.presence,
           mpn:                     variant.sku.presence&.slice(0, 70),
           google_product_category: google_cat,
+          product_type:            product_type,
           color:                   color,
           size:                    size,
           gender:                  is_apparel ? 'unisex' : nil,
@@ -149,6 +152,30 @@ class FeedsController < ApplicationController
   def strip_html(text)
     # Strip tags first, then decode HTML entities (&amp;mdash; → —), then clean whitespace
     CGI.unescapeHTML(text.to_s.gsub(/<[^>]+>/, ' ')).squish.truncate(5000)
+  end
+
+  # Known brands — longer/more specific names must come before shorter ones
+  KNOWN_BRANDS = %w[
+    NeilPryde Duotone Cabrinha Fanatic JP-Australia RRD
+    Nobile North Core F-One Slingshot Eleveight Gaastra
+    Point-7 Simmer ION Mystic Tabou Severne Naish Starboard
+    Prolimit Manera Dakine Airush Ozone Flysurfer HQ4
+  ].freeze
+
+  def extract_brand_from_name(name)
+    return nil if name.blank?
+    KNOWN_BRANDS.find { |b| name.match?(/\A#{Regexp.escape(b)}\b/i) }
+  end
+
+  # Build a human-readable product type breadcrumb from the deepest categories/ taxon.
+  # e.g. "categories/kitesurfing/kiteboards/twin-tip" → "Kitesurfing > Kiteboards > Twin Tip"
+  def product_type_for(taxon_permalinks)
+    cat = taxon_permalinks
+      .select { |p| p.start_with?('categories/') }
+      .max_by(&:length)  # deepest path
+    return nil unless cat
+
+    cat.sub('categories/', '').split('/').map { |s| s.gsub('-', ' ').split.map(&:capitalize).join(' ') }.join(' > ')
   end
 
   def blob_full_url(attachment)
