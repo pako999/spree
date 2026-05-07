@@ -152,18 +152,19 @@ class CreateEracuniOrderJob < ApplicationJob
       description += " (SKU: #{variant.sku})" if variant.sku.present?
 
       if is_eu_oss
-        # OSS "Retail" pricing: send gross `price` (VAT-inclusive).
-        # e-Računi back-calculates net + VAT from gross + vatPercentage.
-        # vatTransactionType 106 + vatCountryIsoCode are set at DOCUMENT level.
+        # OSS: vatTransactionType 106 + vatCountryIsoCode at document level.
+        # Send netPrice (excl. VAT) + vatPercentage (destination rate).
+        # e-Računi displays: net + HR 25% = gross total matching customer payment.
+        net_price = (gross_price / (1 + vat_rate / 100.0)).round(2)
         item = {
-          "description"    => description,
-          "quantity"       => li.quantity.to_f,
-          "price"          => gross_price,
-          "vatPercentage"  => vat_rate,
-          "unit"           => "kos"
+          "description"   => description,
+          "quantity"      => li.quantity.to_f,
+          "netPrice"      => net_price,
+          "vatPercentage" => vat_rate,
+          "unit"          => "kos"
         }
       else
-        # Standard: send netPrice (excl. VAT), e-Računi adds VAT on top.
+        # Standard: netPrice (excl. VAT), e-Računi adds VAT on top.
         net_price = vat_rate.zero? ? gross_price : (gross_price / (1 + vat_rate / 100.0)).round(2)
         item = {
           "description"   => description,
@@ -190,10 +191,11 @@ class CreateEracuniOrderJob < ApplicationJob
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
 
       if is_eu_oss
+        net_shipping = (shipping_total / (1 + vat_rate / 100.0)).round(2)
         shipping_item = {
           "description"   => shipping_method_name,
           "quantity"      => 1.0,
-          "price"         => shipping_total,
+          "netPrice"      => net_shipping,
           "vatPercentage" => vat_rate,
           "unit"          => "storitev"
         }
