@@ -30,10 +30,10 @@ class CreateEracuniOrderJob < ApplicationJob
     client = EracuniClient.new
     order_data = build_order_payload(order)
 
-    Rails.logger.info "[CreateEracuniOrderJob] Creating Naročilo kupca for order #{order.number}..."
-    result = client.create_sales_order(order_data)
+    Rails.logger.info "[CreateEracuniOrderJob] Creating Račun for order #{order.number}..."
+    result = client.create_sales_invoice(order_data)
 
-    # Store the e-Računi order number on the Spree order for reference
+    # Store the e-Računi invoice number on the Spree order for reference
     eracuni_number = result.dig("result", "number") || result.dig("number") || "created"
     document_id = result.dig("result", "documentID")
 
@@ -41,11 +41,11 @@ class CreateEracuniOrderJob < ApplicationJob
       (order.private_metadata || {}).merge(
         "eracuni_order_number" => eracuni_number,
         "eracuni_document_id" => document_id,
-        "eracuni_synced_at" => Time.current.iso8601
+        "eracuni_synced_at"   => Time.current.iso8601
       )
     )
 
-    Rails.logger.info "[CreateEracuniOrderJob] Naročilo #{eracuni_number} created for order #{order.number}"
+    Rails.logger.info "[CreateEracuniOrderJob] Račun #{eracuni_number} created for order #{order.number}"
   rescue EracuniClient::ApiError => e
     Rails.error.report(e, context: { job: "CreateEracuniOrderJob", order_id: order_id }, handled: true)
     raise # Let retry_on handle it
@@ -85,13 +85,12 @@ class CreateEracuniOrderJob < ApplicationJob
                        OSS_ENABLED
 
     payload = {
-      "SalesOrder" => {
+      "SalesInvoice" => {
         "date"                    => Date.current.to_s,
         "dateOfSupplyFrom"        => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
         "dateOfSupplyTo"          => order.completed_at&.strftime("%Y-%m-%d") || Date.current.to_s,
         "referenceDocumentNumber" => order.number,
         "currency"                => order.currency || "EUR",
-        "documentLanguage"        => "Slovene",
         "vatTransactionType"      => vat_transaction_type(country_iso, is_b2b: is_b2b, is_eu_oss: is_eu_oss_order),
         "remarks"                 => "Spletno naročilo #{order.number}",
         "buyerName"               => buyer_name(bill, order),
@@ -104,14 +103,9 @@ class CreateEracuniOrderJob < ApplicationJob
       }
     }
 
-    # OSS: tell e-Računi which country's VAT applies (the missing field!)
-    if is_eu_oss_order
-      payload["SalesOrder"]["vatCountryIsoCode"] = country_iso
-    end
-
     # B2B: include VAT ID to enable reverse charge in e-Računi
     if is_b2b
-      payload["SalesOrder"]["buyerVatId"] = order.vat_number
+      payload["SalesInvoice"]["buyerVatId"] = order.vat_number
     end
 
     payload

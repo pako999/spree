@@ -47,6 +47,16 @@ class EracuniClient
     call_api("SalesOrderCreate", order_data)
   end
 
+  # Create a Sales Invoice (Račun) in e-Računi.
+  def create_sales_invoice(invoice_data)
+    call_api("SalesInvoiceCreate", invoice_data)
+  end
+
+  # Delete a Sales Invoice by number.
+  def delete_sales_invoice(number)
+    call_api("SalesInvoiceDelete", { "number" => number })
+  end
+
   # Get a Sales Order by number.
   def get_sales_order(number)
     call_api("SalesOrderGet", { "number" => number })
