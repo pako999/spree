@@ -35,7 +35,9 @@ module Seo
       Content standards:
       - European English spelling (colour, favourite, specialise, etc.)
       - Lead with outcomes for the customer, not product specifications
-      - Mention specific technologies, materials, and model names where relevant
+      - Recommend by brand + type/size, NOT by made-up model names
+      - Example GOOD: "a Duotone or Cabrinha freestyle board in the 135-150cm range"
+      - Example BAD: "a Duotone Twintip 140cm" (avoid specific SKUs unless you know they exist)
       - Include natural calls-to-action pointing to surf-store.com
       - Write as a knowledgeable shop owner and water sports instructor, not a copywriter
       - Target keyword should appear naturally 2–4 times in body_html
@@ -135,7 +137,7 @@ module Seo
         - <h2>The Full Answer</h2> — detailed explanation with context
         - <h2>Practical Guide</h2> — step-by-step or scenario-based actionable advice
         - <h2>Common Mistakes</h2> — what beginners get wrong
-        - <h2>Surf Store Recommendation</h2> — specific product or service suggestions
+        - <h2>Surf Store Recommendation</h2> — recommend by BRAND + TYPE only. Do NOT invent specific model names. Example: "We stock freestyle boards from Duotone, Cabrinha, and Nobile in various sizes" NOT "Duotone Twintip 140cm"
 
         excerpt: the direct one-sentence answer to the question
         faq: 5 related Q/A pairs on the same topic
@@ -147,10 +149,10 @@ module Seo
 
         Required body_html sections (650–850 words total):
         - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario
-        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes, board type, wetsuit with specific model recommendations
+        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes (e.g. 12m, 15m), board type & size (e.g. 135-150cm freestyle board), wetsuit thickness (e.g. 3/2mm, 4/3mm). Use brand names + type only, NOT fake model names. Example: "a Duotone or Cabrinha freestyle board, 135-150cm" not "Duotone Twintip 140cm"
         - <h2>Technique Tips</h2> — how to adjust riding technique for this scenario
         - <h2>Safety Checklist</h2> — specific risks and how to manage them
-        - <h2>Our Gear Recommendations at Surf Store</h2> — 2–3 specific products with links
+        - <h2>Our Gear Recommendations at Surf Store</h2> — recommend by BRAND + TYPE + SIZE only. Example: "We stock Duotone, Cabrinha, and Nobile freestyle boards in the 135-150cm range suitable for this wind. Pair with a 14-15m kite from Duotone or Cabrinha, and a 3/2 or 4/3mm wetsuit from ION or NeilPryde." Do NOT invent specific model names.
 
         faq: 3 Q/A pairs about this wind/conditions scenario
       PROMPT
