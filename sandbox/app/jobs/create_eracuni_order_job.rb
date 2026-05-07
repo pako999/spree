@@ -155,29 +155,36 @@ class CreateEracuniOrderJob < ApplicationJob
       product = variant.product
       unit_gross = li.price.to_f
 
-      # Per-unit discount: line-item promo takes priority, then order-level promo
+      # Per-unit discount: line-item promo takes priority, then order-level promo (e.g. CARD10)
       unit_discount = if li.promo_total.to_f != 0
-                        li.promo_total.to_f / li.quantity
+                        li.promo_total.to_f / li.quantity        # negative
                       elsif order_promo != 0
                         (order_promo * (unit_gross * li.quantity) / total_items_amount) / li.quantity
                       else
                         0.0
                       end
 
-      # Effective gross per unit after discount (VAT-inclusive for EU included-tax orders)
-      effective_gross = unit_gross + unit_discount
-      net_price = vat_rate.zero? ? effective_gross.round(2) : (effective_gross / (1 + vat_rate / 100.0)).round(2)
+      # Full unit net price (before discount) — e-Računi will apply discountPercentage on top
+      full_net_price = vat_rate.zero? ? unit_gross.round(2) : (unit_gross / (1 + vat_rate / 100.0)).round(2)
 
       description = product_description(product, variant)
       description += " (SKU: #{variant.sku})" if variant.sku.present?
 
-      items << {
+      item = {
         "description"   => description,
         "quantity"      => li.quantity.to_f,
-        "netPrice"      => net_price,
+        "netPrice"      => full_net_price,
         "vatPercentage" => vat_rate,
         "unit"          => "kos"
       }
+
+      # Show discount explicitly on the invoice line (e-Računi: Price → Rabat% → Net → DDV → Total)
+      if unit_discount != 0 && unit_gross > 0
+        discount_pct = (unit_discount.abs / unit_gross * 100).round(4)
+        item["discountPercentage"] = discount_pct
+      end
+
+      items << item
     end
 
     # Shipping line item (no promotion discount applied to shipping)
