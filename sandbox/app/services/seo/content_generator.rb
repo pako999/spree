@@ -147,12 +147,18 @@ module Seo
         Write a wind/conditions guide for: **%{name}**
         Target keyword: %{keyword}
 
+        IMPORTANT LOCATION-SPECIFIC GUIDANCE:
+        - MISTRAL/VALLEY WINDS (France, Rhône Valley): Steady, strong valley wind. NO waves. Use TWINTIP boards for freestyle/tricks, NOT wave boards. Mistral is powered wind, not a wave spot.
+        - NAMED WINDS AT LOCATIONS (Meltemi/Greece, Bora/Croatia, Levante/Tarifa, Poniente/Tarifa, Sirocco/Mediterranean): Check if location has actual waves or is powered thermal wind. Use wave boards ONLY if significant swell exists. Otherwise use twintip/freestyle boards.
+        - THERMAL/SEA-BREEZE WINDS (daily cycles, summer): Typically unpowered until afternoon, light conditions. Choppy water from thermal heating, not real swell. Use twintip/freestyle boards.
+        - TRADE WINDS (Canary Islands, consistent): Consistent powered wind, variable swell. Twintip boards for freestyle, wave boards ONLY if confirmed swell.
+
         Required body_html sections (650–850 words total):
-        - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario
-        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes (e.g. 12m, 15m), board type & size (e.g. 135-150cm freestyle board), wetsuit thickness (e.g. 3/2mm, 4/3mm). Use brand names + type only, NOT fake model names. Example: "a Duotone or Cabrinha freestyle board, 135-150cm" not "Duotone Twintip 140cm"
+        - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario, including whether waves are likely
+        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes (e.g. 12m, 15m), CORRECT board type (twintip for freestyle/powered, wave board ONLY if actual swell), board size (e.g. 135-150cm), wetsuit thickness (e.g. 3/2mm, 4/3mm). Use brand names + type only, NOT fake model names. Example: "a Duotone or Cabrinha twintip board, 135-150cm for freestyle" or "a Cabrinha or Fanatic wave board, 145-160cm for swell conditions"
         - <h2>Technique Tips</h2> — how to adjust riding technique for this scenario
         - <h2>Safety Checklist</h2> — specific risks and how to manage them
-        - <h2>Our Gear Recommendations at Surf Store</h2> — recommend by BRAND + TYPE + SIZE only. Example: "We stock Duotone, Cabrinha, and Nobile freestyle boards in the 135-150cm range suitable for this wind. Pair with a 14-15m kite from Duotone or Cabrinha, and a 3/2 or 4/3mm wetsuit from ION or NeilPryde." Do NOT invent specific model names.
+        - <h2>Our Gear Recommendations at Surf Store</h2> — recommend by BRAND + CORRECT TYPE + SIZE only. Example for powered wind: "We stock Duotone and Cabrinha twintip boards in the 135-150cm range for this wind. Pair with a 12-15m kite from Duotone or Cabrinha, and a 3/2 or 4/3mm wetsuit from ION or NeilPryde." Do NOT invent specific model names. Do NOT recommend wave boards for non-wave conditions.
 
         faq: 3 Q/A pairs about this wind/conditions scenario
       PROMPT
