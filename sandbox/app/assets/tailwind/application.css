@@ -3740,12 +3740,18 @@ body {
 /* Remove aspect-1 constraint on main image */
 .media-gallery-desktop__wrapper .product-image {
   aspect-ratio: auto !important;
+  background-color: #fff;
 }
 
 .media-gallery-desktop__wrapper .product-image img {
-  max-height: 550px;
+  max-height: 600px;
   object-fit: contain;
   width: 100%;
+}
+
+/* Product card: ensure full image is visible with a clean background */
+.card-product-featured-images-container {
+  background-color: #fff;
 }
 
 /* ========================================

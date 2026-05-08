@@ -47,7 +47,7 @@ module Spree
 
       if width.present? && height.present?
         url_helpers.cdn_image_url(
-          image.variant(spree_image_variant_options(resize_to_fill: [width, height], format: options[:format]))
+          image.variant(spree_image_variant_options(resize_to_limit: [width, height], format: options[:format]))
         )
       else
         url_helpers.cdn_image_url(
@@ -105,9 +105,11 @@ module Spree
       format = format_opt || "webp"
 
       # Build hash in alphabetical order to match Active Storage's key ordering
+      # Note: resize_to_limit preserves aspect ratio (no cropping) — preferred for product images.
+      # resize_to_fill is only used for og_image (exact social share dimensions).
       result = {}
       result[:format] = format
-      result[:resize_to_fill] = options[:resize_to_fill] if options[:resize_to_fill]
+      result[:resize_to_fill]  = options[:resize_to_fill]  if options[:resize_to_fill]
       result[:resize_to_limit] = options[:resize_to_limit] if options[:resize_to_limit]
       result[:saver] = saver_options
       result

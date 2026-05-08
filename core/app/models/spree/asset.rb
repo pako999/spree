@@ -27,17 +27,31 @@ module Spree
     has_one_attached :attachment, service: Spree.public_storage_service_name do |attachable|
       # Note: Key order matters for variation digest matching.
       # Active Storage reorders keys alphabetically when calling variant(:name),
-      # so we must define them in alphabetical order: format, resize_to_fill, saver
+      # so we must define them in alphabetical order: format, resize_to_limit/fill, saver
       #
       # IMPORTANT: Use string values (not symbols) for format because the variation key
       # is JSON-encoded in URLs. JSON converts symbols to strings, so "webp" != :webp
       # after round-tripping, which causes digest mismatches.
+      #
+      # We use resize_to_limit (fit whole image, preserve aspect ratio) for all product
+      # variants so tall/portrait items (boards, kites) are never cropped.
+      # og_image is the exception: social platforms expect an exact 1200x630 crop.
       Spree::Config.product_image_variant_sizes.each do |name, (width, height)|
-        attachable.variant name,
-                           format: "webp",
-                           resize_to_fill: [width, height],
-                           saver: WEBP_SAVER_OPTIONS,
-                           preprocessed: true
+        if name == :og_image
+          # Open Graph requires exact 1200×630 — use fill/crop
+          attachable.variant name,
+                             format: "webp",
+                             resize_to_fill: [width, height],
+                             saver: WEBP_SAVER_OPTIONS,
+                             preprocessed: true
+        else
+          # All other sizes: fit the entire image within the box, no cropping
+          attachable.variant name,
+                             format: "webp",
+                             resize_to_limit: [width, height],
+                             saver: WEBP_SAVER_OPTIONS,
+                             preprocessed: true
+        end
       end
     end
 
