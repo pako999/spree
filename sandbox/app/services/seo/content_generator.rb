@@ -147,18 +147,35 @@ module Seo
         Write a wind/conditions guide for: **%{name}**
         Target keyword: %{keyword}
 
-        IMPORTANT LOCATION-SPECIFIC GUIDANCE:
-        - MISTRAL/VALLEY WINDS (France, Rhône Valley): Steady, strong valley wind. NO waves. Use TWINTIP boards for freestyle/tricks, NOT wave boards. Mistral is powered wind, not a wave spot.
-        - NAMED WINDS AT LOCATIONS (Meltemi/Greece, Bora/Croatia, Levante/Tarifa, Poniente/Tarifa, Sirocco/Mediterranean): Check if location has actual waves or is powered thermal wind. Use wave boards ONLY if significant swell exists. Otherwise use twintip/freestyle boards.
-        - THERMAL/SEA-BREEZE WINDS (daily cycles, summer): Typically unpowered until afternoon, light conditions. Choppy water from thermal heating, not real swell. Use twintip/freestyle boards.
-        - TRADE WINDS (Canary Islands, consistent): Consistent powered wind, variable swell. Twintip boards for freestyle, wave boards ONLY if confirmed swell.
+        CRITICAL — IDENTIFY THE SPORT FIRST:
+        - If the guide title/keyword contains "windsurfing" or "windsurf": this is a WINDSURFING guide. NEVER mention kites, twintip kiteboards, or kite brands (Cabrinha, Nobile kiteboards). Use WINDSURF-specific gear only.
+        - If the guide title/keyword contains "wing foiling" or "wing": this is a WING FOILING guide. Use wings + foil boards only.
+        - If the guide title/keyword contains "kitesurfing" or "kite": this is a KITESURFING guide. Use kites + twintip/wave kiteboards.
+
+        WINDSURFING GEAR (use ONLY for windsurfing guides):
+        - Boards: freeride/freewave boards (e.g. Fanatic Gecko, JP Australia SuperSport, Tabou Rocket Plus) — volume 120–200L. NEVER say "twintip board" for windsurfing.
+        - Sail sizes: light wind (10–15 knots) = 7.5–10.0m²; medium (15–20 knots) = 5.5–7.5m²; strong (20–30 knots) = 4.0–5.5m²
+        - Sail brands: NeilPryde, Gaastra, Point7, Duotone (windsurf range only)
+        - Board brands: Fanatic, JP Australia, Tabou
+        - Fin: large fin (40–55cm) for light wind planing, smaller for strong wind
+
+        KITESURFING GEAR (use ONLY for kitesurfing guides):
+        - Boards: twintip (135–150cm) for freestyle/powered wind; wave board (140–165cm) ONLY if actual swell
+        - Kite sizes: light wind = 14–17m; medium = 10–13m; strong = 7–9m
+        - Board/kite brands: Duotone, Cabrinha, Nobile, Core
+
+        LOCATION-SPECIFIC GUIDANCE (kitesurfing):
+        - MISTRAL/VALLEY WINDS: NO waves. Twintip boards only.
+        - NAMED WINDS (Meltemi, Bora, Levante, Poniente, Sirocco): wave boards ONLY if confirmed swell.
+        - THERMAL/SEA-BREEZE: choppy flat water. Twintip boards.
+        - TRADE WINDS (Canaries): twintip for freestyle, wave board only if swell confirmed.
 
         Required body_html sections (650–850 words total):
-        - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario, including whether waves are likely
-        - <h2>Best Gear for These Conditions</h2> — kite/sail sizes (e.g. 12m, 15m), CORRECT board type (twintip for freestyle/powered, wave board ONLY if actual swell), board size (e.g. 135-150cm), wetsuit thickness (e.g. 3/2mm, 4/3mm). Use brand names + type only, NOT fake model names. Example: "a Duotone or Cabrinha twintip board, 135-150cm for freestyle" or "a Cabrinha or Fanatic wave board, 145-160cm for swell conditions"
+        - <h2>Understanding These Conditions</h2> — what defines this wind/weather scenario
+        - <h2>Best Gear for These Conditions</h2> — sport-correct gear: for windsurfing use sail m² + freeride/freewave board volume + fin size; for kitesurfing use kite m² + correct board type. Use brand + type only, NO fake model names.
         - <h2>Technique Tips</h2> — how to adjust riding technique for this scenario
         - <h2>Safety Checklist</h2> — specific risks and how to manage them
-        - <h2>Our Gear Recommendations at Surf Store</h2> — recommend by BRAND + CORRECT TYPE + SIZE only. Example for powered wind: "We stock Duotone and Cabrinha twintip boards in the 135-150cm range for this wind. Pair with a 12-15m kite from Duotone or Cabrinha, and a 3/2 or 4/3mm wetsuit from ION or NeilPryde." Do NOT invent specific model names. Do NOT recommend wave boards for non-wave conditions.
+        - <h2>Our Gear Recommendations at Surf Store</h2> — sport-correct brands and sizes. For windsurfing: "We stock Fanatic and JP Australia freeride boards, 140–180L, plus NeilPryde and Gaastra sails in the 7.5–9.0m range." For kitesurfing: "We stock Duotone and Cabrinha twintip boards 135–150cm." Do NOT mix sports. Do NOT invent model names.
 
         faq: 3 Q/A pairs about this wind/conditions scenario
       PROMPT
