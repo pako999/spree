@@ -34,14 +34,19 @@ module Spree
     end
 
     # Eager-load associations used by the product card template.
-    # Removed stock_items/stock_locations — in_stock? and backorderable? use
-    # Rails.cache when those associations are not loaded, so no N+1 penalty.
+    # master :images   — product card thumbnail (was N+1 per card!)
+    # master/variants :stock_items — needed for purchasable? / in_stock? badges
+    # variants :option_values — color swatches on product cards
     def storefront_products_includes
       {
         taxons: [:taxonomy],
-        taggings: [],
-        master: [:prices],
-        variants: [:prices, { option_values: :option_type }],
+        master: [:images, :prices, { stock_items: :stock_location }],
+        variants: [
+          :images,
+          :prices,
+          { stock_items: :stock_location },
+          { option_values: :option_type }
+        ],
         option_types: []
       }
     end
