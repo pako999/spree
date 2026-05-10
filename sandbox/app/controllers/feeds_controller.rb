@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v3', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v4', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -130,7 +130,7 @@ class FeedsController < ApplicationController
           color:                   color,
           size:                    size,
           gender:                  is_apparel ? 'unisex' : nil,
-          custom_label_0:          is_ss26 ? 'ss26' : nil,
+          custom_label_4:          is_ss26 ? 'bestseller' : nil,
         }
       end
     end
