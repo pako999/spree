@@ -3749,9 +3749,22 @@ body {
   width: 100%;
 }
 
-/* Product card: ensure full image is visible with a clean background */
+/* Product card: force square container so portrait boards/kites always show in full */
 .card-product-featured-images-container {
+  aspect-ratio: 1 / 1;
   background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-product-featured-images-container img {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
 }
 
 /* ========================================
