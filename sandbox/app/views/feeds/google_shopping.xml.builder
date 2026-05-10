@@ -25,6 +25,7 @@ xml.rss(version: '2.0', 'xmlns:g' => 'http://base.google.com/ns/1.0') do
         xml.tag! 'g:color',                   item[:color]                   if item[:color].present?
         xml.tag! 'g:size',                    item[:size]                    if item[:size].present?
         xml.tag! 'g:gender',                  item[:gender]                  if item[:gender].present?
+        xml.tag! 'g:custom_label_0',          item[:custom_label_0]          if item[:custom_label_0].present?
       end
     end
   end

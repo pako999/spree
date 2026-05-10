@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v2', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v3', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -77,6 +77,7 @@ class FeedsController < ApplicationController
       .joins(:stores).where(spree_stores: { id: STORE_ID })
       .includes(
         :taxons,
+        :tags,
         master: [:images, :prices, { stock_items: :stock_location },
                  { option_values: :option_type }],
         variants: [:images, :prices, { stock_items: :stock_location },
@@ -90,6 +91,7 @@ class FeedsController < ApplicationController
       google_cat  = google_category_for(taxon_perms)
       product_type = product_type_for(taxon_perms)
       is_apparel  = taxon_perms.any? { |p| APPAREL_TAXON_PREFIXES.any? { |pf| p.start_with?(pf) } }
+      is_ss26     = product.tags.any? { |t| t.name.casecmp?('ss26') } || product.name.include?('2026')
 
       real_variants   = product.variants.reject { |v| v.deleted_at.present? }
       has_variants    = real_variants.any?
@@ -128,6 +130,7 @@ class FeedsController < ApplicationController
           color:                   color,
           size:                    size,
           gender:                  is_apparel ? 'unisex' : nil,
+          custom_label_0:          is_ss26 ? 'ss26' : nil,
         }
       end
     end
