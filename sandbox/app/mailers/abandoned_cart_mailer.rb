@@ -7,7 +7,7 @@ class AbandonedCartMailer < Spree::BaseMailer
 
     @store     = Spree::Store.default
     @store_url = @store.formatted_url_or_custom_domain
-    @cart_url  = "#{@store_url}/cart"
+    @cart_url  = "#{@store_url}/checkout/#{@order.token}"
 
     @items = build_items(@order, @store_url)
 
@@ -23,7 +23,7 @@ class AbandonedCartMailer < Spree::BaseMailer
 
     @store     = Spree::Store.default
     @store_url = @store.formatted_url_or_custom_domain
-    @cart_url  = "#{@store_url}/cart"
+    @cart_url  = "#{@store_url}/checkout/#{@order.token}"
 
     @items           = build_items(@order, @store_url)
     @discount_code   = 'surfstore7'
