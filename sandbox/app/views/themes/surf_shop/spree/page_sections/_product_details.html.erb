@@ -59,7 +59,7 @@
                       <% if product.brand_taxon %>
                         <%= link_to spree.nested_taxons_path(product.brand_taxon), title: product.brand_taxon.name, class: "inline-block mb-1" do %>
                           <% if product.brand_taxon.image.attached? %>
-                            <%= image_tag rails_blob_path(product.brand_taxon.image, disposition: 'inline'), alt: product.brand_taxon.name, class: "h-8 lg:h-10 w-auto object-contain", loading: "lazy" %>
+                            <img src="/rails/active_storage/blobs/redirect/<%= product.brand_taxon.image.blob.signed_id %>/<%= product.brand_taxon.image.blob.filename %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy">
                           <% elsif (logo = brand_logo_path_for(product.brand_taxon)) %>
                             <img src="<%= logo %>" alt="<%= product.brand_taxon.name %>" class="h-8 lg:h-10 w-auto object-contain" loading="lazy" />
                           <% else %>
