@@ -47,7 +47,12 @@ module BrandLogoHelper
     "gaastra windsurf sails & kites 2026"     => "/brand-logos/gaastra.png",
     "gaastra windsurf sails"                  => "/brand-logos/gaastra.png",
     "gaastra"                                 => "/brand-logos/gaastra.png",
-    "tabou"                                   => "/brand-logos/gaastra.png",
+    # Tabou (correct logo - separate brand from Gaastra)
+    "tabou"                                   => "/brand-logos/tabou.png",
+    "tabou windsurf boards"                   => "/brand-logos/tabou.png",
+    "tabou wave boards"                       => "/brand-logos/tabou.png",
+    "tabou foil boards"                       => "/brand-logos/tabou.png",
+    "tabou accessories"                       => "/brand-logos/tabou.png",
     # JP Australia
     "jp australia sup & windsurf boards 2026" => "/brand-logos/jp-australia.png",
     "jp australia sup & windsurf boards"      => "/brand-logos/jp-australia.png",

@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v5', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v6', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -86,7 +86,11 @@ class FeedsController < ApplicationController
 
     products.find_each do |product|
       taxon_perms = product.taxons.map(&:permalink)
-      brand = product.taxons.find { |t| t.permalink.start_with?('brands/') }&.name
+      brand_taxon = product.taxons.find { |t| t.permalink.start_with?('brands/') }
+      brand = if brand_taxon
+        slug = brand_taxon.permalink.delete_prefix('brands/').split('/').first
+        BRAND_PERMALINK_MAP[slug] || extract_brand_from_name(brand_taxon.name) || brand_taxon.name
+      end
       brand ||= extract_brand_from_name(product.name)
       google_cat  = google_category_for(taxon_perms)
       product_type = product_type_for(taxon_perms)
@@ -163,6 +167,37 @@ class FeedsController < ApplicationController
     # Strip tags first, then decode HTML entities (&amp;mdash; → —), then clean whitespace
     CGI.unescapeHTML(text.to_s.gsub(/<[^>]+>/, ' ')).squish.truncate(5000)
   end
+
+  # Maps brands/ permalink slug → clean brand name for Google Shopping
+  BRAND_PERMALINK_MAP = {
+    'nobile'       => 'Nobile',
+    'duotone'      => 'Duotone',
+    'ion'          => 'ION',
+    'cabrinha'     => 'Cabrinha',
+    'neilpryde'    => 'NeilPryde',
+    'jp-australia' => 'JP Australia',
+    'gaastra'      => 'Gaastra',
+    'tabou'        => 'Tabou',
+    'fanatic'      => 'Fanatic',
+    'north'        => 'North',
+    'rrd'          => 'RRD',
+    'f-one'        => 'F-One',
+    'slingshot'    => 'Slingshot',
+    'eleveight'    => 'Eleveight',
+    'point-7'      => 'Point-7',
+    'simmer'       => 'Simmer',
+    'mystic'       => 'Mystic',
+    'severne'      => 'Severne',
+    'naish'        => 'Naish',
+    'starboard'    => 'Starboard',
+    'prolimit'     => 'Prolimit',
+    'manera'       => 'Manera',
+    'dakine'       => 'Dakine',
+    'airush'       => 'Airush',
+    'ozone'        => 'Ozone',
+    'flysurfer'    => 'Flysurfer',
+    'core'         => 'CORE',
+  }.freeze
 
   # Known brands — longer/more specific names must come before shorter ones
   KNOWN_BRANDS = %w[
