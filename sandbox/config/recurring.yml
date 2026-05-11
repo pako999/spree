@@ -76,3 +76,8 @@ production:
     class: AbandonedCart24hJob
     queue: background
     schedule: 45 * * * *  # every hour at :45 — catch orders abandoned ~24 hours ago
+
+  rebuild_google_feed:
+    class: RebuildGoogleFeedJob
+    queue: background
+    schedule: 20 */6 * * *  # every 6 hours at :20 — after stock syncs finish, rebuild feed
