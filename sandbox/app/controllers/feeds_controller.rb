@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v4', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v5', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -107,7 +107,14 @@ class FeedsController < ApplicationController
         price_obj = variant.prices.find { |p| p.currency == 'EUR' } || variant.prices.first
         next unless price_obj&.amount.to_f > 0
 
-        total_stock = variant.stock_items.sum(&:count_on_hand)
+        total_stock      = variant.stock_items.sum(&:count_on_hand)
+        is_backorderable = variant.stock_items.any?(&:backorderable?)
+
+        # Exclude out-of-stock variants entirely — Google Ads will still serve
+        # items marked 'out_of_stock', so we remove them from the feed instead.
+        # Backorderable variants stay in (they can be ordered regardless of stock).
+        next if total_stock <= 0 && !is_backorderable
+
         color = variant.option_values.find { |ov| ov.option_type&.name == 'color' }&.presentation
         size  = variant.option_values.find { |ov| ov.option_type&.name == 'size'  }&.presentation
 
@@ -120,7 +127,7 @@ class FeedsController < ApplicationController
           link:                    product_url,
           image_link:              blob_full_url(image.attachment),
           price:                   format('%.2f %s', price_obj.amount.to_f, price_obj.currency),
-          availability:            total_stock > 0 ? 'in_stock' : 'out_of_stock',
+          availability:            'in_stock',
           condition:               'new',
           brand:                   brand,
           gtin:                    variant.barcode.presence,
