@@ -33,7 +33,10 @@
     <% end %>
   <% end %>
 
-  <div id='product-variant-picker' class="flex flex-col gap-y-4 mb-4 mt-2">
+  <div id='product-variant-picker'
+       class="flex flex-col gap-y-4 mb-4 mt-2"
+       data-controller="variant-switcher"
+       data-variant-switcher-product-id-value="<%= product.id %>">
 
     <%# === DESKTOP: Color image thumbnails + Size boxes === %>
     <div class="hidden lg:block">
@@ -53,7 +56,7 @@
                   <%= radio_button_tag option_type.presentation, value.name, is_selected,
                     class: 'hidden peer',
                     data: {
-                      action: 'change->product-form#updateVariant',
+                      action: 'change->variant-switcher#switch',
                       product_form_target: 'option',
                       option_id: option_type.id
                     },
@@ -92,7 +95,7 @@
             <%= radio_button_tag option_type.presentation, value.name, selected_option == value,
               class: 'hidden peer',
               data: {
-                action: 'change->product-form#updateVariant',
+                action: 'change->variant-switcher#switch',
                 product_form_target: 'option',
                 option_id: option_type.id
               },
@@ -172,6 +175,27 @@
     </div>
 
   </div>
+
+  <%# Pre-rendered variant data for instant client-side switching (no Turbo round-trip) %>
+  <script id="variant-data-<%= product.id %>" type="application/json">
+    <%= all_variants_data.map { |vd|
+      v = vd[:variant]
+      color_ot_name = color_ot&.name
+      {
+        id:         v.id,
+        sku:        v.sku,
+        option_ids: vd[:options].each_with_object({}) { |(ot_name, ov), h|
+          ot = product.option_types.find { |o| o.name == ot_name }
+          h[ot.id.to_s] = ov[:value] if ot
+        },
+        price:      vd[:price],
+        compare_at: vd[:compare_at],
+        on_sale:    vd[:on_sale],
+        available:  vd[:purchasable],
+        color:      color_ot_name ? vd.dig(:options, color_ot_name, :presentation) : nil
+      }
+    }.to_json.html_safe %>
+  </script>
 
   <script>
     function selectCombinedVariant(el, optionTypes, isMobile) {
