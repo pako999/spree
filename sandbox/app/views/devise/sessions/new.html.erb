@@ -22,7 +22,7 @@
     <% end %>
     <%= render "devise/shared/links" %>
 
-    <% if current_order.present? &&
+    <% if defined?(current_order) && current_order.present? &&
           current_store&.prefers_guest_checkout? &&
           stored_location&.include?(spree.checkout_path(current_order.token))
     %>
