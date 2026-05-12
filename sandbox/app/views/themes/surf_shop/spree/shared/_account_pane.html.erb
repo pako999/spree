@@ -23,6 +23,6 @@
       <span class='text-xl font-medium uppercase leading-none'><%= Spree.t(:account) %></span>
       <span></span>
     </div>
-    <%= turbo_frame_tag "login", src: "/#{I18n.locale}/users/sign_in", loading: "lazy" %>
+    <%= turbo_frame_tag "login", src: "/users/sign_in", loading: "lazy" %>
   </div>
 </div>
