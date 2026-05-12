@@ -1,23 +1,19 @@
 <div data-controller="checkout-summary" class="w-full">
-  <div data-controller='toggle' data-toggle-class="summary-folded" class="w-full summary-wrapper flex flex-col leading-none" data-toggle-target="toggleable" data-checkout-summary-target="wrapper">
-    <button data-action='click->toggle#toggle touch->toggle#toggle' class="w-full lg:hidden relative z-[999] bg-accent", id="toggle-order-summary">
+  <div class="w-full summary-wrapper flex flex-col leading-none" data-checkout-summary-target="wrapper">
+    <%# Order summary header (non-collapsible) %>
+    <div class="w-full lg:hidden relative z-[999] bg-accent" id="toggle-order-summary">
       <div class="h-full flex justify-between text-sm items-center">
-        <p class="flex gap-1 chevron-summary items-center">
+        <p class="flex gap-1 items-center">
           <%= heroicon("shopping-bag", variant: :outline) %>
-          <span class="show-summary hidden">
-            <%= Spree.t(:show) %>
-          </span>
-          <span class="hide-summary">
-            <%= Spree.t(:hide) %>
-          </span>
           <span class="lowercase"><%= Spree.t(:order_summary) %></span>
         </p>
         <span class="font-bold" id='summary-order-total'>
           <%= @order.display_total.to_html %>
         </span>
       </div>
-    </button>
-    <div class="summary overflow-hidden transition-[height] h-0 p-0" data-checkout-summary-target="container">
+    </div>
+    <%# Always visible summary — no toggle %>
+    <div class="summary overflow-hidden" style="height: auto !important;" data-checkout-summary-target="container">
       <div class="summary-content flex flex-col gap-5" data-checkout-summary-target="content">
         <%= render 'line_items', order: @order %>
 
@@ -32,7 +28,8 @@
     </div>
   </div>
 
-  <%# === CHECKOUT TRUST BADGES === %>
+  <%# === CHECKOUT TRUST BADGES — hidden on payment (last) step === %>
+  <% unless action_name == 'payment' || action_name == 'complete' %>
   <div class="hidden lg:block" style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
 
     <%# WhatsApp Live Support %>
@@ -100,6 +97,7 @@
 
     </div>
   </div>
+  <% end %>
 
 </div>
 
