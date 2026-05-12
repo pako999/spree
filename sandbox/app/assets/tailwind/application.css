@@ -745,6 +745,8 @@ button:focus {
 
 .turbo-progress-bar {
   background-color: var(--primary);
+  height: 3px;
+  z-index: 9999;
 }
 
 .modal .turbo-frame-error {

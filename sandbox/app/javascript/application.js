@@ -2,6 +2,11 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
+// Show Turbo loading bar immediately (default is 500ms delay)
+// so users get instant visual feedback when navigating categories
+import { Turbo } from "@hotwired/turbo-rails"
+Turbo.setProgressBarDelay(0)
+
 // Inject fresh CSRF meta tags from <template id="csrf_meta_tags"> into <head>
 // so that @rails/request.js can find them via document.head.querySelector.
 // The template lives outside <html> to avoid page-cache poisoning.
