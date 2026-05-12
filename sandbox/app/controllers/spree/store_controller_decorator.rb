@@ -51,36 +51,34 @@ module Spree
       }
     end
 
-    # Override to push zero-stock products to the bottom of every category listing.
-    # Uses a fast EXISTS subquery (primary sort) + preserves the finder's own ordering
-    # (manual position / name / price) as secondary sort.
+    # Override: push zero-stock products to bottom of category listings.
+    # We let the parent build the full query, then wrap it to prepend stock sort.
     def storefront_products
       return @storefront_products if @storefront_products
 
       finder_params = default_products_finder_params
       finder_params[:sort_by] ||= @taxon&.sort_order || 'manual'
 
-      base = storefront_products_finder
-               .new(scope: storefront_products_scope, params: finder_params)
-               .execute
-
-      # Prepend stock check: 0 = has stock, 1 = out of stock
-      in_stock_sql = Arel.sql(<<~SQL.squish)
-        CASE WHEN EXISTS (
-          SELECT 1 FROM spree_stock_items ssi
-          INNER JOIN spree_variants sv ON sv.id = ssi.variant_id
-          WHERE sv.product_id = spree_products.id
-            AND sv.is_master = FALSE
-            AND sv.deleted_at IS NULL
-            AND (ssi.count_on_hand > 0 OR ssi.backorderable = TRUE)
-        ) THEN 0 ELSE 1 END
-      SQL
-
-      products = base
-                   .unscope(:order)
-                   .order(in_stock_sql, *base.order_values)
+      products = storefront_products_finder
+                   .new(scope: storefront_products_scope, params: finder_params)
+                   .execute
                    .includes(storefront_products_includes)
                    .preload_associations_lazily
+
+      # Wrap with stock-based primary sort using SELECT + ORDER BY
+      products = products.select(
+        "spree_products.*",
+        Arel.sql(<<~SQL.squish)
+          CASE WHEN EXISTS (
+            SELECT 1 FROM spree_stock_items ssi
+            INNER JOIN spree_variants sv ON sv.id = ssi.variant_id
+            WHERE sv.product_id = spree_products.id
+              AND sv.is_master = FALSE
+              AND sv.deleted_at IS NULL
+              AND (ssi.count_on_hand > 0 OR ssi.backorderable = TRUE)
+          ) THEN 0 ELSE 1 END AS out_of_stock_flag
+        SQL
+      ).order(Arel.sql("out_of_stock_flag ASC"))
 
       default_per_page = Spree::Storefront::Config[:products_per_page]
       per_page = params[:per_page].present? ? params[:per_page].to_i : default_per_page
