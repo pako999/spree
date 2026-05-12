@@ -1,6 +1,8 @@
 <%
-  # On product pages, use the current product's category instead of the configured taxon
-  # so that "Beloved Products" shows items from the same category
+  # On product pages, show related items from the same category.
+  # On other pages with "Beloved Products" heading, use daily-rotating 2026 products.
+  is_beloved_section = @product.nil? && section.preferred_heading.to_s.downcase.include?('beloved')
+
   if @product.present?
     display_taxon = @product.taxons
                             .joins(:taxonomy)
@@ -11,7 +13,8 @@
     display_taxon = section.taxon
   end
 %>
-<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_key, section.cache_key_with_version, loaded.to_b, @product&.cache_key_with_version] do %>
+<%# Include date in cache key for beloved sections so rotation happens daily %>
+<% cache_unless page_builder_enabled?, [spree_storefront_base_cache_key, section.cache_key_with_version, loaded.to_b, @product&.cache_key_with_version, is_beloved_section ? Date.today.to_s : nil] do %>
   <div style='<%= section_styles(section) %>' class='animate-fadeIn'>
     <div class='page-container'>
       <% heading_size = case section.preferred_heading_size
@@ -55,9 +58,16 @@
           <% end %>
         </div>
       <% end %>
-      <% if loaded && display_taxon.present? %>
-        <% taxon_products = taxon_products(display_taxon).limit(section.preferred_max_products_to_show) %>
-        <% taxon_products = taxon_products.where.not(id: @product.id) if @product.present? %>
+      <% if loaded %>
+        <%# Beloved Products on homepage: rotate daily across categories %>
+        <% if is_beloved_section %>
+          <% taxon_products = beloved_products_for_today(limit: section.preferred_max_products_to_show) %>
+        <% elsif display_taxon.present? %>
+          <% taxon_products = taxon_products(display_taxon).limit(section.preferred_max_products_to_show) %>
+          <% taxon_products = taxon_products.where.not(id: @product.id) if @product.present? %>
+        <% else %>
+          <% taxon_products = [] %>
+        <% end %>
         <% if taxon_products.any? %>
           <div class='grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6'>
             <% if section_with_image %>
