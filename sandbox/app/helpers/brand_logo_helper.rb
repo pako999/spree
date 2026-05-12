@@ -57,6 +57,14 @@ module BrandLogoHelper
     "jp australia sup & windsurf boards 2026" => "/brand-logos/jp-australia.png",
     "jp australia sup & windsurf boards"      => "/brand-logos/jp-australia.png",
     "jp australia"                            => "/brand-logos/jp-australia.png",
+    # Nobile
+    "nobile"                                  => "/brand-logos/nobile.png",
+    "nobile kiteboards & foils 2026"          => "/brand-logos/nobile.png",
+    "nobile kites"                            => "/brand-logos/nobile.png",
+    "nobile kite bars"                        => "/brand-logos/nobile.png",
+    "nobile harnesses"                        => "/brand-logos/nobile.png",
+    "nobile kiteboards"                       => "/brand-logos/nobile.png",
+    "nobile foils"                            => "/brand-logos/nobile.png",
   }.freeze
 
   def brand_logo_path_for(brand_taxon)
