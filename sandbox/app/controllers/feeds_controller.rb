@@ -9,7 +9,7 @@ require 'cgi'
 #   Rails.cache.delete('feeds/google_shopping_v1')
 class FeedsController < ApplicationController
   CACHE_TTL  = 30.minutes
-  STORE_URL  = 'https://surf-store.com'
+  STORE_URL  = 'https://www.surf-store.com'
   STORE_ID   = 2  # the main surf-store (matches store used during imports)
 
   # More specific prefixes must come before their parent prefixes
@@ -122,6 +122,17 @@ class FeedsController < ApplicationController
         color = variant.option_values.find { |ov| ov.option_type&.name == 'color' }&.presentation
         size  = variant.option_values.find { |ov| ov.option_type&.name == 'size'  }&.presentation
 
+        # Additional images: up to 10 extra, prefer variant images then product images
+        all_images = (variant.images + product.master.images).uniq(&:id)
+        additional_images = all_images.drop(1).first(10).filter_map { |img| blob_full_url(img.attachment) }
+
+        # Sale price: use compare_at_price if available
+        sale_price = nil
+        compare_price = price_obj.respond_to?(:compare_at_amount) ? price_obj.compare_at_amount : nil
+        if compare_price.present? && compare_price > price_obj.amount
+          sale_price = format('%.2f %s', price_obj.amount.to_f, price_obj.currency)
+        end
+
         raw_id = variant.sku.presence || "spree-#{variant.id}"
         items << {
           id:                      raw_id.length > 50 ? "var-#{variant.id}" : raw_id,
@@ -130,7 +141,9 @@ class FeedsController < ApplicationController
           description:             strip_html(product.description),
           link:                    product_url,
           image_link:              blob_full_url(image.attachment),
-          price:                   format('%.2f %s', price_obj.amount.to_f, price_obj.currency),
+          additional_image_links:  additional_images,
+          price:                   sale_price ? format('%.2f %s', compare_price.to_f, price_obj.currency) : format('%.2f %s', price_obj.amount.to_f, price_obj.currency),
+          sale_price:              sale_price,
           availability:            'in_stock',
           condition:               'new',
           brand:                   brand,
@@ -142,6 +155,7 @@ class FeedsController < ApplicationController
           size:                    size,
           gender:                  is_apparel ? 'unisex' : nil,
           custom_label_4:          is_ss26 ? 'bestseller' : nil,
+          shipping_weight:         variant.weight.present? && variant.weight > 0 ? format('%.2f kg', variant.weight.to_f) : nil,
         }
       end
     end

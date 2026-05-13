@@ -14,7 +14,16 @@ xml.rss(version: '2.0', 'xmlns:g' => 'http://base.google.com/ns/1.0') do
         xml.tag! 'g:description',             item[:description]             if item[:description].present?
         xml.tag! 'g:link',                    item[:link]
         xml.tag! 'g:image_link',              item[:image_link]              if item[:image_link].present?
+
+        # Additional images (up to 10) — improves PMax ad creative variety
+        if item[:additional_image_links].present?
+          item[:additional_image_links].each do |img_url|
+            xml.tag! 'g:additional_image_link', img_url
+          end
+        end
+
         xml.tag! 'g:price',                   item[:price]
+        xml.tag! 'g:sale_price',              item[:sale_price]              if item[:sale_price].present?
         xml.tag! 'g:availability',            item[:availability]
         xml.tag! 'g:condition',               item[:condition]
         xml.tag! 'g:brand',                   item[:brand]                   if item[:brand].present?
@@ -25,7 +34,15 @@ xml.rss(version: '2.0', 'xmlns:g' => 'http://base.google.com/ns/1.0') do
         xml.tag! 'g:color',                   item[:color]                   if item[:color].present?
         xml.tag! 'g:size',                    item[:size]                    if item[:size].present?
         xml.tag! 'g:gender',                  item[:gender]                  if item[:gender].present?
+        xml.tag! 'g:shipping_weight',         item[:shipping_weight]         if item[:shipping_weight].present?
         xml.tag! 'g:custom_label_4',          item[:custom_label_4]          if item[:custom_label_4].present?
+
+        # Shipping: Free EU delivery over €99
+        xml.tag! 'g:shipping' do
+          xml.tag! 'g:country', 'SI'
+          xml.tag! 'g:service', 'Standard'
+          xml.tag! 'g:price',  '0.00 EUR'
+        end
       end
     end
   end
