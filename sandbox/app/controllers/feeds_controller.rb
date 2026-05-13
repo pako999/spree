@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v6', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v7', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
