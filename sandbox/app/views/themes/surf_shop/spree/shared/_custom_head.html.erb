@@ -1,3 +1,77 @@
+<%# Blog post design system — loaded for all pages, only activates on .section-post-details %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--blog-bg:#0F0F1A;--blog-bg2:#14141F;--blog-surface:#1E1E30;--blog-surface2:#252540;--blog-border:rgba(255,255,255,0.08);--blog-accent:#00C2FF;--blog-gold:#F5A623;--blog-green:#2ECC71;--blog-text:#E8E8F0;--blog-muted:#7E7E9A;--blog-radius:6px}
+.section-post-details>div{background-color:var(--blog-bg)!important;--section-background:var(--blog-bg)!important;color:var(--blog-text)!important}
+.trix-content{font-family:'Barlow',sans-serif;font-size:17px;line-height:1.75;color:var(--blog-text)}
+.trix-content h1,.trix-content h2,.trix-content h3,.trix-content h4{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:-0.01em}
+.trix-content h2{font-size:2rem;margin:2.5rem 0 1rem;color:#fff}
+.trix-content h3{font-size:1.4rem;margin:2rem 0 .75rem;color:#fff}
+.trix-content p{margin:0 0 1.2rem}
+.trix-content a{color:var(--blog-accent);text-decoration:none}
+.trix-content a:hover{text-decoration:underline}
+.trix-content ul,.trix-content ol{padding-left:1.5rem;margin:0 0 1.2rem}
+.trix-content li{margin-bottom:.5rem}
+.trix-content strong{color:#fff}
+.trix-content table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:15px}
+.trix-content th{background:var(--blog-surface2);color:#fff;padding:12px 16px;text-align:left;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--blog-border)}
+.trix-content td{padding:10px 16px;border:1px solid var(--blog-border);color:var(--blog-text)}
+.trix-content tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.blog-label{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--blog-accent);border-left:3px solid var(--blog-accent);padding-left:10px;margin-bottom:8px}
+.blog-stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--blog-border);border:1px solid var(--blog-border);border-top:2px solid var(--blog-accent);border-radius:var(--blog-radius);margin:2rem 0;overflow:hidden}
+.blog-stat{flex:1;min-width:120px;background:var(--blog-surface);padding:20px 16px;text-align:center}
+.blog-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:#fff;line-height:1}
+.blog-stat-lbl{font-size:12px;color:var(--blog-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+.blog-card{background:var(--blog-surface);border:1px solid var(--blog-border);border-radius:var(--blog-radius);margin:1.5rem 0;overflow:hidden}
+.blog-card.featured{border-top:3px solid var(--blog-accent)}
+.blog-card.premium-card{border-top:3px solid var(--blog-gold)}
+.blog-card.value-card{border-top:3px solid var(--blog-green)}
+.blog-card-header{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 20px 0;gap:12px}
+.blog-card-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1.2}
+.blog-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.blog-badge.top{background:var(--blog-accent);color:#0F0F1A}
+.blog-badge.premium{background:var(--blog-gold);color:#0F0F1A}
+.blog-badge.value{background:var(--blog-green);color:#0F0F1A}
+.blog-badge.alt{background:var(--blog-surface2);color:var(--blog-muted);border:1px solid var(--blog-border)}
+.blog-specs{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px}
+.blog-pill{background:var(--blog-surface2);border:1px solid var(--blog-border);border-radius:20px;padding:4px 12px;font-size:13px;color:var(--blog-muted)}
+.blog-pill strong{color:var(--blog-text)}
+.blog-card-desc{padding:0 20px 16px;font-size:15px;color:var(--blog-muted);line-height:1.6;margin:0}
+.blog-card-footer{padding:0 20px 20px}
+.blog-btn{display:inline-block;background:var(--blog-accent);color:#0F0F1A!important;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.03em;padding:10px 20px;border-radius:var(--blog-radius);text-decoration:none!important}
+.blog-btn:hover{opacity:.85}
+.blog-btn.outline{background:transparent;color:var(--blog-accent)!important;border:1px solid var(--blog-accent)}
+.blog-skills{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:1.5rem 0}
+.blog-skill{background:var(--blog-surface);border:1px solid var(--blog-border);border-radius:var(--blog-radius);padding:20px}
+.blog-skill.beginner{border-top:3px solid var(--blog-green)}
+.blog-skill.advanced{border-top:3px solid var(--blog-gold)}
+.blog-skill-tag{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.blog-skill.beginner .blog-skill-tag{color:var(--blog-green)}
+.blog-skill.advanced .blog-skill-tag{color:var(--blog-gold)}
+.blog-skill h4{font-size:17px;font-weight:700;color:#fff;margin:0 0 8px}
+.blog-skill p{font-size:14px;color:var(--blog-muted);margin:0}
+.blog-flist{list-style:none;padding:0;margin:1rem 0}
+.blog-flist li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--blog-border)}
+.blog-flist li:last-child{border-bottom:none}
+.blog-flist-icon{color:var(--blog-accent);font-size:18px;flex-shrink:0;margin-top:2px}
+.blog-tier{display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em;text-transform:uppercase}
+.blog-tier.entry{background:rgba(46,204,113,.15);color:var(--blog-green)}
+.blog-tier.mid{background:rgba(0,194,255,.15);color:var(--blog-accent)}
+.blog-tier.premium{background:rgba(245,166,35,.15);color:var(--blog-gold)}
+.blog-mistakes{display:flex;flex-direction:column;gap:12px;margin:1.5rem 0}
+.blog-mistake{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-left:3px solid #dc2626;border-radius:var(--blog-radius);padding:14px 16px}
+.blog-mistake-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#f87171;margin:0 0 4px}
+.blog-mistake p{font-size:14px;color:var(--blog-muted);margin:0}
+.blog-cta{background:var(--blog-surface);border:1px solid rgba(0,194,255,.2);border-radius:8px;padding:32px;text-align:center;margin:2.5rem 0}
+.blog-cta h3{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fff;margin:0 0 10px}
+.blog-cta p{color:var(--blog-muted);margin:0 0 20px}
+.blog-cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.blog-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;background:var(--blog-surface);border-top:1px solid var(--blog-border);padding:16px 20px;font-size:13px;color:var(--blog-muted);margin:2rem 0 0;border-radius:var(--blog-radius)}
+@media(max-width:640px){.blog-skills{grid-template-columns:1fr}.blog-stat{min-width:90px}.blog-cta{padding:24px 16px}}
+</style>
+
 <%# Favicon & icons %>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/icon.png" type="image/png">
