@@ -118,10 +118,35 @@ module Seo
         <h3>Ready to Gear Up?</h3>
         <p>Expert advice, authorized stock, ships across Europe within 24h.</p>
         <div class="blog-cta-btns">
-          <a href="https://www.surf-store.com/t/categories/CATEGORY-PATH" class="blog-btn">Browse All [CATEGORY] →</a>
+          <a href="https://www.surf-store.com/t/categories/VERIFIED-URL-BELOW" class="blog-btn">Browse All [CATEGORY] →</a>
           <a href="https://www.surf-store.com/policies/contact" class="blog-btn outline">Ask Our Experts</a>
         </div>
       </div>
+
+      VERIFIED CATEGORY URLs — use ONLY these exact paths (all tested, all return 200):
+      Kitesurfing — kites:     /t/categories/kitesurfing/kites
+      Kitesurfing — boards:    /t/categories/kitesurfing   ← NOT /kiteboards (broken)
+      Kitesurfing — harnesses: /t/categories/kitesurfing/kite-harnesses
+      Kitesurfing — foil:      /t/categories/kitesurfing/kite-foil
+      Kitesurfing — all:       /t/categories/kitesurfing
+      Windsurfing — sails:     /t/categories/windsurf/windsurf-sails
+      Windsurfing — boards:    /t/categories/windsurf/windsurf-boards
+      Windsurfing — all:       /t/categories/windsurf
+      Wing foil — wings:       /t/categories/wingfoil/wings
+      Wing foil — boards:      /t/categories/wingfoil/wing-boards
+      Wing foil — foils:       /t/categories/wingfoil/wing-foils
+      Wing foil — all:         /t/categories/wingfoil
+      Wetsuits — men:          /t/categories/wetsuits/men-wetsuits
+      Wetsuits — women:        /t/categories/wetsuits/women-wetsuits
+      Wetsuits — all:          /t/categories/wetsuits
+      SUP boards:              /t/categories/sup-board/sup-boards
+      Brand — Duotone kite:    /t/brands/duotone-kiteboarding   ← NOT /kites sub-path (broken)
+      Brand — Duotone windsurf: /t/brands/duotone-windsurfing
+      Brand — Duotone wing:    /t/brands/duotone-wing-foiling
+      Brand — Cabrinha:        /t/brands/cabrinha
+      Brand — ION:             /t/brands/ion-water
+      Brand — Nobile:          /t/brands/nobile
+      NEVER invent a URL. If unsure, use /t/categories/kitesurfing (or the relevant sport parent).
 
       TRUST BAR (after CTA, always last element):
       <div class="blog-trust">
