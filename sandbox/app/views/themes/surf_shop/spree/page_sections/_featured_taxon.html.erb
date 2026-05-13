@@ -38,10 +38,11 @@
               class='<%= heading_size %> featured-taxon--title font-medium text-<%= section.preferred_heading_alignment %>'
               data-title="<%= section.preferred_heading.downcase %>"
               style='<%= section_heading_styles(section) %>'>
+              <% heading_text = @product.present? ? 'Similar Products' : section.preferred_heading %>
               <% if display_taxon.present? %>
-                <%= link_to section.preferred_heading, spree_storefront_resource_url(display_taxon), data: { turbo_frame: "_top" } %>
+                <%= link_to heading_text, spree_storefront_resource_url(display_taxon), data: { turbo_frame: "_top" } %>
               <% else %>
-                <%= section.preferred_heading %>
+                <%= heading_text %>
               <% end %>
             </h3>
 
