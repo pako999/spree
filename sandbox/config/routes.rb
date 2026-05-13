@@ -46,6 +46,12 @@ Rails.application.routes.draw do
   get '/de/*path',  to: redirect('/%{path}', status: 301)
 
   mount Spree::Core::Engine, at: '/'
+  devise_for :admin_users, class_name: "Spree::AdminUser",
+             controllers: {
+               sessions: 'spree/admin/user_sessions',
+               passwords: 'spree/admin/user_passwords'
+             },
+             skip: :registrations
   devise_for :users, class_name: "Spree::User",
              controllers: {
                sessions: 'spree/user_sessions',
