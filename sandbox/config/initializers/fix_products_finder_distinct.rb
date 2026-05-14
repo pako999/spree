@@ -1,13 +1,11 @@
 # Fix PostgreSQL / Mobility gem errors when sorting products by price.
 #
-# Issues:
-# 1. PG: ORDER BY expressions must appear in select list (with DISTINCT)
-# 2. Mobility gem: undefined method 'right' for String (when .count is called
-#    with custom SQL in SELECT)
+# Root cause: `with_currency` scope (called by `active(currency)`) adds
+# `.distinct` which conflicts with ORDER BY on derived table columns.
+# Additionally, the Finder's `execute` also appends `.distinct`.
 #
-# Fix: Use derived table JOIN + add min_price to SELECT (fixes #1),
-# and skip .distinct for price-sorted queries since the derived table JOIN
-# already ensures one row per product (fixes both #1 and #2).
+# Fix: Use derived table JOIN for price sorting and remove DISTINCT from
+# the query (the derived table JOIN guarantees one row per product anyway).
 Rails.application.config.after_initialize do
   Spree::Products::Find.class_eval do
     private
@@ -29,7 +27,10 @@ Rails.application.config.after_initialize do
         ) _price_sort ON _price_sort.product_id = spree_products.id
       SQL
 
-      scope.joins(price_join)
+      # Remove DISTINCT that was added by with_currency scope —
+      # the derived table JOIN already ensures one row per product
+      scope.except(:distinct)
+           .joins(price_join)
            .order(Arel.sql("_price_sort.min_price #{direction}"))
     end
 
@@ -59,15 +60,10 @@ Rails.application.config.after_initialize do
       products = by_vendor_ids(products) if respond_to?(:by_vendor_ids, true)
       products = ordered(products)
 
-      # Skip .distinct for price-sorted queries:
-      # - The derived table JOIN already ensures one row per product
-      # - DISTINCT conflicts with ORDER BY on derived table columns in PG
-      # - Mobility gem can't handle .count on queries with custom SQL in SELECT
-      if @_price_sorted
-        products
-      else
-        products.distinct
-      end
+      # Skip .distinct for price-sorted queries — the derived table JOIN
+      # already deduplicates and PG doesn't allow DISTINCT + ORDER BY
+      # on non-SELECT columns
+      @_price_sorted ? products : products.distinct
     end
   end
 end
