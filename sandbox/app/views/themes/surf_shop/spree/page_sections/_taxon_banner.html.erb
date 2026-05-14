@@ -7,9 +7,18 @@
     <div class="page-container">
       <div class="lg:gap-6 lg:grid lg:grid-cols-12">
         <% if taxon.image.present? %>
-          <div class="flex lg:col-span-7 lg:col-start-6 lg:order-1 lg:items-center lg:justify-end">
-            <% aspect_ratio_style = "aspect-ratio: #{spree_asset_aspect_ratio(taxon.image)};" %>
-            <%= spree_image_tag(taxon.image, width: 500, height: 280, alt: taxon.name, class: 'w-full lg:h-[280px] h-full lg:w-auto mb-6', style: aspect_ratio_style, loading: :lazy) %>
+          <%
+            img_w = taxon.image.blob.metadata['width'].to_i
+            img_h = taxon.image.blob.metadata['height'].to_i
+            is_logo = img_h > 0 && (img_w.to_f / img_h) > 2.5
+          %>
+          <div class="flex lg:col-span-7 lg:col-start-6 lg:order-1 lg:items-center lg:justify-center">
+            <% if is_logo %>
+              <%= spree_image_tag(taxon.image, width: img_w, height: img_h, alt: taxon.name, class: 'max-w-[320px] max-h-[80px] w-auto h-auto object-contain mb-6', loading: :lazy) %>
+            <% else %>
+              <% aspect_ratio_style = "aspect-ratio: #{spree_asset_aspect_ratio(taxon.image)};" %>
+              <%= spree_image_tag(taxon.image, width: 500, height: 280, alt: taxon.name, class: 'w-full lg:h-[280px] h-full lg:w-auto mb-6', style: aspect_ratio_style, loading: :lazy) %>
+            <% end %>
           </div>
         <% end %>
         <div class="<%= taxon.image.present? ? 'lg:col-span-5' : 'lg:col-span-12' %> flex flex-col justify-center items-start gap-1">
