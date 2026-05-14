@@ -129,19 +129,8 @@ class CreateEracuniOrderJob < ApplicationJob
 
   def build_line_items(order, country_iso, is_b2b: false, is_eu_oss: false)
     is_non_eu = country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI"
+    zero_vat = is_b2b || is_non_eu
     items = []
-
-    # VAT rate:
-    #  - B2B EU / non-EU export → 0%
-    #  - EU B2C OSS             → destination country rate (HR=25, FR=20, DE=19…)
-    #  - SI domestic            → 22% Slovenian DDV
-    vat_rate = if is_b2b || is_non_eu
-                 0
-               elsif is_eu_oss
-                 EU_STANDARD_VAT_RATES.fetch(country_iso, 22)
-               else
-                 22
-               end
 
     # Distribute order-level promotion (e.g. CARD10 coupon) proportionally across line items.
     # Spree stores coupon discounts on order.promo_total when the promotion action is
@@ -149,11 +138,24 @@ class CreateEracuniOrderJob < ApplicationJob
     total_items_amount = order.line_items.sum { |i| i.price.to_f * i.quantity }.nonzero? || 1.0
     order_promo = order.promo_total.to_f  # e.g. -314.56
 
+    # We'll track the last VAT rate found so we can apply it to shipping too
+    last_vat_rate = 22
+
     # Product line items
     order.line_items.includes(variant: :product).each do |li|
       variant = li.variant
       product = variant.product
       unit_gross = li.price.to_f
+
+      # Read the actual VAT rate from the line item's Spree tax adjustment.
+      # This is always correct because Spree calculates it from the configured
+      # TaxRate for the destination country/zone.
+      vat_rate = if zero_vat
+                   0
+                 else
+                   vat_rate_from_adjustment(li)
+                 end
+      last_vat_rate = vat_rate unless zero_vat
 
       # Per-unit discount: line-item promo takes priority, then order-level promo (e.g. CARD10)
       unit_discount = if li.promo_total.to_f != 0
@@ -190,18 +192,33 @@ class CreateEracuniOrderJob < ApplicationJob
     # Shipping line item (no promotion discount applied to shipping)
     shipping_total = order.shipment_total.to_f
     if shipping_total > 0
+      shipping_vat = zero_vat ? 0 : last_vat_rate
       shipping_method_name = order.shipments.first&.shipping_method&.name || "Poštnina"
-      net_shipping = vat_rate.zero? ? shipping_total : (shipping_total / (1 + vat_rate / 100.0)).round(2)
+      net_shipping = shipping_vat.zero? ? shipping_total : (shipping_total / (1 + shipping_vat / 100.0)).round(2)
       items << {
         "description"   => shipping_method_name,
         "quantity"      => 1.0,
         "netPrice"      => net_shipping,
-        "vatPercentage" => vat_rate,
+        "vatPercentage" => shipping_vat,
         "unit"          => "storitev"
       }
     end
 
     items
+  end
+
+  # Extract the VAT percentage from a line item's Spree tax adjustment.
+  # Returns an integer (e.g. 22, 23, 25) as required by e-Računi.
+  def vat_rate_from_adjustment(line_item)
+    tax_adj = line_item.adjustments
+                       .select { |a| a.source_type == 'Spree::TaxRate' }
+                       .max_by { |a| a.amount.abs }
+
+    if tax_adj&.source.is_a?(Spree::TaxRate) && tax_adj.source.amount.to_f > 0
+      return (tax_adj.source.amount.to_f * 100).round
+    end
+
+    22 # Fallback: Slovenian standard VAT
   end
 
   def product_description(product, variant)
@@ -234,34 +251,9 @@ class CreateEracuniOrderJob < ApplicationJob
     "0" # SI domestic
   end
 
-  # Standard EU VAT rates (2024) used as fallback when Spree adjustment cannot be read.
-  EU_STANDARD_VAT_RATES = {
-    'AT' => 20, 'BE' => 21, 'BG' => 20, 'CY' => 19, 'CZ' => 21,
-    'DE' => 19, 'DK' => 25, 'EE' => 22, 'ES' => 21, 'FI' => 25,
-    'FR' => 20, 'GR' => 24, 'HR' => 25, 'HU' => 27, 'IE' => 23,
-    'IT' => 22, 'LT' => 21, 'LU' => 17, 'LV' => 21, 'MT' => 18,
-    'NL' => 21, 'PL' => 23, 'PT' => 23, 'RO' => 19, 'SE' => 25,
-    'SK' => 20, 'XI' => 20
-  }.freeze
+  # NOTE: EU_STANDARD_VAT_RATES removed — we now read the actual VAT rate
+  # from each line item's Spree::TaxRate adjustment (vat_rate_from_adjustment).
+  # This ensures the rate always matches what's configured in Spree and e-Računi.
 
-  # Determine the VAT percentage from the line item's tax adjustments.
-  # Falls back to EU standard VAT rates table so we never send 0% by mistake.
-  # e-Računi requires integer percentages (22, not 22.0).
-  def vat_percentage(line_item, country_iso = nil)
-    # Try reading from the tax adjustment (handles both included & excluded tax)
-    tax_adj = line_item.adjustments
-                       .select { |a| a.source_type == 'Spree::TaxRate' }
-                       .max_by { |a| a.amount.abs }
-
-    if tax_adj&.source.is_a?(Spree::TaxRate) && tax_adj.source.amount.to_f > 0
-      return (tax_adj.source.amount.to_f * 100).round
-    end
-
-    # Fall back to EU standard rate for the destination country
-    if country_iso.present? && EU_STANDARD_VAT_RATES.key?(country_iso)
-      return EU_STANDARD_VAT_RATES[country_iso]
-    end
-
-    22 # Final fallback: Slovenian standard VAT
-  end
+  # Old vat_percentage method removed — replaced by vat_rate_from_adjustment above.
 end
