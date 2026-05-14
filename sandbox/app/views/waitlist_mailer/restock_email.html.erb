@@ -70,8 +70,19 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>SURF-STORE.COM</h1>
+        <a href="https://www.surf-store.com" style="text-decoration: none;">
+          <% logo = Spree::Store.default.mailer_logo %>
+          <% if logo.attached? %>
+            <%= image_tag main_app.cdn_image_url(logo.variant(resize_to_limit: [400, 80])),
+                  style: "height: 52px; width: auto; display: block; margin: 0 auto;",
+                  alt: "Surf-store.com",
+                  height: 52 %>
+          <% else %>
+            <h1 style="margin: 0; color: #1a6fb5; font-size: 22px;">Surf-store.com</h1>
+          <% end %>
+        </a>
       </div>
+
       
       <div class="content">
         <h2>Great news! It's back in stock.</h2>
