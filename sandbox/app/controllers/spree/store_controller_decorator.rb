@@ -65,26 +65,10 @@ module Spree
                    .includes(storefront_products_includes)
                    .preload_associations_lazily
 
-      # Push out-of-stock products to the bottom of listings.
-      # Use a derived table JOIN instead of adding to SELECT to avoid
-      # Mobility gem's count method crashing on custom SQL expressions.
-      stock_join = <<~SQL.squish
-        LEFT JOIN (
-          SELECT DISTINCT sv.product_id
-          FROM spree_stock_items ssi
-          INNER JOIN spree_variants sv ON sv.id = ssi.variant_id
-          WHERE sv.is_master = FALSE
-            AND sv.deleted_at IS NULL
-            AND (ssi.count_on_hand > 0 OR ssi.backorderable = TRUE)
-        ) _in_stock ON _in_stock.product_id = spree_products.id
-      SQL
-      products = products.joins(stock_join)
-                         .order(Arel.sql("CASE WHEN _in_stock.product_id IS NOT NULL THEN 0 ELSE 1 END ASC"))
-
-
       default_per_page = Spree::Storefront::Config[:products_per_page]
       per_page = params[:per_page].present? ? params[:per_page].to_i : default_per_page
       @storefront_products = paginate_collection(products, limit: per_page)
+
     end
 
     private
