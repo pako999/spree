@@ -1,0 +1,58 @@
+# Local "production-like" stack for the Surf-Store Spree app.
+#
+# Mirrors the Kamal production deployment (config/deploy.yml):
+#   - web: the Spree app image, built from ./Dockerfile (RAILS_ENV=production)
+#   - db:  PostgreSQL, database my_kite_shop_production (user: ubuntu / pass: kite)
+#
+# Usage:
+#   1. Create sandbox/.env with the production master key:
+#        RAILS_MASTER_KEY=<contents of config/master.key>
+#   2. docker compose up --build
+#   3. Open http://localhost:3000
+#
+# The RAILS_MASTER_KEY is required: the production environment decrypts
+# config/credentials.yml.enc on boot. Without it the web container will not start.
+
+services:
+  db:
+    image: postgres:14
+    container_name: surf-store-db
+    environment:
+      POSTGRES_USER: ubuntu
+      POSTGRES_PASSWORD: kite
+      POSTGRES_DB: my_kite_shop_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ubuntu -d my_kite_shop_production"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    image: pako999/surf-store:local
+    container_name: surf-store
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      DB_HOST: db
+      DB_USERNAME: ubuntu
+      DB_PASSWORD: kite
+      SOLID_QUEUE_IN_PUMA: "true"
+      # Thruster (the default CMD) listens on this port; matches deploy.yml app_port.
+      HTTP_PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - sandbox_storage:/rails/storage
+
+volumes:
+  postgres_data:
+  sandbox_storage:
