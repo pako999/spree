@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; }
+    .header { background: #1a1a2e; color: #ffffff; padding: 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .body { padding: 32px 24px; color: #333333; line-height: 1.6; }
+    .footer { padding: 16px 24px; text-align: center; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee; }
+    .btn { display: inline-block; background: #4CAF50; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+    .schedule-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .schedule-table th, .schedule-table td { padding: 8px 12px; border: 1px solid #eeeeee; text-align: left; }
+    .schedule-table th { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>RacketRent</h1>
+    </div>
+    <div class="body">
+      <%= yield %>
+    </div>
+    <div class="footer">
+      <p>&copy; <%= Date.current.year %> RacketRent</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<h2><%= I18n.t('mailer.rental.extended.heading') %></h2>
+
+<p><%= I18n.t('mailer.rental.extended.greeting', name: @customer.first_name) %></p>
+
+<p><%= I18n.t('mailer.rental.extended.body', extra_days: @extra_days) %></p>
+
+<table class="schedule-table">
+  <tr><th><%= I18n.t('mailer.rental.new_due') %></th><td><%= I18n.l(@rental.due_at, format: :short) %></td></tr>
+  <tr><th><%= I18n.t('mailer.rental.total') %></th><td>&euro; <%= '%.2f' % (@rental.total_price_cents / 100.0) %></td></tr>
+</table>

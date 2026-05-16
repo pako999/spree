@@ -1,0 +1,14 @@
+<h2><%= I18n.t('mailer.stringing.received.heading') %></h2>
+
+<p><%= I18n.t('mailer.stringing.received.greeting', name: @customer.first_name) %></p>
+
+<p><%= I18n.t('mailer.stringing.received.body') %></p>
+
+<table class="schedule-table">
+  <tr><th><%= I18n.t('mailer.stringing.racket') %></th><td><%= @order.racket_brand %> <%= @order.racket_model %></td></tr>
+  <tr><th><%= I18n.t('mailer.stringing.string_type') %></th><td><%= @order.string_type %></td></tr>
+  <tr><th><%= I18n.t('mailer.stringing.tension') %></th><td><%= @order.string_tension_kg %> kg</td></tr>
+  <tr><th><%= I18n.t('mailer.stringing.price') %></th><td>&euro; <%= '%.2f' % @order.price %></td></tr>
+</table>
+
+<p><%= I18n.t('mailer.stringing.received.note') %></p>

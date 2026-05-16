@@ -1,0 +1,47 @@
+de:
+  mailer:
+    unsubscribe: "Von Marketing-E-Mails abmelden"
+    rental:
+      racket: "Schläger"
+      starts: "Startdatum"
+      due: "Rückgabe bis"
+      new_due: "Neues Rückgabedatum"
+      days: "Tage"
+      total: "Gesamt"
+      confirmation:
+        subject: "Mietbestätigung - RacketRent"
+        heading: "Ihre Miete wurde bestätigt!"
+        greeting: "Hallo %{name},"
+        body: "Ihre Schlägermiete wurde erfolgreich registriert. Hier sind die Details:"
+        return_note: "Bitte geben Sie den Schläger bis zum Fälligkeitsdatum zurück. Sie können Ihre Miete über die App verlängern."
+      extended:
+        subject: "Miete verlängert - RacketRent"
+        heading: "Miete verlängert"
+        greeting: "Hallo %{name},"
+        body: "Ihre Miete wurde um %{extra_days} Tag(e) verlängert."
+      reminder:
+        subject: "Rückgabeerinnerung - RacketRent"
+        heading: "Erinnerung an Schlägerrückgabe"
+        greeting: "Hallo %{name},"
+        body: "Dies ist eine Erinnerung, dass Ihre Miete für %{racket} heute fällig ist."
+        extend_note: "Falls Sie mehr Zeit benötigen, können Sie Ihre Miete direkt in der App verlängern."
+    stringing:
+      racket: "Schläger"
+      string_type: "Saite"
+      tension: "Bespannungshärte"
+      price: "Preis"
+      received:
+        subject: "Schläger erhalten zur Bespannung - RacketRent"
+        heading: "Wir haben Ihren Schläger erhalten"
+        greeting: "Hallo %{name},"
+        body: "Ihr Schläger wurde zur Bespannung angenommen. Hier sind die Details:"
+        note: "Wir benachrichtigen Sie, sobald Ihr Schläger zur Abholung bereit ist."
+      ready:
+        subject: "Ihr Schläger ist fertig! - RacketRent"
+        heading: "Ihr Schläger ist zur Abholung bereit!"
+        greeting: "Hallo %{name},"
+        body: "Gute Nachrichten! Die Bespannung Ihres Schlägers ist abgeschlossen und er kann abgeholt werden."
+        pickup_heading: "Abholzeiten"
+        day: "Datum"
+        hours: "Öffnungszeiten"
+        note: "Bitte holen Sie Ihren Schläger während der oben genannten Zeiten ab."

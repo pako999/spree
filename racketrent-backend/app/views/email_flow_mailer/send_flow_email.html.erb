@@ -1,0 +1,9 @@
+<%= @body.html_safe %>
+
+<br>
+<hr style="border: none; border-top: 1px solid #eeeeee; margin: 24px 0;">
+<p style="font-size: 11px; color: #999999;">
+  <a href="<%= @unsubscribe_url %>" style="color: #999999;"><%= I18n.t('mailer.unsubscribe') %></a>
+</p>
+
+<img src="<%= @tracking_url %>" width="1" height="1" style="display:none;" alt="">

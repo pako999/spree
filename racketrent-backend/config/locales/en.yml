@@ -1,0 +1,47 @@
+en:
+  mailer:
+    unsubscribe: "Unsubscribe from marketing emails"
+    rental:
+      racket: "Racket"
+      starts: "Start date"
+      due: "Return by"
+      new_due: "New return date"
+      days: "Days"
+      total: "Total"
+      confirmation:
+        subject: "Rental Confirmation - RacketRent"
+        heading: "Your Rental is Confirmed!"
+        greeting: "Hello %{name},"
+        body: "Your racket rental has been successfully registered. Here are the details:"
+        return_note: "Please return the racket by the due date. You can extend your rental via the app."
+      extended:
+        subject: "Rental Extended - RacketRent"
+        heading: "Rental Extended"
+        greeting: "Hello %{name},"
+        body: "Your rental has been extended by %{extra_days} day(s)."
+      reminder:
+        subject: "Return Reminder - RacketRent"
+        heading: "Rental Return Reminder"
+        greeting: "Hello %{name},"
+        body: "This is a reminder that your rental for %{racket} is due today."
+        extend_note: "If you need more time, you can extend your rental directly in the app."
+    stringing:
+      racket: "Racket"
+      string_type: "String"
+      tension: "Tension"
+      price: "Price"
+      received:
+        subject: "Racket Received for Stringing - RacketRent"
+        heading: "We've Received Your Racket"
+        greeting: "Hello %{name},"
+        body: "Your racket has been received for stringing. Here are the details:"
+        note: "We'll notify you as soon as your racket is ready for pickup."
+      ready:
+        subject: "Your Racket is Ready! - RacketRent"
+        heading: "Your Racket is Ready for Pickup!"
+        greeting: "Hello %{name},"
+        body: "Great news! Your racket stringing is complete and ready for pickup."
+        pickup_heading: "Pickup Times"
+        day: "Date"
+        hours: "Open Hours"
+        note: "Please pick up your racket during the available times above."

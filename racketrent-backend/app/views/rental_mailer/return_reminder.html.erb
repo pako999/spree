@@ -1,0 +1,7 @@
+<h2><%= I18n.t('mailer.rental.reminder.heading') %></h2>
+
+<p><%= I18n.t('mailer.rental.reminder.greeting', name: @customer.first_name) %></p>
+
+<p><%= I18n.t('mailer.rental.reminder.body', racket: "#{@racket.brand} #{@racket.model}") %></p>
+
+<p><%= I18n.t('mailer.rental.reminder.extend_note') %></p>

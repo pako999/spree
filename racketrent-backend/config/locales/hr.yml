@@ -1,0 +1,47 @@
+hr:
+  mailer:
+    unsubscribe: "Odjava od marketinških e-mailova"
+    rental:
+      racket: "Reket"
+      starts: "Datum početka"
+      due: "Povrat do"
+      new_due: "Novi datum povrata"
+      days: "Dana"
+      total: "Ukupno"
+      confirmation:
+        subject: "Potvrda najma - RacketRent"
+        heading: "Vaš najam je potvrđen!"
+        greeting: "Pozdrav %{name},"
+        body: "Vaš najam reketa je uspješno registriran. Evo detalja:"
+        return_note: "Molimo vratite reket do roka. Najam možete produžiti putem aplikacije."
+      extended:
+        subject: "Najam produžen - RacketRent"
+        heading: "Najam produžen"
+        greeting: "Pozdrav %{name},"
+        body: "Vaš najam je produžen za %{extra_days} dan(a)."
+      reminder:
+        subject: "Podsjetnik za povrat - RacketRent"
+        heading: "Podsjetnik za povrat reketa"
+        greeting: "Pozdrav %{name},"
+        body: "Ovo je podsjetnik da vaš najam za %{racket} danas istječe."
+        extend_note: "Ako trebate više vremena, možete produžiti najam direktno u aplikaciji."
+    stringing:
+      racket: "Reket"
+      string_type: "Žica"
+      tension: "Napetost"
+      price: "Cijena"
+      received:
+        subject: "Reket zaprimljen za navlačenje - RacketRent"
+        heading: "Zaprimili smo vaš reket"
+        greeting: "Pozdrav %{name},"
+        body: "Vaš reket je zaprimljen za navlačenje žica. Evo detalja:"
+        note: "Obavijestit ćemo vas čim vaš reket bude spreman za preuzimanje."
+      ready:
+        subject: "Vaš reket je spreman! - RacketRent"
+        heading: "Vaš reket je spreman za preuzimanje!"
+        greeting: "Pozdrav %{name},"
+        body: "Odlične vijesti! Navlačenje vašeg reketa je završeno i spreman je za preuzimanje."
+        pickup_heading: "Vremena preuzimanja"
+        day: "Datum"
+        hours: "Radno vrijeme"
+        note: "Molimo preuzmite vaš reket u gore navedenim terminima."
