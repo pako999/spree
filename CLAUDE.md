@@ -1,551 +1,176 @@
-# Claude Code Rules for Spree Commerce Development
+# Surf-Store Spree Project — Claude Code Context
 
-## General Development Guidelines
+## Project Overview
 
-### Framework & Architecture
+Spree Commerce-based surf/kitesurfing shop at **https://www.surf-store.com**
+- Ruby on Rails 8 + Spree 5.4 (headless + custom storefront)
+- Deployed via **Kamal** (Docker) on Hetzner server
+- PostgreSQL 14 (running in Docker on production server)
+- GitHub: https://github.com/pako999/spree
 
-- Spree is built on Ruby on Rails and follows MVC architecture
-- All Spree code must be namespaced under `Spree::` module
-- Spree is distributed as Rails engines with separate packages:
-  - **Core packages (required):** `spree_core` (models, services, business logic), `spree_api` (Storefront API, Platform API, Webhooks)
-  - **Optional packages:** `spree_admin` (admin dashboard), `spree_cli` (CLI tool), `spree_storefront` (Rails storefront), `spree_emails` (transactional emails), `spree_page_builder` (visual page builder), `spree_sample` (sample data), `spree_dev_tools` (development/testing utilities)
-- Most users run Spree in headless mode with custom frontends using the Storefront API
-- Follow Rails conventions and the Rails Security Guide
-- Prefer Rails idioms and standard patterns over custom solutions
+## Repository Structure
 
-### Code Organization
-
-- Place all models in `app/models/spree/` directory
-- Place all controllers in `app/controllers/spree/` directory  
-- Place all views in `app/views/spree/` directory
-- Place all services in `app/services/spree/` directory
-- Place all mailers in `app/mailers/spree/` directory
-- Place all API serializers in `app/serializers/spree/` directory
-- Place all helpers in `app/helpers/spree/` directory
-- Place all jobs in `app/jobs/spree/` directory
-- Place all presenters in `app/presenters/spree/` directory
-- Use consistent file naming: `spree/product.rb` for `Spree::Product` class
-- Group related functionality into concerns when appropriate
-- Do not call `Spree::User` directly, use `Spree.user_class` instead
-- Do not call `Spree::AdminUser` directly, use `Spree.admin_user_class` instead
-
-## Naming Conventions & Structure
-
-### Classes & Modules
-
-```ruby
-# ✅ Correct naming
-module Spree
-  class Product < Spree.base_class
-  end
-end
-
-module Spree
-  module Admin
-    class ProductsController < ResourceController
-    end
-  end
-end
-
-# ❌ Incorrect - missing namespace
-class Product < ApplicationRecord
-end
+```
+spree/
+├── sandbox/          ← Main application (this is the Rails app)
+│   ├── app/
+│   ├── config/
+│   │   ├── deploy.yml        ← Kamal deploy config
+│   │   └── storage.yml       ← ActiveStorage (local disk service)
+│   ├── lib/tasks/            ← Import/maintenance rake tasks
+│   └── script/               ← One-off runner scripts
+├── api/              ← Spree API engine (gem source)
+├── core/             ← Spree Core engine (gem source)
+└── admin/            ← Spree Admin engine (gem source)
 ```
 
-Always inherit from `Spree.base_class` when creating models.
+## Production Server
 
-### File Paths
+- **IP:** 46.224.5.25 (Hetzner, Ubuntu 24.04)
+- **SSH:** `ssh ubuntu@46.224.5.25`
+- **Domain:** www.surf-store.com
+- **Container name:** `surf-store`
+- **App port:** 3000 (internal), Nginx proxies 80/443
+- **Database:** `my_kite_shop_production` (PostgreSQL, user: ubuntu, pass: kite, host: 127.0.0.1)
 
-- Models: `app/models/spree/product.rb`
-- Controllers: `app/controllers/spree/admin/products_controller.rb`
-- Views: `app/views/spree/admin/products/`
-- Decorators: `app/models/spree/product_decorator.rb`
+## Deployment
 
-## Model Development
-
-### Model Patterns
-
-- Use ActiveRecord associations appropriately, always pass `class_name` and `dependent` options
-- Implement concerns for shared functionality
-- Use scopes for reusable query patterns
-- Include `Spree::Metafields` concern for models that need metadata support
-- Don't use enums, use string columns instead
-- For models that require state machine, please use https://github.com/state-machines/state_machines-activerecord gem, default column should be `status`, legacy models use `state`
-- Don't ever cast IDs to integer, we need to support also UUIDs so please always treat IDs as strings
-
-```ruby
-# ✅ Good model structure
-class Spree::Product < Spree.base_class
-  include Spree::Metafields
-  
-  has_many :variants, class_name: 'Spree::Variant', dependent: :destroy
-  
-  scope :available, -> { where(available_on: ..Time.current) }
-  
-  validates :name, presence: true
-  validates :slug, presence: true, uniqueness: { scope: spree_base_uniqueness_scope }
-end
+### Deploy new code changes:
+```bash
+cd sandbox
+bin/kamal deploy
 ```
 
-For uniqueness validation, always use `scope: spree_base_uniqueness_scope`
+### Quick: copy a file and restart (faster than full deploy):
+```bash
+# Copy single file to container
+docker cp ./sandbox/lib/tasks/some_task.rb surf-store:/rails/lib/tasks/some_task.rb
 
-## Controller Development
-
-### Controller Inheritance
-
-- Admin controllers inherit from `Spree::Admin::ResourceController` which handles most of CRUD operations
-- Store API controllers inherit from `Spree::Api::V3::Store::ResourceController`
-- Storefront controllers inherit from `Spree::StoreController`
-
-### Parameter Handling
-
-- Always use strong parameters
-- Always use `Spree::PermittedAttributes` to define allowed parameters for each resource
-
-```ruby
-# ✅ Proper parameter handling
-def permitted_product_params
-  params.require(:product).permit(Spree::PermittedAttributes.product_attributes)
-end
+# Restart app
+ssh ubuntu@46.224.5.25 "docker restart surf-store"
 ```
 
-## API Development
-
-### Serializers
-
-API v3 uses [Alba serializers](https://github.com/okuramasafumi/alba) located in `api/app/serializers/spree/api/v3/`. We have separate serializers for Store and Admin APIs:
-
-- **Store serializers** (`app/serializers/spree/api/v3/`) - Customer-facing, limited data
-- **Admin serializers** (`app/serializers/spree/api/v3/admin/`) - Full access, extends store serializers
-
-Admin serializers inherit from store serializers and add additional fields.
-
-```ruby
-# Store serializer - customer-facing
-module Spree::Api::V3
-  class ProductSerializer < BaseSerializer
-    typelize purchasable: :boolean, in_stock: :boolean, price: 'number | null'
-
-    attributes :id, :name, :description, :slug, :price
-  end
-end
-
-# Admin serializer - extends store with admin-only fields
-module Spree::Api::V3::Admin
-  class ProductSerializer < V3::ProductSerializer
-    typelize cost_price: 'number | null', private_metadata: 'Record<string, unknown> | null'
-
-    attributes :status, :cost_price, :private_metadata
-  end
-end
+### Run Rails commands on server:
+```bash
+ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rails runner 'puts Spree::Product.count'"
+ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rake some:task"
 ```
 
-Never use `typelize_from` in serializers this causes serializers to connnect to the database.
-
-### TypeScript Type Generation
-
-We use [typelizer](https://github.com/skryukov/typelizer) to generate TypeScript types from Alba serializers:
-
-- Types are generated to `sdk/src/types/generated/`
-- Store types: `StoreProduct`, `StoreOrder`, etc.
-- Admin types: `AdminProduct`, `AdminOrder`, etc.
-- Run `bundle exec rake typelizer:generate` to regenerate types
-
-### Serializer DSL
-
-- `typelize attr: :type` - Define types for computed/delegated attributes
-- Use `Spree.api.serializer_name` for configurable serializer references
-
-### API Authentication
-
-API uses Publishable and Secret API Keys for authentication. Publishable works for Store API and Secret for Admin API, both are passed via headers `x-spree-api-key`.
-
-User authentication uses JWT tokens, passed via headers `Authorization: Bearer <token>`.
-
-## Events System
-
-When adding new functionality that other parts of the system (or external integrations) might need to react to, fire events using Spree's event system:
-
-```ruby
-order.publish_event('order.completed')
+### Run a script on server:
+```bash
+# Upload and run
+scp sandbox/script/my_script.rb ubuntu@46.224.5.25:/tmp/
+ssh ubuntu@46.224.5.25 "docker cp /tmp/my_script.rb surf-store:/rails/tmp/ && docker exec surf-store bundle exec rails runner /rails/tmp/my_script.rb"
 ```
 
-Place subscriber classes in `app/subscribers/spree/` directory:
-
-```ruby app/subscribers/spree/order_completed_subscriber.rb
-module Spree
-  class OrderCompletedSubscriber < Spree::Subscriber
-    subscribes_to 'order.complete'
-
-    def handle(event)
-      order_id = event.payload['id']
-      order = Spree::Order.find_by(id: order_id)
-      return unless order
-
-      # Your custom logic here
-      ExternalService.notify_order_placed(order)
-    end
-  end
-end
+### View logs:
+```bash
+ssh ubuntu@46.224.5.25 "docker logs surf-store --tail 100 -f"
+ssh ubuntu@46.224.5.25 "docker exec surf-store tail -f /rails/log/production.log"
 ```
 
-For new models that publish events, please add `publishes_lifecycle_events` concern to the model.
+## Key Environment Variables (on server)
 
-You also need to create an event serializer for the model, see [Events](docs/developer/core-concepts/events.mdx) for more details.
+Set in Docker via Kamal secrets (`.kamal/secrets`):
+- `RAILS_MASTER_KEY` — required for credential decryption
+- `RAILS_STORAGE=cloudflare` — ActiveStorage service name
+- `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — Cloudflare R2 (legacy, now using local)
+- `POSTGRES_PASSWORD=kite`
+- `RAILS_ENV=production`
 
-## Dependencies System
+## ActiveStorage Configuration
 
-When building services that users might want to swap out, register them in `Spree::Dependencies`:
+- **Service:** Local disk (`/rails/storage/` inside container)
+- **Docker volume:** `sandbox_storage` (persisted across restarts)
+- **Volume path:** `/var/lib/docker/volumes/sandbox_storage/_data/` (on host)
+- Files stored at: `storage/XX/YY/KEY` (2-level hash directory)
 
-```ruby
-# In the dependency configuration
-Spree::Dependencies.cart_add_item_service = 'Spree::Cart::AddItem'
+## Database Access
+
+```bash
+# From host:
+ssh ubuntu@46.224.5.25 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
+
+# From inside container:
+ssh ubuntu@46.224.5.25 "docker exec -it surf-store bash -c 'cd /rails && bundle exec rails dbconsole'"
 ```
 
-This allows users to replace services without modifying core code.
+## Key Product Import Sheets (Google Sheets)
 
-## Admin Development
+These are all Shopify-format CSVs used to import product data and images.
+Column `Variant Barcode` = EAN, `Image Src` = product image URL, `Variant Image` = variant image URL.
 
-When adding new resources to the admin, you need to register tables and navigation.
+| Brand | Sheet URL |
+|-------|-----------|
+| ION Water (main) | `1I0HNNCyuTl1PJFV-3n5kn6Fz6Bk-02BFz7nlB4hjIHg` |
+| ION Full | `1eo5WMuZzw6sM_4b40lOf6Dlw6IT0v59RU61xnyxbRz0` |
+| Duotone Wing 2026 | `1nK_RowVZP5KDYU1WKjIyJGeOPgVJm-uIspuXPcQjOS0` |
+| Duotone Wingfoil 2026 | `1OXb4No4pzBs8hwbMB7q17jMV17HTV37Nl7kwagn2OjY` |
+| Duotone Windsurf DTW26 | `1fNVzmPICVpOb6CnpqFMAT-s8VueeDyZajXL0r8Qf5RQ` |
+| Gaastra/Tabou | `1WQpNTIi5xcZi4pmjZoaokliFEmwxiKLCJvLdSXp3bC4` |
+| Cabrinha | `1nk-NW2QXQo6uTGr00AJ2q62svZS_q3muS7_SKQVZc_s` |
 
-### Admin Tables
+To download: `curl -sL "https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv" -o /tmp/sheet.csv`
 
-For rendering records lists in Admin always use [Admin Tables](docs/developer/admin/tables.mdx)
-Register new tables in `admin/config/initializers/spree_admin_tables.rb`:
+## Image Restore Workflow
 
-```ruby
-Rails.application.config.after_initialize do
-  # Register the table
-  Spree.admin.tables.register(:gift_cards, model_class: Spree::GiftCard, search_param: :multi_search)
+If product images are missing (ENOENT 500 errors):
 
-  # Add columns
-  Spree.admin.tables.gift_cards.add :code,
-                                    label: :code,
-                                    type: :string,
-                                    sortable: true,
-                                    filterable: true,
-                                    default: true,
-                                    position: 10
+```bash
+# 1. Find missing blobs
+ssh ubuntu@46.224.5.25 "docker run --rm -v sandbox_storage:/storage:ro -v /tmp/blobs.txt:/blobs.txt python:3.11-slim python3 -c '...'"
 
-  Spree.admin.tables.gift_cards.add :balance,
-                                    label: :balance,
-                                    type: :currency,
-                                    sortable: true,
-                                    default: true,
-                                    position: 20
+# 2. Build filename→URL index from all CSVs (local)
+python3 sandbox/lib/tasks/restore_images.rb  # see script for details
 
-  Spree.admin.tables.gift_cards.add :status,
-                                    label: :status,
-                                    type: :custom,
-                                    filter_type: :status,
-                                    sortable: true,
-                                    filterable: true,
-                                    default: true,
-                                    position: 30,
-                                    partial: 'spree/admin/tables/columns/gift_card_status'
-end
+# 3. Run Python restore container
+docker run -v sandbox_storage:/storage -v /tmp/missing.txt:/missing.txt -v /tmp/urls.json:/urlindex.json python:3.11-slim python3 /restore.py
 ```
 
-Column types: `:string`, `:currency`, `:date`, `:datetime`, `:boolean`, `:custom` (requires `partial`)
+Key scripts:
+- `sandbox/lib/tasks/restore_images.rb` — Rails runner: find+restore missing blobs
+- `sandbox/lib/tasks/redownload_missing_images.rb` — EAN-based restore from CSVs
+- `/tmp/restore_missing_images.py` — Pure Python restore (no Rails, faster)
 
-### Admin Navigation
+## Backups
 
-Register navigation items in `admin/config/initializers/spree_admin_navigation.rb`:
+- **Database:** Daily at 3am via cron → `/home/ubuntu/backups/` (7-day retention)
+- **Storage:** Included in `full_backup.sh` → `/home/ubuntu/backups/storage-YYYY-MM-DD.tar.gz`
 
-```ruby
-Rails.application.config.after_initialize do
-  # Sidebar navigation
-  sidebar_nav = Spree.admin.navigation.sidebar
+```bash
+# Manual DB backup:
+ssh ubuntu@46.224.5.25 "~/backup_db.sh"
 
-  # Simple item
-  sidebar_nav.add :reports,
-          label: :reports,
-          url: :admin_reports_path,
-          icon: 'chart-bar',
-          position: 60,
-          if: -> { can?(:manage, Spree::Report) }
-
-  # Item with submenu
-  sidebar_nav.add :products,
-          label: :products,
-          url: :admin_products_path,
-          icon: 'package',
-          position: 30,
-          if: -> { can?(:manage, Spree::Product) } do |products|
-
-    products.add :price_lists,
-                label: :price_lists,
-                url: :admin_price_lists_path,
-                position: 10,
-                if: -> { can?(:manage, Spree::PriceList) }
-
-    products.add :stock,
-                label: :stock,
-                url: :admin_stock_items_path,
-                position: 20,
-                if: -> { can?(:manage, Spree::StockItem) }
-  end
-
-  # Settings navigation
-  settings_nav = Spree.admin.navigation.settings
-
-  settings_nav.add :payment_methods,
-          label: :payments,
-          url: :admin_payment_methods_path,
-          icon: 'credit-card',
-          position: 70,
-          active: -> { controller_name == 'payment_methods' },
-          if: -> { can?(:manage, Spree::PaymentMethod) }
-
-  # Tab navigation (for pages with tabs)
-  tax_tabs_nav = Spree.admin.navigation.tax_tabs
-
-  tax_tabs_nav.add :tax_rates,
-          label: :tax_rates,
-          url: :admin_tax_rates_path,
-          position: 10,
-          if: -> { can?(:manage, Spree::TaxRate) }
-end
+# Manual full backup (DB + storage):
+ssh ubuntu@46.224.5.25 "~/full_backup.sh"
 ```
 
-Navigation options:
-- `label` - Translation key or string
-- `url` - Route helper symbol or lambda
-- `icon` - Tabler icon name (see https://tabler.io/icons)
-- `position` - Sort order (lower = higher)
-- `if` - Lambda for conditional display
-- `active` - Lambda for active state detection
-- `badge` - Lambda returning badge text
-- `badge_class` - CSS class for badge
+## Common Tasks
 
-## Testing
-
-Always run tests before committing changes. Always run tests after making changes.
-
-### Test Application
-
-To run tests you need to create test app with `bundle exec rake test_app` in every gem directory (eg. admin, api, core, etc.)
-
-This will create a dummy rails application and run migrations. If there's already a dummy app in the gem directory, you can skip this step.
-
-### Test Structure
-
-- Use RSpec for testing and Factory Bot for creating test data
-- As much as you can use build vs create for Factories to speed up tests
-- Be very pragmatic, and don't over-engineer tests, don't repeat same tests in multiple places, tests must be fast
-- Create test app with `bundle exec rake test_app` in every gem directory (eg. admin, api, core, etc.)
-- Place specs in appropriate directories matching app structure
-- For controller specs always add `render_views` to the test
-- For controller spec authentication use `stub_authorization!`
-- Don't create test scenarios for standard rails validation, only for custom validations
-- For time-based testing / operations use `Timecop` gem
-- Be pragmatic, and don't over-engineer tests, don't repeat same tests in multiple places
-
-```ruby
-# ✅ Proper spec structure
-require 'spec_helper'
-
-RSpec.describe Spree::Product, type: :model do
-  let(:product) { create(:product) }
-  
-  describe '#custom_method' do
-    it 'returns expected result' do
-      expect(product.custom_method).to eq('EXPECTED')
-    end
-  end
-end
+### Add images to products from a Google Sheet:
+```bash
+curl -sL "https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv" -o /tmp/sheet.csv
+scp /tmp/sheet.csv ubuntu@46.224.5.25:/tmp/products_sheet.csv
+ssh ubuntu@46.224.5.25 "docker cp /tmp/products_sheet.csv surf-store:/rails/tmp/ && docker exec surf-store bundle exec rake images:import_from_csv CSV_PATH=/rails/tmp/products_sheet.csv"
 ```
 
-### Factory Usage
-
-- Use `create` for persisted objects in tests
-- Use `build` for non-persisted objects, recommended as it's much faster than `create`
-- Add new factories in `lib/spree/testing_support/factories/`
-
-```ruby
-# ✅ Proper factory usage
-let(:product) { create(:product, name: 'Test Product') }
-let(:variant) { build(:variant, product: product) }
+### Check 500 image errors:
+```bash
+ssh ubuntu@46.224.5.25 "docker logs surf-store --since 1h 2>&1 | grep ENOENT | head -20"
 ```
 
-## Security
-
-### Authentication & Authorization
-
-- Follow Rails Security Guide principles
-- Define permissions in Permission Sets, see [Permissions](/docs/developer/customization/permissions.mdx) for more details
-- Implement proper authorization checks with CanCanCan
-- Validate all user inputs
-- In Admin controllers inheriting from `Spree::Admin::ResourceController` will automatically secure all actions
-- Authentication is handled by app developers, by default we provide Devise installer, always use `Spree.user_class` to access the user model for Customers and `Spree.admin_user_class` to access the user model for Admins
-
-### Parameter Security
-
-- Never permit mass assignment without validation
-- Spree uses `Spree::PermittedAttributes` to define allowed parameters for each resource globally
-- Use allowlists, not blocklists for parameters
-- Sanitize user inputs appropriately
-
-## Database & Migrations
-
-### Migration Patterns
-
-- Follow Rails migration conventions
-- Use proper indexing for performance
-- Do not include foreign key constraints
-- Use descriptive migration names with timestamps
-- Try to limit number of migrations to 1 per feature
-- Avoid using default values in migrations
-- Always add `null: false` to required columns
-- Always try to combine multiple migrations into one if possible when developing a new feature
-- If new feature require transformation of existing data please add a rake task to do the transformation, never do it in a migration
-- Add unique indexes to columns that are used for uniqueness validation
-- By default add `deleted_at` column to all tables that have soft delete functionality (we use `paranoia` gem)
-- For migrations please use 7.2 as the target version as we still support Rails 7.2
-
-```ruby
-# ✅ Proper migration structure
-class CreateSpreeMetafields < ActiveRecord::Migration[7.2]
-  def change
-    create_table :spree_metafields do |t|
-      t.string :key, null: false
-      t.text :value, null: false
-      t.string :kind, null: false
-      t.string :visibility, null: false
-      t.references :resource, polymorphic: true, null: false
-      t.timestamps
-    end
-    
-    add_index :spree_metafields, [:resource_type, :resource_id, :key, :visibility], 
-              name: 'index_spree_metafields_on_resource_and_key_and_visibility'
-  end
-end
+### Purge orphaned variant records:
+```bash
+ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rails runner 'ActiveStorage::VariantRecord.joins(\"LEFT JOIN active_storage_blobs ON active_storage_blobs.id = active_storage_variant_records.blob_id\").where(active_storage_blobs: {id: nil}).delete_all'"
 ```
 
-### Database Design
+## Code Style (AGENTS.md rules apply)
 
-- Use appropriate column types and constraints
-- Implement proper foreign key relationships
-- Consider indexing for query performance
-- Use polymorphic associations when appropriate
-
-## Frontend Development
-
-### Admin Interface
-
-- Use Spree's admin styling conventions
-- Use as much as possible Turbo Rails features (Hotwire)
-- Use Stimulus controllers for JavaScript interactions
-- Please use [Admin Components](docs/developer/admin/components.mdx) for elements such as dialogs, drawers, dropdowns, and more.
-- Please use [Spree::Admin::FormBuilder](docs/developer/admin/form-builder.mdx) methods for form fields
-- For rendering record lists please use [Admin Tables](docs/developer/admin/tables.mdx)
-
-For create new resource form:
-
-```erb
-<!-- ✅ Proper admin form structure -->
-<%= render 'spree/admin/shared/new_resource' %>
-```
-
-For edit resource form:
-
-```erb
-<%= render 'spree/admin/shared/edit_resource' %>
-```
-
-And the re-usable form partial should be in `app/views/spree/admin/products/_form.html.erb`, eg.
-
-```erb
-<div class="card mb-6">
-  <div class="card-header">
-    <h5 class="card-title">
-      <%= Spree.t(:general_settings) %>
-    </h5>
-  </div>
-
-  <div class="card-body">
-    <%= f.spree_text_field :name %>
-    <%= f.spree_rich_text_area :description %>
-    <%= f.spree_check_box :active %>
-  </div>
-</div>
-```
-
-## Performance & Best Practices
-
-### Query Optimization
-
-- We're using ar_lazy_preload gem to avoid N+1 queries, however please use includes/preload to avoid N+1 queries as much as possible
-- Implement proper database indexing
-- Use scopes for reusable query logic
-- Consider caching for expensive operations
-
-```ruby
-# ✅ Optimized queries
-products = Spree::Product.includes(:variants, :thumbnail)
-                         .where(available_on: ..Time.current)
-                         .order(:name)
-```
-
-### Caching
-
-- Use Rails caching mechanisms appropriately (via `Rails.cache`)
-- Cache expensive calculations and queries, however caching one query is not recommended
-- Implement cache invalidation strategies, use Rails `cache_key_with_version` when constructing custom cache keys
-- Consider fragment caching for views
-
-### Code Quality
-
-- Follow Ruby style guidelines
-- Keep methods small and focused
-- Use meaningful variable and method names
-- Write self-documenting code with appropriate comments
-- Avoid deep nesting and complex conditionals
-- Avoid business logic in controllers, move that to models and use concerns
-- Use services only when necessary, we should as much as we possible use standard Rails models and Concerns
-- Use concerns for reusable code
-
-## Documentation & Comments
-
-### Code Documentation
-
-- Document complex business logic
-- Explain non-obvious code patterns
-- Use YARD documentation format for public APIs
-- Keep comments up-to-date with code changes
-
-## Error Handling
-
-### Exception Management
-
-- Use Rails error reporter - https://guides.rubyonrails.org/error_reporting.html
-- Use appropriate exception classes
-- Provide meaningful error messages
-- Implement proper error recovery where possible
-
-```ruby
-# ✅ Proper error handling
-def process_payment
-  payment_service.call
-rescue Spree::PaymentProcessingError => e
-  Rails.error.report e
-  flash[:error] = I18n.t('spree.payment_processing_failed')
-  false
-end
-```
-
-This document should be updated as Spree evolves and new patterns emerge. Always refer to the official Spree documentation for the most current practices and guidelines.
-
-## Routes
-
-- Always use `spree.` routes engine when using routes in views and controllers
-
-## Internationalization
-
-- Use Rails 18n for internationalization
-- Use `Spree.t` for translations
-- Please keep admin translations in `admin/config/locales/en.yml`
-- Please keep storefront translations in `storefront/config/locales/en.yml`
-- Please keep all other translations in `config/locales/en.yml`
-- Please do not repeat translations in multiple files, use `Spree.t` instead
-- Please try to use existing translations as much as possible
+See `AGENTS.md` at repo root for full Spree coding conventions.
+Key rules:
+- All models/controllers under `Spree::` namespace
+- Use `Spree.user_class` not `Spree::User` directly  
+- No foreign key constraints in migrations
+- Use `Spree.base_class` for model inheritance
+- `spree.` route prefix in views/controllers
+- Tests in RSpec with Factory Bot
