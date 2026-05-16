@@ -1,130 +1,100 @@
-require "aws-sdk-s3"
-require "marcel"
+require 'open-uri'
+require 'fileutils'
+require 'json'
 
-client = Aws::S3::Client.new(
-  access_key_id: "ac7e3bbb7ccc50ddabb46b395fbac80e",
-  secret_access_key: "24077a93b38c5e4cb6076ed7d8dcc1c1affa02ec78f6fd4d077d55ac73a1fba3",
-  region: "auto",
-  endpoint: "https://8b7e078431b06069d14ce4bd18839679.r2.cloudflarestorage.com"
-)
+puts "=== Comprehensive Image Restore by Filename ==="
+puts "Time: #{Time.current}"
+puts ""
 
-BUCKET = "surf-store-storage"
-local = ActiveStorage::Blob.service
-storage_root = Rails.root.join("storage")
+STORAGE_ROOT = '/rails/storage'
 
-# Step 1: Download missing blob files from R2 to local disk
-puts "=== Step 1: Download missing blob files from R2 ==="
-db_keys = Set.new(ActiveStorage::Blob.pluck(:key))
-downloaded = 0
-already_local = 0
-not_in_r2 = 0
+def blob_path(key)
+  File.join(STORAGE_ROOT, key[0, 2], key[2, 2], key)
+end
 
-db_keys.each_with_index do |key, idx|
-  next if local.exist?(key)
-  
-  r2_key = "#{key[0..1]}/#{key[2..3]}/#{key}"
+# ── 1. Build filename → CDN URL index ────────────────────────────────────────
+json_path = '/rails/tmp/filename_to_url.json'
+puts "Loading filename→URL index..."
+filename_to_url = JSON.parse(File.read(json_path))
+puts "  #{filename_to_url.size} mappings loaded"
+puts ""
+
+# ── 2. Get missing blobs using SQL + filesystem check (batched) ──────────────
+puts "Finding missing blob files..."
+
+# Get all distinct asset blob keys+filenames in one query
+rows = ActiveRecord::Base.connection.execute(<<~SQL)
+  SELECT DISTINCT b.key, b.filename
+  FROM active_storage_blobs b
+  INNER JOIN active_storage_attachments a ON a.blob_id = b.id
+  WHERE a.record_type = 'Spree::Asset'
+  ORDER BY b.key
+SQL
+
+total = rows.count
+puts "Total asset blobs in DB: #{total}"
+
+missing = rows.select { |r| !File.exist?(blob_path(r['key'])) }
+puts "Missing from disk:       #{missing.size}"
+puts ""
+
+# ── 3. Download missing files ─────────────────────────────────────────────────
+puts "=== Downloading ==="
+
+restored    = 0
+no_url      = 0
+failed      = 0
+failed_list = []
+
+missing.each_with_index do |row, idx|
+  print "\r[#{idx+1}/#{missing.size}] ✓#{restored} ✗#{failed} ?#{no_url}" if (idx % 10).zero?
+
+  key      = row['key']
+  filename = row['filename']
+  cdn_url  = filename_to_url[filename] || filename_to_url.find { |k, _| k.downcase == filename.downcase }&.last
+
+  unless cdn_url
+    no_url += 1
+    failed_list << "#{key}|#{filename}|NO_URL"
+    next
+  end
+
+  target = blob_path(key)
+  FileUtils.mkdir_p(File.dirname(target))
+
   begin
-    resp = client.get_object(bucket: BUCKET, key: r2_key)
-    data = resp.body.read
-    local.upload(key, StringIO.new(data))
-    downloaded += 1
-  rescue Aws::S3::Errors::NotFound
-    not_in_r2 += 1
+    data = URI.open(cdn_url,
+      "User-Agent" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      read_timeout: 30, open_timeout: 10
+    ).read
+    File.binwrite(target, data)
+    restored += 1
+    print "✓"
+  rescue OpenURI::HTTPError => e
+    failed += 1
+    failed_list << "#{key}|#{filename}|#{e.message[0,50]}"
+    print "✗"
   rescue => e
-    not_in_r2 += 1
+    failed += 1
+    failed_list << "#{key}|#{filename}|#{e.class}"
+    print "!"
   end
-  
-  print "\r  Progress: #{idx+1}/#{db_keys.size} (downloaded: #{downloaded})..." if (idx+1) % 500 == 0
+  STDOUT.flush
 end
 
-puts "\n  Downloaded from R2: #{downloaded}"
-puts "  Not in R2: #{not_in_r2}"
+puts "\n"
+puts "=== DONE ==="
+puts "Total missing:    #{missing.size}"
+puts "Restored:         #{restored}"
+puts "No URL in index:  #{no_url}"
+puts "Download failed:  #{failed}"
+puts "Finished: #{Time.current}"
 
-# Step 2: Find orphaned local files and try to create blob records + match to products
-puts "\n=== Step 2: Restore orphaned local files to DB ==="
-disk_keys = Set.new
-Dir.glob(File.join(storage_root, "**", "*")).each do |path|
-  next if File.directory?(path)
-  key = File.basename(path)
-  next if key == ".keep"
-  disk_keys.add(key)
-end
-
-current_db_keys = Set.new(ActiveStorage::Blob.pluck(:key))
-orphaned = disk_keys - current_db_keys
-puts "  Orphaned disk files: #{orphaned.size}"
-
-# Create blob records for orphaned files
-created_blobs = 0
-orphaned.each do |key|
-  path = File.join(storage_root, key[0..1], key[2..3], key)
-  next unless File.exist?(path)
-  
-  data = File.read(path, mode: "rb")
-  
-  # Detect content type from magic bytes
-  content_type = Marcel::MimeType.for(StringIO.new(data))
-  next unless content_type&.start_with?("image/")
-  
-  checksum = Digest::MD5.base64digest(data)
-  
-  begin
-    ActiveStorage::Blob.create!(
-      key: key,
-      filename: "recovered_#{key}.#{content_type.split('/').last}",
-      content_type: content_type,
-      byte_size: data.bytesize,
-      checksum: checksum,
-      service_name: "local",
-      metadata: {}
-    )
-    created_blobs += 1
-  rescue => e
-    # skip duplicates
+if failed_list.any?
+  File.write('/rails/tmp/restore_failed.txt', failed_list.join("\n"))
+  puts "\nFailed list → /rails/tmp/restore_failed.txt"
+  puts "Sample NO_URL (need to find CDN):"
+  failed_list.select { |l| l.include?('NO_URL') }.first(8).each do |l|
+    puts "  #{l.split('|')[1]}"
   end
 end
-puts "  Created blob records: #{created_blobs}"
-
-# Step 3: Try to match recovered blobs to products without images
-puts "\n=== Step 3: Match recovered blobs to products ==="
-# Get products without master images
-missing_products = Spree::Product.published
-  .joins(:master)
-  .left_joins(master: :images)
-  .where(spree_assets: { id: nil })
-  .includes(:master)
-  .to_a
-
-puts "  Products needing images: #{missing_products.size}"
-
-# Get unattached image blobs (blobs that have no attachment)
-unattached_blobs = ActiveStorage::Blob
-  .left_joins(:attachments)
-  .where(active_storage_attachments: { id: nil })
-  .where("content_type LIKE 'image/%'")
-  .where("byte_size > 10000")
-  .order(created_at: :desc)
-  .to_a
-
-puts "  Unattached image blobs available: #{unattached_blobs.size}"
-
-# We can't automatically match blobs to specific products without filenames
-# But we can report what we have
-puts "\n=== Summary ==="
-working_images = 0
-broken_images = 0
-Spree::Image.includes(attachment_attachment: :blob).find_each do |img|
-  b = img.attachment&.blob rescue nil
-  next unless b
-  if local.exist?(b.key)
-    working_images += 1
-  else
-    broken_images += 1
-  end
-end
-
-puts "Total images: #{Spree::Image.count}"
-puts "Working (file on disk): #{working_images}"
-puts "Broken (no file): #{broken_images}"
-puts "Products without images: #{missing_products.size}"
-puts "Unattached blobs: #{unattached_blobs.size}"

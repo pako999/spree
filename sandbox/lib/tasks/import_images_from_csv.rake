@@ -76,13 +76,18 @@ namespace :images do
 
       # Check if the product's master already has a working image
       # (not the "Untitled design.png" placeholder)
+      storage_root = Rails.root.join('storage').to_s
       master_images = product.master.images.includes(attachment_attachment: :blob)
       has_real_image = master_images.any? do |img|
         blob = img.attachment&.blob rescue nil
         next false unless blob
         fname = blob.filename.to_s
-        # Skip placeholder images
-        fname != "Untitled design.png" && fname != "placeholder.png"
+        # Skip placeholder / coming-soon images
+        next false if fname.match?(/untitled design|placeholder|coming.?soon|image_coming_soon/i)
+        # Also verify file actually exists on disk
+        key = blob.key
+        file_path = File.join(storage_root, key[0, 2], key[2, 2], key)
+        File.exist?(file_path)
       end
 
       if has_real_image
