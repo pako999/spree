@@ -31,6 +31,7 @@
     <% variant_options = spree_image_variant_options(resize_to_fit: [nil, cdn_height * 3]) %>
     <%= image_tag main_app.cdn_image_url(logo.variant(variant_options)), class: img_class, alt: current_store.name + " logo", style: logo_style, height: cdn_height %>
   <% else %>
-    <h1 class='text-lg text-center uppercase'><%= current_store.name %></h1>
+    <%# Fallback: static logo from public/images when AS attachment is missing %>
+    <img src="/images/surfstore-logo.webp" alt="<%= current_store.name %>" class="w-auto h-[33px] md:h-[40px]" height="40" />
   <% end %>
 <% end %>
