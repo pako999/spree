@@ -1,9 +1,9 @@
 name: Deploy to Production
 
 on:
-  workflow_dispatch:  # manual trigger only until SSH connectivity is fixed
-  # push:
-  #   branches: [main]
+  workflow_dispatch:  # allow manual runs from the Actions tab
+  push:
+    branches: [main]
 
 jobs:
   deploy:
