@@ -8,8 +8,9 @@
 #   4. Products NOT found in sheet → images untouched
 #
 # Usage:
-#   SHEET=cabrinha  bundle exec rails runner /rails/tmp/reimport_by_ean.rb
-#   SHEET=ion       bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=cabrinha      bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=ion           bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=tabou_gaastra bundle exec rails runner /rails/tmp/reimport_by_ean.rb
 
 require 'csv'
 require 'net/http'
@@ -38,6 +39,13 @@ SHEETS = {
     img_src_col:   'Image Src',
     variant_col:   'Variant Image',
     master_only:   false,
+  },
+  "tabou_gaastra" => {
+    url:           'https://docs.google.com/spreadsheets/d/1WQpNTIi5xcZi4pmjZoaokliFEmwxiKLCJvLdSXp3bC4/export?format=csv',
+    ean_col:       'GTIN',
+    name_col:      'ItemName',
+    img_cols:      (0..6).map { |i| "ImageURLpng#{i}" },
+    master_only:   true,  # all images → master variant
   },
 }.freeze
 
