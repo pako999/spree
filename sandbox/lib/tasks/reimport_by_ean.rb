@@ -8,9 +8,12 @@
 #   4. Products NOT found in sheet → images untouched
 #
 # Usage:
-#   SHEET=cabrinha      bundle exec rails runner /rails/tmp/reimport_by_ean.rb
-#   SHEET=ion           bundle exec rails runner /rails/tmp/reimport_by_ean.rb
-#   SHEET=tabou_gaastra bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=cabrinha         bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=ion              bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=tabou_gaastra    bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=duotone_wing     bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=duotone_wingfoil bundle exec rails runner /rails/tmp/reimport_by_ean.rb
+#   SHEET=duotone_windsurf bundle exec rails runner /rails/tmp/reimport_by_ean.rb
 
 require 'csv'
 require 'net/http'
@@ -45,7 +48,31 @@ SHEETS = {
     ean_col:       'GTIN',
     name_col:      'ItemName',
     img_cols:      (0..6).map { |i| "ImageURLpng#{i}" },
-    master_only:   true,  # all images → master variant
+    master_only:   true,
+  },
+  "duotone_wing" => {
+    url:           'https://docs.google.com/spreadsheets/d/1nK_RowVZP5KDYU1WKjIyJGeOPgVJm-uIspuXPcQjOS0/export?format=csv',
+    ean_col:       'Variant Barcode',
+    name_col:      'Title',
+    img_src_col:   'Image Src',
+    variant_col:   'Variant Image',
+    master_only:   false,
+  },
+  "duotone_wingfoil" => {
+    url:           'https://docs.google.com/spreadsheets/d/1OXb4No4pzBs8hwbMB7q17jMV17HTV37Nl7kwagn2OjY/export?format=csv',
+    ean_col:       'Variant Barcode',
+    name_col:      'Title',
+    img_src_col:   'Image Src',
+    variant_col:   'Variant Image',
+    master_only:   false,
+  },
+  "duotone_windsurf" => {
+    url:           'https://docs.google.com/spreadsheets/d/1fNVzmPICVpOb6CnpqFMAT-s8VueeDyZajXL0r8Qf5RQ/export?format=csv',
+    ean_col:       'Variant Barcode',
+    name_col:      'Title',
+    img_src_col:   'Image Src',
+    variant_col:   'Variant Image',
+    master_only:   false,
   },
 }.freeze
 
