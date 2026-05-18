@@ -40,6 +40,8 @@ Rails.application.configure do
                         'https://region1.analytics.google.com',
                         'https://region1.google-analytics.com',
                         'https://stats.g.doubleclick.net',
+                        'https://googleads.g.doubleclick.net',
+                        'https://pagead2.googlesyndication.com',
                         'https://www.googletagmanager.com',
                         'https://www.google.com',
                         'https://a.klaviyo.com',
