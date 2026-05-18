@@ -153,7 +153,7 @@ class CreateEracuniOrderJob < ApplicationJob
       vat_rate = if zero_vat
                    0
                  else
-                   vat_rate_from_adjustment(li)
+                   vat_rate_from_adjustment(li, country_iso, is_eu_oss: is_eu_oss)
                  end
       last_vat_rate = vat_rate unless zero_vat
 
@@ -208,18 +208,59 @@ class CreateEracuniOrderJob < ApplicationJob
   end
 
   # Extract the VAT percentage from a line item's Spree tax adjustment.
-  # Returns an integer (e.g. 22, 23, 25) as required by e-Računi.
-  def vat_rate_from_adjustment(line_item)
+  # Returns an integer (e.g. 19, 22, 25) as required by e-Računi.
+  #
+  # Priority for OSS (EU B2C) orders — eRačuni validates against destination country rates:
+  #   1. EU country standard VAT rate map (destination country, e.g. DE=19%)
+  #   2. The Spree TaxRate source amount
+  #   3. The adjustment label (e.g. "EU VAT 22 %")
+  #   4. 22% Slovenian fallback
+  #
+  # Priority for domestic (SI) and non-OSS orders:
+  #   1. The Spree TaxRate source amount
+  #   2. The adjustment label
+  #   3. Country map
+  #   4. 22% fallback
+  def vat_rate_from_adjustment(line_item, country_iso = nil, is_eu_oss: false)
+    # For OSS orders: e-Računi requires the destination country's official rate
+    if is_eu_oss && country_iso.present? && EU_STANDARD_VAT_RATES.key?(country_iso)
+      return EU_STANDARD_VAT_RATES[country_iso]
+    end
+
     tax_adj = line_item.adjustments
                        .select { |a| a.source_type == 'Spree::TaxRate' }
                        .max_by { |a| a.amount.abs }
 
+    # From the live TaxRate record
     if tax_adj&.source.is_a?(Spree::TaxRate) && tax_adj.source.amount.to_f > 0
       return (tax_adj.source.amount.to_f * 100).round
     end
 
+    # Parse percentage from the adjustment label (e.g. "EU VAT 22 %")
+    if tax_adj&.label.present?
+      if (match = tax_adj.label.match(/(\d+(?:\.\d+)?)\s*%/))
+        return match[1].to_f.round
+      end
+    end
+
+    # Country map fallback for non-OSS
+    if country_iso.present? && EU_STANDARD_VAT_RATES.key?(country_iso)
+      return EU_STANDARD_VAT_RATES[country_iso]
+    end
+
     22 # Fallback: Slovenian standard VAT
   end
+
+  # Standard VAT rates for EU countries (used as fallback for OSS orders
+  # when the Spree TaxRate record has been deleted)
+  EU_STANDARD_VAT_RATES = {
+    "AT" => 20, "BE" => 21, "BG" => 20, "CY" => 19, "CZ" => 21,
+    "DE" => 19, "DK" => 25, "EE" => 22, "ES" => 21, "FI" => 25.5.round,
+    "FR" => 20, "GR" => 24, "HR" => 25, "HU" => 27, "IE" => 23,
+    "IT" => 22, "LT" => 21, "LU" => 17, "LV" => 21, "MT" => 18,
+    "NL" => 21, "PL" => 23, "PT" => 23, "RO" => 19, "SE" => 25,
+    "SK" => 23, "SI" => 22, "XI" => 20
+  }.freeze
 
   def product_description(product, variant)
     parts = [product.name]
@@ -239,6 +280,14 @@ class CreateEracuniOrderJob < ApplicationJob
   # When false: EU B2C orders use vatTransactionType "0" + 22% Slovenian DDV (safe fallback).
   OSS_ENABLED = true
 
+  # Countries where OSS is configured in e-Računi account settings.
+  # Only include countries where the OSS VAT rate differs from Slovenian 22%.
+  # Countries with 22% (EE, IT) use domestic type "0" — same financial result,
+  # avoids rejection if not configured in eRačuni OSS module.
+  OSS_CONFIGURED_COUNTRIES = %w[
+    AT BE BG CY CZ DE DK DK ES FI FR GR HR HU IE LT LU LV MT NL PL PT RO SE SK XI
+  ].freeze
+
   # Determine vatTransactionType for e-Računi at DOCUMENT level:
   #   "0"   = Domestic SI taxable (22% DDV)
   #   "2"   = Non-EU export (0%, no input VAT deduction)
@@ -247,13 +296,12 @@ class CreateEracuniOrderJob < ApplicationJob
   def vat_transaction_type(country_iso, is_b2b: false, is_eu_oss: false)
     return "11"  if is_b2b && EU_COUNTRY_CODES.include?(country_iso) # EU B2B reverse charge
     return "2"   if country_iso.present? && !EU_COUNTRY_CODES.include?(country_iso) && country_iso != "SI" # Non-EU export
-    return "106" if is_eu_oss # EU B2C OSS — paired with vatCountryIsoCode on the document
-    "0" # SI domestic
+    # OSS type 106 only for countries configured in e-Računi OSS module
+    return "106" if is_eu_oss && OSS_CONFIGURED_COUNTRIES.include?(country_iso)
+    "0" # SI domestic (also used for EU B2C countries not in OSS module)
   end
 
-  # NOTE: EU_STANDARD_VAT_RATES removed — we now read the actual VAT rate
-  # from each line item's Spree::TaxRate adjustment (vat_rate_from_adjustment).
-  # This ensures the rate always matches what's configured in Spree and e-Računi.
-
+  # NOTE: EU_STANDARD_VAT_RATES is used for OSS orders where the Spree TaxRate
+  # record has been deleted, to ensure the correct destination country rate is sent.
   # Old vat_percentage method removed — replaced by vat_rate_from_adjustment above.
 end
