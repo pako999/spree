@@ -47,7 +47,7 @@ module Spree
 
       if width.present? && height.present?
         url_helpers.cdn_image_url(
-          image.variant(spree_image_variant_options(resize_to_fill: [width, height], format: options[:format]))
+          image.variant(spree_image_variant_options(resize_to_limit: [width, height], format: options[:format]))
         )
       else
         url_helpers.cdn_image_url(
