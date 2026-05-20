@@ -21,31 +21,39 @@ class CreateEracuniOrderJob < ApplicationJob
     order = find_order(order_id)
     return unless order
 
-    # Skip if order was already synced (idempotency)
-    if order.private_metadata&.dig("eracuni_order_number").present?
-      Rails.logger.info "[CreateEracuniOrderJob] e-Računi order already exists for #{order.number}: #{order.private_metadata['eracuni_order_number']}"
-      return
-    end
+    # Use a DB-level row lock to prevent race conditions.
+    # Both order.completed and order.paid can fire within milliseconds of each other
+    # (e.g. Saferpay callback + our own state machine). Without a lock, both jobs
+    # read private_metadata simultaneously, see no invoice number, and both call
+    # the API — creating two invoices. with_lock serialises access per order row.
+    order.with_lock do
+      # Re-read metadata inside the lock (stale check outside would be pointless)
+      order.reload
 
-    client = EracuniClient.new
-    order_data = build_order_payload(order)
+      if order.private_metadata&.dig("eracuni_order_number").present?
+        Rails.logger.info "[CreateEracuniOrderJob] e-Računi order already exists for #{order.number}: #{order.private_metadata['eracuni_order_number']}"
+        return
+      end
 
-    Rails.logger.info "[CreateEracuniOrderJob] Creating Naročilo kupca for order #{order.number}..."
-    result = client.create_sales_order(order_data)
+      client = EracuniClient.new
+      order_data = build_order_payload(order)
 
-    # Store the e-Računi invoice number on the Spree order for reference
-    eracuni_number = result.dig("result", "number") || result.dig("number") || "created"
-    document_id = result.dig("result", "documentID")
+      Rails.logger.info "[CreateEracuniOrderJob] Creating Naročilo kupca for order #{order.number}..."
+      result = client.create_sales_order(order_data)
 
-    order.update_column(:private_metadata,
-      (order.private_metadata || {}).merge(
-        "eracuni_order_number" => eracuni_number,
-        "eracuni_document_id" => document_id,
-        "eracuni_synced_at"   => Time.current.iso8601
+      eracuni_number = result.dig("result", "number") || result.dig("number") || "created"
+      document_id    = result.dig("result", "documentID")
+
+      order.update_column(:private_metadata,
+        (order.private_metadata || {}).merge(
+          "eracuni_order_number" => eracuni_number,
+          "eracuni_document_id"  => document_id,
+          "eracuni_synced_at"    => Time.current.iso8601
+        )
       )
-    )
 
-    Rails.logger.info "[CreateEracuniOrderJob] Naročilo #{eracuni_number} created for order #{order.number}"
+      Rails.logger.info "[CreateEracuniOrderJob] Naročilo #{eracuni_number} created for order #{order.number}"
+    end
   rescue EracuniClient::ApiError => e
     Rails.error.report(e, context: { job: "CreateEracuniOrderJob", order_id: order_id }, handled: true)
     raise # Let retry_on handle it
