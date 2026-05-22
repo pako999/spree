@@ -128,16 +128,19 @@
   });
 
   // If user already consented on a previous visit — upgrade immediately
+  // Reads from cookie_consent_v2 cookie (set by _cookie_banner.html.erb)
   (function() {
     try {
-      var c = JSON.parse(localStorage.getItem('surf_store_cookie_consent') || 'null');
-      if (!c) return;
+      var match = document.cookie.match('(?:^|;)\\s*cookie_consent_v2=([^;]+)');
+      if (!match) return;
+      var c = JSON.parse(decodeURIComponent(match[1]));
+      if (!c || !c.version) return;
       gtag('consent', 'update', {
-        'ad_storage':              c.marketing    ? 'granted' : 'denied',
-        'ad_user_data':            c.marketing    ? 'granted' : 'denied',
-        'ad_personalization':      c.marketing    ? 'granted' : 'denied',
-        'analytics_storage':       c.analytics    ? 'granted' : 'denied',
-        'functionality_storage':   'granted',
+        'ad_storage':              c.marketing       ? 'granted' : 'denied',
+        'ad_user_data':            c.marketing       ? 'granted' : 'denied',
+        'ad_personalization':      c.marketing       ? 'granted' : 'denied',
+        'analytics_storage':       c.analytics       ? 'granted' : 'denied',
+        'functionality_storage':   c.personalization ? 'granted' : 'denied',
         'personalization_storage': c.personalization ? 'granted' : 'denied'
       });
     } catch(e) {}
@@ -182,8 +185,11 @@
   // Load Hotjar immediately if analytics already consented on previous visit
   var HJ_ID = parseInt('<%= ENV.fetch('HOTJAR_ID', '5062304') %>', 10);
   try {
-    var c = JSON.parse(localStorage.getItem('surf_store_cookie_consent') || 'null');
-    if (c && c.analytics) loadHotjar(HJ_ID);
+    var match = document.cookie.match('(?:^|;)\\s*cookie_consent_v2=([^;]+)');
+    if (match) {
+      var c = JSON.parse(decodeURIComponent(match[1]));
+      if (c && c.analytics) loadHotjar(HJ_ID);
+    }
   } catch(e) {}
 
   // Load Hotjar when user consents during this session
