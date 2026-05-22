@@ -15,7 +15,19 @@ Rails.application.routes.draw do
       post "products/:id/ai_description", to: "ai_descriptions#create", as: :product_ai_description
       get "ai_descriptions/bulk", to: "ai_descriptions#bulk", as: :ai_descriptions_bulk
       post "ai_descriptions/generate_bulk", to: "ai_descriptions#generate_bulk", as: :ai_descriptions_generate_bulk
+
+      # DHL Express Commerce (Starshipit) integration
+      scope "orders/:order_number" do
+        resource :dhl_commerce, only: [] do
+          member do
+            post :push
+            post :reset
+            get  :rates
+          end
+        end
+      end
     end
+
 
     # Saferpay payment callbacks
     get 'saferpay/success', to: 'saferpay#success', as: :saferpay_success
