@@ -18,9 +18,20 @@
       </div>
 
       <div style="padding: 16px 24px 24px;">
-        <%# === COUNTRY SELECTOR === %>
         <%
           selected_country = cookies[:preferred_country] || "SI"
+
+          # Country -> default currency auto-mapping
+          country_currency_map = {
+            "GB" => "GBP", "US" => "USD", "CA" => "CAD", "AU" => "AUD",
+            "NZ" => "NZD", "CH" => "CHF", "NO" => "EUR", "SE" => "SEK",
+            "DK" => "EUR", "JP" => "JPY", "BR" => "BRL", "AR" => "USD",
+            "MX" => "USD", "CO" => "USD", "CL" => "USD", "PE" => "USD",
+            "AE" => "AED", "SA" => "AED", "ZA" => "USD", "NG" => "USD",
+            "SG" => "USD", "IN" => "USD", "TH" => "USD", "MY" => "USD",
+            "ID" => "USD", "KR" => "JPY", "CN" => "JPY", "HK" => "USD",
+            "TR" => "USD", "IL" => "USD", "MA" => "USD", "IS" => "EUR"
+          }
 
           eu_countries = [
             ["SI", "🇸🇮", "Slovenia"],  ["DE", "🇩🇪", "Germany"],   ["AT", "🇦🇹", "Austria"],
@@ -34,51 +45,78 @@
             ["LU", "🇱🇺", "Luxembourg"],["MT", "🇲🇹", "Malta"],     ["CY", "🇨🇾", "Cyprus"]
           ]
 
-          other_countries = [
-            ["GB", "🇬🇧", "United Kingdom"], ["US", "🇺🇸", "United States"],
-            ["CH", "🇨🇭", "Switzerland"],    ["NO", "🇳🇴", "Norway"],
-            ["AU", "🇦🇺", "Australia"],      ["CA", "🇨🇦", "Canada"],
-            ["JP", "🇯🇵", "Japan"]
-          ]
+          other_country_groups = {
+            "🇬🇧 British Isles & Europe+" => [
+              ["GB", "🇬🇧", "United Kingdom"], ["NO", "🇳🇴", "Norway"],
+              ["CH", "🇨🇭", "Switzerland"], ["IS", "🇮🇸", "Iceland"],
+              ["TR", "🇹🇷", "Turkey"]
+            ],
+            "🌎 Americas" => [
+              ["US", "🇺🇸", "United States"], ["CA", "🇨🇦", "Canada"],
+              ["BR", "🇧🇷", "Brazil"], ["AR", "🇦🇷", "Argentina"],
+              ["MX", "🇲🇽", "Mexico"], ["CO", "🇨🇴", "Colombia"],
+              ["CL", "🇨🇱", "Chile"], ["PE", "🇵🇪", "Peru"]
+            ],
+            "🌏 Asia-Pacific" => [
+              ["AU", "🇦🇺", "Australia"], ["NZ", "🇳🇿", "New Zealand"],
+              ["JP", "🇯🇵", "Japan"], ["SG", "🇸🇬", "Singapore"],
+              ["IN", "🇮🇳", "India"], ["TH", "🇹🇭", "Thailand"],
+              ["MY", "🇲🇾", "Malaysia"], ["ID", "🇮🇩", "Indonesia"],
+              ["KR", "🇰🇷", "South Korea"], ["CN", "🇨🇳", "China"],
+              ["HK", "🇭🇰", "Hong Kong"]
+            ],
+            "🌍 Middle East & Africa" => [
+              ["AE", "🇦🇪", "UAE / Dubai"], ["SA", "🇸🇦", "Saudi Arabia"],
+              ["IL", "🇮🇱", "Israel"], ["ZA", "🇿🇦", "South Africa"],
+              ["NG", "🇳🇬", "Nigeria"], ["MA", "🇲🇦", "Morocco"]
+            ]
+          }
         %>
 
         <label style="display: block; font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Shipping Country</label>
 
-        <div id="country-list" style="max-height: 320px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
-          <%# EU Countries Section %>
+        <div id="country-list" style="max-height: 360px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
+
+          <%# EU Countries %>
           <div style="padding: 6px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1;">
             <span style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em;">🇪🇺 European Union</span>
           </div>
           <% eu_countries.each do |code, flag, name| %>
+            <% auto_curr = "EUR" %>
+            <% is_sel = code == selected_country %>
             <button type="button" class="country-option" data-country="<%= code %>"
-              onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='<%= code == 'SI' ? 'sl-SI' : 'en' %>';}f.requestSubmit();}else{window.location.reload();}"
-              style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: none; background: <%= code == selected_country ? '#eef2ff' : 'transparent' %>; cursor: pointer; font-size: 0.875rem; color: #111; transition: background 0.1s; text-align: left;"
-              onmouseover="this.style.background='<%= code == selected_country ? '#eef2ff' : '#f3f4f6' %>'"
-              onmouseout="this.style.background='<%= code == selected_country ? '#eef2ff' : 'transparent' %>'">
-              <span style="font-size: 1.25rem; line-height: 1;"><%= flag %></span>
-              <span style="flex: 1; font-weight: <%= code == selected_country ? '600' : '400' %>;"><%= name %></span>
-              <% if code == selected_country %>
+              onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='<%= code == 'SI' ? 'sl-SI' : 'en' %>';}var c=f.querySelector('[name*=switch_to_currency]');if(c){c.value='<%= auto_curr %>';}f.requestSubmit();}else{window.location.reload();}"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:<%= is_sel ? '#eef2ff' : 'transparent' %>;cursor:pointer;font-size:0.875rem;color:#111;transition:background 0.1s;text-align:left;"
+              onmouseover="this.style.background='<%= is_sel ? '#eef2ff' : '#f3f4f6' %>'"
+              onmouseout="this.style.background='<%= is_sel ? '#eef2ff' : 'transparent' %>'">
+              <span style="font-size:1.25rem;line-height:1;"><%= flag %></span>
+              <span style="flex:1;font-weight:<%= is_sel ? '600' : '400' %>;"><%= name %></span>
+              <% if is_sel %>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <% end %>
             </button>
           <% end %>
 
-          <%# Other Countries Section %>
-          <div style="padding: 6px 12px; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1;">
-            <span style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em;">🌍 Other Countries</span>
-          </div>
-          <% other_countries.each do |code, flag, name| %>
-            <button type="button" class="country-option" data-country="<%= code %>"
-              onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='en';}f.requestSubmit();}else{window.location.reload();}"
-              style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: none; background: <%= code == selected_country ? '#eef2ff' : 'transparent' %>; cursor: pointer; font-size: 0.875rem; color: #111; transition: background 0.1s; text-align: left;"
-              onmouseover="this.style.background='<%= code == selected_country ? '#eef2ff' : '#f3f4f6' %>'"
-              onmouseout="this.style.background='<%= code == selected_country ? '#eef2ff' : 'transparent' %>'">
-              <span style="font-size: 1.25rem; line-height: 1;"><%= flag %></span>
-              <span style="flex: 1; font-weight: <%= code == selected_country ? '600' : '400' %>;"><%= name %></span>
-              <% if code == selected_country %>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <% end %>
-            </button>
+          <%# Regional groups %>
+          <% other_country_groups.each do |group_label, countries| %>
+            <div style="padding: 6px 12px; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1;">
+              <span style="font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em;"><%= group_label %></span>
+            </div>
+            <% countries.each do |code, flag, name| %>
+              <% auto_curr = country_currency_map[code] || "EUR" %>
+              <% is_sel = code == selected_country %>
+              <button type="button" class="country-option" data-country="<%= code %>"
+                onclick="document.cookie='preferred_country=<%= code %>;path=/;max-age=31536000;SameSite=Lax';var f=document.getElementById('settings-form');if(f){var l=f.querySelector('[name*=switch_to_locale]');if(l){l.value='en';}var c=f.querySelector('[name*=switch_to_currency]');if(c){c.value='<%= auto_curr %>';}f.requestSubmit();}else{window.location.reload();}"
+                style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:<%= is_sel ? '#eef2ff' : 'transparent' %>;cursor:pointer;font-size:0.875rem;color:#111;transition:background 0.1s;text-align:left;"
+                onmouseover="this.style.background='<%= is_sel ? '#eef2ff' : '#f3f4f6' %>'"
+                onmouseout="this.style.background='<%= is_sel ? '#eef2ff' : 'transparent' %>'">
+                <span style="font-size:1.25rem;line-height:1;"><%= flag %></span>
+                <span style="flex:1;font-weight:<%= is_sel ? '600' : '400' %>;"><%= name %></span>
+                <% if is_sel %>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <% end %>
+              </button>
+            <% end %>
           <% end %>
         </div>
 
@@ -108,4 +146,3 @@
     </div>
   </div>
 <% end %>
-
