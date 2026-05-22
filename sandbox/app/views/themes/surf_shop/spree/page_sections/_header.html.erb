@@ -133,7 +133,7 @@
           <%# Right icons %>
           <div class='mt-header-icons'>
             <% if should_render_locale_dropdown? || should_render_currency_dropdown? %>
-              <div data-controller="modal" data-modal-disable-backdrop="true" class="hidden lg:flex">
+              <div data-controller="modal" data-modal-disable-backdrop="true" class="flex">
                 <%= button_tag class: 'mt-icon-btn', data: {action: 'modal#open'} do %>
                   <% country_code = cookies[:preferred_country] || current_locale.to_s.split("-").last %>
                   <%= svg_country_icon(country_code) %>
