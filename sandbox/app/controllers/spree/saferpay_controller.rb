@@ -15,6 +15,7 @@ module Spree
       # Already completed by notify webhook — just redirect
       if payment.completed?
         flash[:success] = Spree.t(:payment_success, scope: :saferpay, default: 'Payment successful! Your order has been placed.')
+        session[:checkout_completed] = true
         return redirect_to spree.order_path(order)
       end
 
@@ -25,6 +26,7 @@ module Spree
         process_saferpay_payment(order, payment, saferpay_token)
 
         flash[:success] = Spree.t(:payment_success, scope: :saferpay, default: 'Payment successful! Your order has been placed.')
+        session[:checkout_completed] = true
         redirect_to spree.order_path(order)
       rescue SaferpayError => e
         Rails.logger.error("[Saferpay] Assert/Capture error for order #{order.number}: #{e.message}")

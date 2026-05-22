@@ -1,0 +1,60 @@
+<%# GA4 purchase + Google Ads conversion tracking partial.
+    Rendered on:
+      - themes/surf_shop/spree/checkout/complete.html.erb  (normal checkout flow)
+      - themes/surf_shop/spree/orders/show.html.erb         (Saferpay + bank transfer redirect)
+    Both pages gate rendering with order_just_completed?, which checks:
+      @order.completed? && session[:checkout_completed].present?
+    The SaferpayController sets session[:checkout_completed] before redirecting. %>
+<% if order_just_completed? %>
+<script>
+(function() {
+  if (typeof gtag !== 'function') return;
+
+  var orderData = {
+    transaction_id: '<%= j(@order.number) %>',
+    value:          <%= @order.total.to_f.round(2) %>,
+    tax:            <%= @order.tax_total.to_f.round(2) %>,
+    shipping:       <%= @order.shipment_total.to_f.round(2) %>,
+    currency:       '<%= @order.currency %>',
+    items: [
+      <% @order.line_items.each_with_index do |item, idx| %>
+      {
+        item_id:    '<%= j(item.variant.sku.to_s) %>',
+        item_name:  '<%= j(item.name) %>',
+        item_brand: '<%= j(item.product.taxons.find { |t| t.permalink.start_with?("brands/") }&.name.to_s.presence || item.product.name.split.first) %>',
+        price:      <%= item.price.to_f.round(2) %>,
+        quantity:   <%= item.quantity %>
+      }<%= ',' if idx < @order.line_items.size - 1 %>
+      <% end %>
+    ]
+  };
+
+  // GA4 purchase event
+  gtag('event', 'purchase', orderData);
+
+  // Enhanced Conversions — pass user identity for improved match rates.
+  // Google hashes this server-side over HTTPS. Do NOT pre-hash client-side.
+  gtag('set', 'user_data', {
+    email:        '<%= j(@order.email.to_s.downcase.strip) %>',
+    phone_number: '<%= j((@order.ship_address&.phone || @order.bill_address&.phone).to_s.gsub(/\s/, '')) %>',
+    address: {
+      first_name:  '<%= j(@order.ship_address&.firstname.to_s) %>',
+      last_name:   '<%= j(@order.ship_address&.lastname.to_s) %>',
+      street:      '<%= j(@order.ship_address&.address1.to_s) %>',
+      city:        '<%= j(@order.ship_address&.city.to_s) %>',
+      region:      '<%= j(@order.ship_address&.state_name.to_s) %>',
+      postal_code: '<%= j(@order.ship_address&.zipcode.to_s) %>',
+      country:     '<%= j(@order.ship_address&.country&.iso.to_s.downcase) %>'
+    }
+  });
+
+  // Google Ads conversion
+  gtag('event', 'conversion', {
+    send_to:        '<%= ENV.fetch("GOOGLE_ADS_CONVERSION_ID", "AW-11446870184") %>/<%= ENV.fetch("GOOGLE_ADS_CONVERSION_LABEL", "e9mkCOO-pqccEKjBpdIq") %>',
+    value:          orderData.value,
+    currency:       orderData.currency,
+    transaction_id: orderData.transaction_id
+  });
+})();
+</script>
+<% end %>
