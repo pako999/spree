@@ -1,4 +1,4 @@
-<div id="cookie-banner" aria-label="Cookie consent" role="dialog" aria-modal="true" style="display:none">
+<div id="cookie-banner" aria-label="Cookie consent" role="dialog" aria-modal="true" aria-labelledby="cookie-banner-title" style="display:none">
   <%# Wave accent top line %>
   <div class="cookie-banner__wave"></div>
 
@@ -11,21 +11,21 @@
         </svg>
         surf-store.com
       </div>
-      <h2 class="cookie-banner__title">We value your privacy</h2>
-      <p class="cookie-banner__body">We use cookies to enhance your browsing experience, serve personalised content, and analyse our traffic. By clicking "Accept All" you consent to our use of cookies.</p>
+      <h2 id="cookie-banner-title" class="cookie-banner__title">We value your privacy</h2>
+      <p class="cookie-banner__body">We use cookies to enhance your browsing experience, serve personalised content, and analyse our traffic. By clicking "Accept All" you consent to our use of cookies. <a href="/privacy-policy" class="cookie-banner__policy-link">Cookie Policy →</a></p>
     </div>
 
     <%# Expandable preferences panel %>
-    <div id="cookie-prefs-panel" class="cookie-banner__prefs" hidden>
+    <div id="cookie-prefs-panel" class="cookie-banner__prefs" hidden aria-hidden="true">
       <%# Necessary — locked %>
       <div class="cookie-pref-row">
         <div class="cookie-pref-info">
           <strong>Necessary</strong>
-          <span>Required for the website to function. Cannot be disabled.</span>
+          <span>Required for the website to function (shopping cart, secure login). Cannot be disabled.</span>
         </div>
         <div class="cookie-pref-toggle-wrap">
           <span class="cookie-pref-always-on">Always on</span>
-          <button class="cookie-toggle cookie-toggle--on cookie-toggle--disabled" role="switch" aria-checked="true" disabled></button>
+          <button class="cookie-toggle cookie-toggle--on cookie-toggle--disabled" role="switch" aria-checked="true" disabled aria-label="Necessary cookies — always enabled"></button>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
           <span>Help us understand how visitors interact with our store (Google Analytics, Hotjar).</span>
         </div>
         <div class="cookie-pref-toggle-wrap">
-          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="analytics" id="toggle-analytics"></button>
+          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="analytics" id="toggle-analytics" aria-label="Analytics cookies"></button>
         </div>
       </div>
 
@@ -47,7 +47,7 @@
           <span>Used to deliver personalised ads on platforms like Google and Meta.</span>
         </div>
         <div class="cookie-pref-toggle-wrap">
-          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="marketing" id="toggle-marketing"></button>
+          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="marketing" id="toggle-marketing" aria-label="Marketing cookies"></button>
         </div>
       </div>
 
@@ -58,18 +58,17 @@
           <span>Remember your preferences, recently viewed items, and wishlist.</span>
         </div>
         <div class="cookie-pref-toggle-wrap">
-          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="personalization" id="toggle-personalization"></button>
+          <button class="cookie-toggle" role="switch" aria-checked="false" data-pref="personalization" id="toggle-personalization" aria-label="Personalisation cookies"></button>
         </div>
       </div>
     </div>
 
-    <%# Action buttons %>
+    <%# Action buttons — Accept and Reject are equal weight per GDPR/EDPB guidance %>
     <div class="cookie-banner__actions">
       <button id="cookie-accept-all" class="cookie-btn cookie-btn--primary">Accept All</button>
       <button id="cookie-reject-all" class="cookie-btn cookie-btn--secondary">Reject All</button>
-      <button id="cookie-manage-prefs" class="cookie-btn cookie-btn--ghost">Manage Preferences</button>
+      <button id="cookie-manage-prefs" class="cookie-btn cookie-btn--ghost" aria-expanded="false" aria-controls="cookie-prefs-panel">Manage Preferences</button>
       <button id="cookie-save-prefs" class="cookie-btn cookie-btn--outline" hidden>Save Preferences</button>
-      <a href="/privacy-policy" class="cookie-btn cookie-btn--link">Privacy Policy →</a>
     </div>
   </div>
 </div>
@@ -155,6 +154,12 @@
     margin: 0;
   }
   @media (min-width: 768px) { .cookie-banner__body { font-size: 13px; } }
+  .cookie-banner__policy-link {
+    color: rgba(45,212,191,0.8);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .cookie-banner__policy-link:hover { color: #2dd4bf; text-decoration: underline; }
 
   /* Preferences panel */
   .cookie-banner__prefs {
@@ -241,7 +246,7 @@
     transform: translateX(18px);
   }
 
-  /* Action buttons */
+  /* Action buttons — equal visual weight for Accept and Reject (GDPR/EDPB requirement) */
   .cookie-banner__actions {
     display: flex;
     flex-wrap: wrap;
@@ -260,6 +265,7 @@
     align-items: center;
     white-space: nowrap;
   }
+  /* Accept All — teal primary */
   .cookie-btn--primary {
     background: #2dd4bf;
     color: #0d1f2d;
@@ -269,16 +275,17 @@
     justify-content: center;
   }
   .cookie-btn--primary:hover { background: #5eead4; }
+  /* Reject All — same size/weight as Accept, different style */
   .cookie-btn--secondary {
-    background: transparent;
-    color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
     padding: 10px 20px;
     flex: 1;
     min-width: 110px;
     justify-content: center;
   }
-  .cookie-btn--secondary:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
+  .cookie-btn--secondary:hover { border-color: rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.12); }
   .cookie-btn--ghost {
     background: transparent;
     color: rgba(255,255,255,0.4);
@@ -298,70 +305,103 @@
     justify-content: center;
   }
   .cookie-btn--outline:hover { border-color: rgba(45,212,191,0.7); background: rgba(45,212,191,0.08); }
-  .cookie-btn--link {
-    background: transparent;
-    color: rgba(255,255,255,0.3);
-    padding: 6px 4px;
-    font-size: 11px;
-    font-weight: 400;
-    display: none;
-  }
-  .cookie-btn--link:hover { color: rgba(255,255,255,0.6); }
   @media (min-width: 768px) {
     .cookie-btn--ghost  { width: auto; }
     .cookie-btn--outline { width: auto; }
-    .cookie-btn--link   { display: inline-flex; margin-left: auto; }
   }
   .cookie-banner__prefs[hidden] { display: none !important; }
 </style>
 
 <script>
 (function() {
-  var STORAGE_KEY = 'surf_store_cookie_consent';
+  // ── GCM v2 Cookie Consent v2 ──────────────────────────────────────────────
+  // Stores consent in a first-party COOKIE (not localStorage) so:
+  //   1. Server-side code can read it (SSR, Rails helpers)
+  //   2. It survives private browsing sessions correctly
+  //   3. It has a real expiry (12 months)
+  // ─────────────────────────────────────────────────────────────────────────
+  var COOKIE_NAME    = 'cookie_consent_v2';
+  var CONSENT_VERSION = 2;
+  var COOKIE_MAX_AGE  = 60 * 60 * 24 * 365; // 12 months
 
-  function loadConsent() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return null; }
+  function readConsentCookie() {
+    try {
+      var match = document.cookie.match('(?:^|;)\\s*' + COOKIE_NAME + '=([^;]+)');
+      if (!match) return null;
+      var parsed = JSON.parse(decodeURIComponent(match[1]));
+      // Re-prompt if version is older than current
+      if (!parsed || parsed.version < CONSENT_VERSION) return null;
+      return parsed;
+    } catch(e) { return null; }
   }
 
-  function saveConsent(consent) {
-    var full = Object.assign({ necessary: true, timestamp: new Date().toISOString() }, consent);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(full));
+  function writeConsentCookie(data) {
+    var value = encodeURIComponent(JSON.stringify(data));
+    var secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = COOKIE_NAME + '=' + value +
+      '; path=/' +
+      '; max-age=' + COOKIE_MAX_AGE +
+      '; SameSite=Lax' + secure;
+  }
 
-    // Update Google Consent Mode v2 immediately — no page reload needed
-    if (typeof gtag === 'function') {
-      gtag('consent', 'update', {
-        'ad_storage':              full.marketing       ? 'granted' : 'denied',
-        'ad_user_data':            full.marketing       ? 'granted' : 'denied',
-        'ad_personalization':      full.marketing       ? 'granted' : 'denied',
-        'analytics_storage':       full.analytics       ? 'granted' : 'denied',
-        'functionality_storage':   'granted',
-        'personalization_storage': full.personalization ? 'granted' : 'denied'
-      });
-    }
+  function applyConsentToGtag(c) {
+    if (typeof gtag !== 'function') return;
+    gtag('consent', 'update', {
+      'ad_storage':              c.marketing       ? 'granted' : 'denied',
+      'ad_user_data':            c.marketing       ? 'granted' : 'denied',
+      'ad_personalization':      c.marketing       ? 'granted' : 'denied',
+      'analytics_storage':       c.analytics       ? 'granted' : 'denied',
+      'functionality_storage':   c.personalization ? 'granted' : 'denied',
+      'personalization_storage': c.personalization ? 'granted' : 'denied'
+    });
+  }
 
-    window.dispatchEvent(new CustomEvent('cookieConsentUpdate', { detail: full }));
-    return full;
+  function saveConsent(choices) {
+    var consent = {
+      version:         CONSENT_VERSION,
+      timestamp:       Date.now(),
+      necessary:       true,
+      analytics:       !!choices.analytics,
+      marketing:       !!choices.marketing,
+      personalization: !!choices.personalization
+    };
+    writeConsentCookie(consent);
+    applyConsentToGtag(consent);
+    window.dispatchEvent(new CustomEvent('cookieConsentUpdate', { detail: consent }));
+    return consent;
   }
 
   function hideBanner() {
     var b = document.getElementById('cookie-banner');
-    if (b) b.style.display = 'none';
+    if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); }
   }
 
   function showBanner() {
     var b = document.getElementById('cookie-banner');
     if (!b) return;
     b.style.display = '';
+    b.removeAttribute('aria-hidden');
+    // Focus the first button for keyboard accessibility
+    var firstBtn = b.querySelector('.cookie-btn');
+    if (firstBtn) setTimeout(function(){ firstBtn.focus(); }, 450);
   }
 
   function initBanner() {
-    if (loadConsent()) return; // Already consented — don't show
+    var stored = readConsentCookie();
+    if (stored) {
+      // Already consented this version — apply silently, no banner
+      applyConsentToGtag(stored);
+      // Also update Hotjar etc. via event
+      window.dispatchEvent(new CustomEvent('cookieConsentUpdate', { detail: stored }));
+      return;
+    }
 
+    // No valid consent — show banner after short delay
     setTimeout(showBanner, 400);
 
     var prefs = { analytics: false, marketing: false, personalization: false };
 
-    // Toggles
+    // Toggles in manage panel
     document.querySelectorAll('.cookie-toggle[data-pref]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var pref = btn.dataset.pref;
@@ -382,11 +422,18 @@
       hideBanner();
     });
 
-    // Manage Preferences
+    // Manage Preferences — expand panel
     document.getElementById('cookie-manage-prefs').addEventListener('click', function() {
-      document.getElementById('cookie-prefs-panel').hidden = false;
+      var panel = document.getElementById('cookie-prefs-panel');
+      panel.hidden = false;
+      panel.removeAttribute('aria-hidden');
       this.hidden = true;
+      this.setAttribute('aria-expanded', 'true');
       document.getElementById('cookie-save-prefs').hidden = false;
+      // Pre-fill toggles from current prefs state
+      document.querySelectorAll('.cookie-toggle[data-pref]').forEach(function(t) {
+        t.setAttribute('aria-checked', prefs[t.dataset.pref] ? 'true' : 'false');
+      });
     });
 
     // Save Preferences
@@ -394,16 +441,51 @@
       saveConsent(prefs);
       hideBanner();
     });
+
+    // Keyboard: Esc closes manage panel but not the main banner
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      var panel = document.getElementById('cookie-prefs-panel');
+      if (panel && !panel.hidden) {
+        panel.hidden = true;
+        panel.setAttribute('aria-hidden', 'true');
+        var manageBtn = document.getElementById('cookie-manage-prefs');
+        if (manageBtn) { manageBtn.hidden = false; manageBtn.focus(); }
+      }
+    });
   }
 
-  // Works with both Turbo and standard page loads
+  // Works with Turbo AND standard page loads
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBanner);
   } else {
     initBanner();
   }
+
+  // Turbo navigation — re-check on each page
   document.addEventListener('turbo:load', function() {
-    if (!loadConsent()) showBanner();
+    var stored = readConsentCookie();
+    if (!stored) {
+      showBanner();
+    } else {
+      applyConsentToGtag(stored);
+    }
   });
+
+  // Expose globally for footer "Cookie Settings" link and testing
+  window.CookieConsent = {
+    getStored:  readConsentCookie,
+    reset:      function() {
+      document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
+      showBanner();
+    },
+    openPrefs:  function() {
+      showBanner();
+      setTimeout(function() {
+        var btn = document.getElementById('cookie-manage-prefs');
+        if (btn) btn.click();
+      }, 100);
+    }
+  };
 })();
 </script>
