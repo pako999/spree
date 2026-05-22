@@ -2,7 +2,7 @@
 
 module Spree
   module Admin
-    class DhlCommerceController < Spree::Admin::BaseController
+    class DhlCommercesController < Spree::Admin::BaseController
       before_action :load_order
 
       # POST /admin/orders/:order_number/dhl/push
