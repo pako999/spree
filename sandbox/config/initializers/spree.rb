@@ -98,7 +98,8 @@ Rails.application.config.after_initialize do
 
   # Admin partials
   Spree.admin.partials.product_form << 'spree/admin/products/bulk_image_assign'
-  Spree.admin.partials.order_page_body << 'spree/admin/dhl_commerce/panel'
+  # DHL panel - re-enable after full Kamal deploy bakes files into image:
+  # Spree.admin.partials.order_page_body << 'spree/admin/dhl_commerce/panel'
 
 
   # Role-based permissions
