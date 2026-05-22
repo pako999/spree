@@ -144,14 +144,17 @@
   })();
 </script>
 
-<!-- Google Tag Manager — GT-K54MS7QS (routes to GA4 + Google Ads) -->
+<!-- Google Tag Manager — routes to GA4 + Google Ads -->
 <!-- Loads AFTER Consent Mode v2 defaults are set — runs in restricted mode until consent granted -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GT-K54MS7QS"></script>
+<% gtm_id  = ENV.fetch('GOOGLE_TAG_MANAGER_ID',    'GT-K54MS7QS') %>
+<% ga4_id  = ENV.fetch('GA4_MEASUREMENT_ID',       'G-MLSPRGVMGD') %>
+<% gads_id = ENV.fetch('GOOGLE_ADS_CONVERSION_ID', 'AW-11446870184') %>
+<script async src="https://www.googletagmanager.com/gtag/js?id=<%= gtm_id %>"></script>
 <script>
   gtag('js', new Date());
-  gtag('config', 'GT-K54MS7QS');
-  gtag('config', 'G-MLSPRGVMGD');   // GA4 — required by Tag Diagnostics
-  gtag('config', 'AW-11446870184'); // Google Ads — required by Tag Diagnostics
+  gtag('config', '<%= gtm_id %>');
+  gtag('config', '<%= ga4_id %>');   // GA4
+  gtag('config', '<%= gads_id %>'); // Google Ads
 
   // Consent Mode v2: required for EU conversion modeling when consent is denied.
   // url_passthrough: passes consent state via URL params for cross-site measurement.
@@ -163,12 +166,12 @@
 <!-- Hotjar — loaded only after analytics consent via cookieConsentUpdate event -->
 <script>
 (function() {
-  function loadHotjar() {
+  function loadHotjar(hjid) {
     if (window._hjLoaded) return;
     window._hjLoaded = true;
     (function(h,o,t,j,a,r){
       h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-      h._hjSettings={hjid:5062304,hjsv:6};
+      h._hjSettings={hjid:hjid,hjsv:6};
       a=o.getElementsByTagName('head')[0];
       r=o.createElement('script');r.async=1;
       r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
@@ -177,14 +180,15 @@
   }
 
   // Load Hotjar immediately if analytics already consented on previous visit
+  var HJ_ID = parseInt('<%= ENV.fetch('HOTJAR_ID', '5062304') %>', 10);
   try {
     var c = JSON.parse(localStorage.getItem('surf_store_cookie_consent') || 'null');
-    if (c && c.analytics) loadHotjar();
+    if (c && c.analytics) loadHotjar(HJ_ID);
   } catch(e) {}
 
   // Load Hotjar when user consents during this session
   window.addEventListener('cookieConsentUpdate', function(e) {
-    if (e.detail && e.detail.analytics) loadHotjar();
+    if (e.detail && e.detail.analytics) loadHotjar(HJ_ID);
   });
 })();
 </script>
