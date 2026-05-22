@@ -53,10 +53,20 @@ env:
     - SMTP_PORT
     - SMTP_USERNAME
     - SMTP_PASSWORD
+    - DHL_API_KEY
+    - DHL_SUBSCRIPTION_KEY
   clear:
     SOLID_QUEUE_IN_PUMA: true
     DATABASE_URL: "postgresql://ubuntu:kite@172.17.0.1/my_kite_shop_production"
     DB_HOST: "172.17.0.1"
+    DHL_SENDER_NAME: "Surf-Store d.o.o."
+    DHL_SENDER_STREET: "Vojkova cesta 58"
+    DHL_SENDER_CITY: "Ljubljana"
+    DHL_SENDER_STATE: ""
+    DHL_SENDER_POSTCODE: "1000"
+    DHL_SENDER_COUNTRY: "SI"
+    DHL_SENDER_PHONE: "+386 1 234 5678"
+    DHL_SENDER_EMAIL: "info@surf-store.com"
     # Google Analytics / Ads — public IDs (visible in browser source, not secrets)
     GOOGLE_TAG_MANAGER_ID: "GT-K54MS7QS"
     GA4_MEASUREMENT_ID: "G-MLSPRGVMGD"
