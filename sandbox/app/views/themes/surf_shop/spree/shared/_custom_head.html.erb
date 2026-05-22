@@ -77,6 +77,8 @@
 <link rel="icon" href="/icon.png" type="image/png">
 <link rel="apple-touch-icon" href="/icon.png">
 <meta name="theme-color" content="#0F0F1A">
+<%# Cart currency — read by add_to_cart GA4 event to avoid hardcoding 'EUR' %>
+<meta name="cart-currency" content="<%= current_order&.currency || current_store&.default_currency || 'EUR' %>">
 
 <% if ENV['KLAVIYO_PUBLIC_KEY'].present? %>
 <script async type="text/javascript" src="https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=<%= ENV['KLAVIYO_PUBLIC_KEY'] %>"></script>
@@ -150,6 +152,12 @@
   gtag('config', 'GT-K54MS7QS');
   gtag('config', 'G-MLSPRGVMGD');   // GA4 — required by Tag Diagnostics
   gtag('config', 'AW-11446870184'); // Google Ads — required by Tag Diagnostics
+
+  // Consent Mode v2: required for EU conversion modeling when consent is denied.
+  // url_passthrough: passes consent state via URL params for cross-site measurement.
+  // ads_data_redaction: redacts ad click identifiers (gclid) for denied users.
+  gtag('set', 'url_passthrough', true);
+  gtag('set', 'ads_data_redaction', true);
 </script>
 
 <!-- Hotjar — loaded only after analytics consent via cookieConsentUpdate event -->
@@ -208,8 +216,10 @@
     var d = _pending;
     _pending = null;
     if (!d || typeof gtag !== 'function') return;
+    // Read currency from meta tag (set per-request) — avoids hardcoding 'EUR'
+    var currency = document.querySelector('meta[name="cart-currency"]');
     gtag('event', 'add_to_cart', {
-      currency: 'EUR',
+      currency: currency ? currency.content : 'EUR',
       value:    d.price * d.quantity,
       items: [{
         item_id:    d.item_id,
