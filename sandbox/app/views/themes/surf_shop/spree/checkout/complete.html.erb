@@ -128,7 +128,7 @@
 
   // Google Ads conversion — real label from Google Ads › Goals › Conversions
   gtag('event', 'conversion', {
-    send_to:        'AW-11446870184/e9mkCOO-pqccEKjBpdIq',
+    send_to:        '<%= ENV.fetch("GOOGLE_ADS_CONVERSION_ID", "AW-11446870184") %>/<%= ENV.fetch("GOOGLE_ADS_CONVERSION_LABEL", "e9mkCOO-pqccEKjBpdIq") %>',
     value:          orderData.value,
     currency:       orderData.currency,
     transaction_id: orderData.transaction_id
