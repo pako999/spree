@@ -67,9 +67,11 @@ Rails.application.config.to_prepare do
   Spree.subscribers.concat [
     Spree::OrderCompletedSubscriber,
     Spree::EracuniOrderSubscriber,
-    Spree::KlaviyoOrderSubscriber
+    Spree::KlaviyoOrderSubscriber,
+    Spree::DhlOrderSubscriber
   ]
 end
+
 
 # uncomment lines below to add your own custom business logic
 # such as promotions, shipping methods, etc
