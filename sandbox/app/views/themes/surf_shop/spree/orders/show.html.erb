@@ -4,3 +4,9 @@
   </h1>
   <%= render 'spree/shared/order_details', order: @order, shipments: @shipments %>
 </div>
+
+<%# GA4 purchase + Google Ads conversion.
+    Fires for Saferpay and bank transfer orders that land on this page
+    instead of checkout/complete. SaferpayController sets
+    session[:checkout_completed] before redirecting here. %>
+<%= render 'themes/surf_shop/spree/shared/conversion_tracking' %>
