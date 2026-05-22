@@ -92,6 +92,8 @@ class CreateEracuniOrderJob < ApplicationJob
                        country_iso != "SI" &&
                        OSS_ENABLED
 
+    buyer_phone = (ship&.phone.presence || bill&.phone.presence).to_s.strip
+
     payload = {
       "SalesOrder" => {
         "date"                    => Date.current.to_s,
@@ -103,6 +105,7 @@ class CreateEracuniOrderJob < ApplicationJob
         "remarks"                 => "Spletno naročilo #{order.number}",
         "buyerName"               => buyer_name(bill, order),
         "buyerEmail"              => order.email.to_s,
+        "buyerPhone"              => buyer_phone,
         "buyerStreet"             => bill&.address1.to_s.presence || "N/A",
         "buyerPostalCode"         => bill&.zipcode.to_s.presence || "0000",
         "buyerCity"               => bill&.city.to_s.presence || "N/A",
