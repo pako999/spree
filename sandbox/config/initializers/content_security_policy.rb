@@ -44,6 +44,7 @@ Rails.application.configure do
                         'https://pagead2.googlesyndication.com',
                         'https://www.googletagmanager.com',
                         'https://www.google.com',
+                        'https://www.googleadservices.com',
                         'https://a.klaviyo.com',
                         'https://static.klaviyo.com',
                         'https://ga.jspm.io',
