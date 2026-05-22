@@ -1,0 +1,115 @@
+<%
+  dhl_meta     = order.private_metadata&.dig rescue {}
+  dhl_meta     = order.private_metadata || {}
+  dhl_order_id = dhl_meta["dhl_order_id"]
+  dhl_pushed   = dhl_meta["dhl_pushed_at"]
+  already_sent = dhl_order_id.present? && dhl_order_id != "pending"
+  pending      = dhl_order_id == "pending"
+
+  # Pre-fill with previously saved values
+  saved_weight = dhl_meta["dhl_weight_kg"]
+  saved_length = dhl_meta["dhl_length_cm"]
+  saved_width  = dhl_meta["dhl_width_cm"]
+  saved_height = dhl_meta["dhl_height_cm"]
+
+  # Estimate weight from variants
+  est_weight = order.line_items.sum { |li| (li.variant.weight.to_f.nonzero? || 0.5) * li.quantity }.round(2)
+%>
+
+<div id="dhl-commerce-panel" style="background:#fff;border:1.5px solid #f0b800;border-radius:10px;padding:20px 24px;margin-top:24px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <svg width="48" height="20" viewBox="0 0 48 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="20" rx="3" fill="#FFCC00"/>
+      <text x="4" y="14" font-family="Arial" font-size="11" font-weight="bold" fill="#D40511">DHL</text>
+    </svg>
+    <h4 style="margin:0;font-size:1rem;font-weight:700;color:#1a1a1a;">DHL Express Commerce</h4>
+    <% if already_sent %>
+      <span style="background:#dcfce7;color:#15803d;font-size:0.75rem;font-weight:700;padding:2px 10px;border-radius:99px;">✓ Sent to DHL</span>
+    <% elsif pending %>
+      <span style="background:#fef9c3;color:#92400e;font-size:0.75rem;font-weight:700;padding:2px 10px;border-radius:99px;">⏳ Pending...</span>
+    <% end %>
+  </div>
+
+  <% if already_sent %>
+    <%# ── Status when already pushed ── %>
+    <table style="font-size:0.85rem;border-collapse:collapse;margin-bottom:14px;">
+      <tr>
+        <td style="color:#6b7280;padding-right:12px;">DHL Order ID:</td>
+        <td style="font-weight:600;"><%= dhl_order_id %></td>
+      </tr>
+      <tr>
+        <td style="color:#6b7280;padding-right:12px;">Pushed at:</td>
+        <td><%= Time.parse(dhl_pushed).strftime("%d.%m.%Y %H:%M") rescue dhl_pushed %></td>
+      </tr>
+      <% if saved_weight.present? %>
+      <tr>
+        <td style="color:#6b7280;padding-right:12px;">Package:</td>
+        <td><%= saved_weight %> kg &nbsp;|&nbsp; <%= saved_length %>×<%= saved_width %>×<%= saved_height %> cm</td>
+      </tr>
+      <% end %>
+    </table>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <%= link_to "🔗 Open in DHL Commerce",
+            "https://app2.dhlexpresscommerce.com/orders",
+            target: "_blank",
+            style: "background:#FFCC00;color:#1a1a1a;font-weight:700;font-size:0.8125rem;padding:8px 16px;border-radius:6px;text-decoration:none;border:none;" %>
+
+      <%= link_to "↩ Re-push (reset)",
+            spree.reset_admin_order_dhl_commerce_path(order_number: order.number),
+            method: :post,
+            data: { confirm: "This will clear the DHL status and allow you to re-push the order. Continue?" },
+            style: "background:#f3f4f6;color:#374151;font-size:0.8125rem;padding:8px 16px;border-radius:6px;text-decoration:none;border:1px solid #d1d5db;" %>
+    </div>
+
+  <% else %>
+    <%# ── Push form ── %>
+    <%= form_with url: spree.push_admin_order_dhl_commerce_path(order_number: order.number),
+                  method: :post, local: true, id: "dhl-push-form" do |f| %>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:0.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">
+            Weight (kg)
+          </label>
+          <%= f.text_field :weight_kg,
+                value: saved_weight || est_weight,
+                placeholder: "#{est_weight}",
+                style: "width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:0.875rem;" %>
+          <div style="font-size:0.68rem;color:#9ca3af;margin-top:2px;">Est. <%= est_weight %> kg</div>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">
+            Length (cm)
+          </label>
+          <%= f.text_field :length_cm, value: saved_length || "40",
+                style: "width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:0.875rem;" %>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">
+            Width (cm)
+          </label>
+          <%= f.text_field :width_cm, value: saved_width || "30",
+                style: "width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:0.875rem;" %>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">
+            Height (cm)
+          </label>
+          <%= f.text_field :height_cm, value: saved_height || "20",
+                style: "width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:0.875rem;" %>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <%= f.submit "📦 Push to DHL Express Commerce",
+              style: "background:#D40511;color:#fff;font-weight:700;font-size:0.8125rem;padding:9px 20px;border-radius:6px;border:none;cursor:pointer;letter-spacing:.03em;" %>
+
+        <%= link_to "🔗 Open DHL Commerce",
+              "https://app2.dhlexpresscommerce.com/orders",
+              target: "_blank",
+              style: "background:#f3f4f6;color:#374151;font-size:0.8125rem;padding:9px 16px;border-radius:6px;text-decoration:none;border:1px solid #d1d5db;" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
