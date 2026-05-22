@@ -10,6 +10,9 @@
     <%= current_store.storefront_custom_code_head&.html_safe %>
   </head>
   <body id="checkout-page" class="theme-<%= current_theme.class.name.demodulize.underscore %> w-full bg-background text-text">
+    <%# GTM noscript fallback — must be first element inside <body> %>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GT-K54MS7QS"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <%= render_storefront_partials(:body_start_partials) %>
     <%= current_store.storefront_custom_code_body_start&.html_safe %>
 
