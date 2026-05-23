@@ -155,16 +155,21 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=<%= gtm_id %>"></script>
 <script>
   gtag('js', new Date());
-  gtag('config', '<%= gtm_id %>');
-  gtag('config', '<%= ga4_id %>');   // GA4
+  // Consent Mode v2: configs pass consent_aware flags so Google respects
+  // the default/update signals on the initial page view hit.
+  gtag('config', '<%= gtm_id %>', { 'allow_google_signals': false });
+  gtag('config', '<%= ga4_id %>', {   // GA4
+    'allow_google_signals': false,
+    'allow_ad_personalization_signals': false
+  });
   gtag('config', '<%= gads_id %>'); // Google Ads
 
-  // Consent Mode v2: required for EU conversion modeling when consent is denied.
   // url_passthrough: passes consent state via URL params for cross-site measurement.
   // ads_data_redaction: redacts ad click identifiers (gclid) for denied users.
   gtag('set', 'url_passthrough', true);
   gtag('set', 'ads_data_redaction', true);
 </script>
+
 
 <!-- Hotjar — loaded only after analytics consent via cookieConsentUpdate event -->
 <script>
