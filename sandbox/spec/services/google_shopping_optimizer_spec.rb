@@ -301,5 +301,94 @@ RSpec.describe GoogleShoppingOptimizer do
       expect(result.length).to be <= 150
       expect(result).to end_with('...')
     end
+
+    # Bug 4: Strip "Cab " abbreviation from Cabrinha model names
+    it 'strips redundant Cab prefix from Cabrinha model names (Bug 4)' do
+      result = described_class.build_title('Cabrinha Cab Prestige Front Wing 2026', 'Cabrinha', 'Hydrofoil', nil, nil)
+      expect(result).not_to include(' Cab ')
+      expect(result).to include('Prestige Front')
+    end
+  end
+
+  # ── Bug fix regression specs ──────────────────────────────────────────────
+
+  describe 'Bug 1: normalize_brand never returns "Unknown"' do
+    it 'falls back to raw brand name for unknown slugs' do
+      # brand taxon exists but slug is not in BRAND_SLUG_TO_RAW
+      expect(described_class.normalize_brand('Some New Brand')).to eq('Some New Brand')
+    end
+
+    it 'returns empty string for completely blank brand, not "Unknown"' do
+      expect(described_class.normalize_brand('')).to  eq('')
+      expect(described_class.normalize_brand(nil)).to eq('')
+    end
+
+    it 'never produces the literal string "Unknown"' do
+      inputs = ['', nil, 'RandomBrand', 'JP', 'whatever-slug']
+      inputs.each do |input|
+        expect(described_class.normalize_brand(input)).not_to eq('Unknown')
+      end
+    end
+  end
+
+  describe 'Bug 2: JP Australia hydrofoils correctly detected' do
+    def detect(title, brand: 'JP Australia', taxons: [])
+      described_class.detect_product_type(title, brand, taxons)
+    end
+
+    it 'detects JP HydroFoil SLALOM S-TEC as Hydrofoil, not Windsurfing Board' do
+      expect(detect('JP HydroFoil SLALOM S-TEC 2025')).to eq('Hydrofoil')
+    end
+
+    it 'detects JP HydroFoil Freeride as Hydrofoil' do
+      expect(detect('JP HydroFoil Freeride 2025')).to eq('Hydrofoil')
+    end
+
+    it 'detects JP Super Lightwind as Wing Foiling Board' do
+      expect(detect('JP Super Lightwind Wood 2026')).to eq('Wing Foiling Board')
+    end
+
+    it 'still detects JP Magic Ride as Windsurfing Board' do
+      expect(detect('JP Magic Ride 2026')).to eq('Windsurfing Board')
+    end
+
+    it 'still detects JP AllroundAir as SUP Board' do
+      expect(detect('JP AllroundAir 2026')).to eq('SUP Board')
+    end
+  end
+
+  describe 'Bug 3: Cabrinha foil parts and bar components correctly typed' do
+    def detect(title, brand: 'Cabrinha', taxons: [])
+      described_class.detect_product_type(title, brand, taxons)
+    end
+
+    it 'detects Cabrinha Carbon Mast as Foil Mast' do
+      expect(detect('Cabrinha Carbon Mast 2026')).to eq('Foil Mast')
+    end
+
+    it 'detects Cabrinha Apex Carbon Mast as Foil Mast' do
+      expect(detect('Cabrinha Apex Carbon Mast 2026')).to eq('Foil Mast')
+    end
+
+    it 'detects Cabrinha Prestige Front as Hydrofoil' do
+      expect(detect('Cabrinha Cab Prestige Front Wing 2026')).to eq('Hydrofoil')
+    end
+
+    it 'detects Cabrinha Unify Control System as Kitesurfing Control Bar Component' do
+      expect(detect('Cabrinha Unify Control System 2026')).to eq('Kitesurfing Control Bar Component')
+    end
+
+    it 'detects Cabrinha Unify Leash as Kitesurfing Control Bar Component' do
+      expect(detect('Cabrinha Unify Leash 2026')).to eq('Kitesurfing Control Bar Component')
+    end
+
+    it 'still detects a regular Cabrinha kite as Kitesurfing Kite' do
+      expect(detect('Cabrinha Switchblade 2026')).to eq('Kitesurfing Kite')
+    end
+
+    it 'still detects a Cabrinha kiteboard as Kiteboard' do
+      expect(detect('Cabrinha XCaliber Board 2026')).to eq('Kiteboard')
+    end
   end
 end
+

@@ -89,7 +89,13 @@ class FeedsController < ApplicationController
       brand_taxon = product.taxons.find { |t| t.permalink.start_with?('brands/') }
       raw_brand = if brand_taxon
         slug = brand_taxon.permalink.delete_prefix('brands/').split('/').first
-        BRAND_SLUG_TO_RAW[slug] || extract_brand_from_name(brand_taxon.name.gsub(/[^\x20-\x7E]/, '').strip) || 'Unknown'
+        # Never fall back to literal 'Unknown' — use the taxon name directly when
+        # the slug isn't in BRAND_SLUG_TO_RAW (covers any brand added to the store
+        # after this map was last updated).
+        BRAND_SLUG_TO_RAW[slug] ||
+          extract_brand_from_name(brand_taxon.name.gsub(/[^\x20-\x7E]/, '').strip) ||
+          brand_taxon.name.gsub(/[^\x20-\x7E]/, '').strip.presence ||
+          ''
       else
         extract_brand_from_name(product.name) || ''
       end
