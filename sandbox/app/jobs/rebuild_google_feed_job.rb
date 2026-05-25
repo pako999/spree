@@ -6,7 +6,7 @@
 class RebuildGoogleFeedJob < ApplicationJob
   queue_as :background
 
-  FEED_CACHE_KEY = 'feeds/google_shopping_v6'
+  FEED_CACHE_KEY = 'feeds/google_shopping_v7'
 
   def perform
     Rails.cache.delete(FEED_CACHE_KEY)
