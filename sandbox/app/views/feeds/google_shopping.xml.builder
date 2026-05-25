@@ -35,6 +35,9 @@ xml.rss(version: '2.0', 'xmlns:g' => 'http://base.google.com/ns/1.0') do
         xml.tag! 'g:size',                    item[:size]                    if item[:size].present?
         xml.tag! 'g:gender',                  item[:gender]                  if item[:gender].present?
         xml.tag! 'g:shipping_weight',         item[:shipping_weight]         if item[:shipping_weight].present?
+        xml.tag! 'g:custom_label_0',          item[:custom_label_0]          if item[:custom_label_0].present?
+        xml.tag! 'g:custom_label_2',          item[:custom_label_2]          if item[:custom_label_2].present?
+        xml.tag! 'g:custom_label_3',          item[:custom_label_3]          if item[:custom_label_3].present?
         xml.tag! 'g:custom_label_4',          item[:custom_label_4]          if item[:custom_label_4].present?
 
         # Shipping: Free EU delivery over €99

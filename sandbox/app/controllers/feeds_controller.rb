@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
   # GET /feeds/google-shopping.xml
   def google_shopping
     @store_name = 'Surf Store'
-    @items      = Rails.cache.fetch('feeds/google_shopping_v7', expires_in: CACHE_TTL) do
+    @items      = Rails.cache.fetch('feeds/google_shopping_v8', expires_in: CACHE_TTL) do
       build_items
     end
     render layout: false, content_type: 'application/xml'
@@ -87,15 +87,13 @@ class FeedsController < ApplicationController
     products.find_each do |product|
       taxon_perms = product.taxons.map(&:permalink)
       brand_taxon = product.taxons.find { |t| t.permalink.start_with?('brands/') }
-      brand = if brand_taxon
-        slug = brand_taxon.permalink.delete_prefix('brands/').split('/').first
-        BRAND_PERMALINK_MAP[slug] || extract_brand_from_name(brand_taxon.name) || brand_taxon.name
-      end
-      brand ||= extract_brand_from_name(product.name)
-      google_cat  = google_category_for(taxon_perms)
-      product_type = product_type_for(taxon_perms)
-      is_apparel  = taxon_perms.any? { |p| APPAREL_TAXON_PREFIXES.any? { |pf| p.start_with?(pf) } }
-      is_ss26     = product.tags.any? { |t| t.name.casecmp?('ss26') } || product.name.include?('2026')
+      raw_brand   = brand_taxon&.name || extract_brand_from_name(product.name) || ''
+      brand       = GoogleShoppingOptimizer.normalize_brand(raw_brand)
+
+      google_cat   = google_category_for(taxon_perms)
+      opt_type     = GoogleShoppingOptimizer.detect_product_type(product.name, raw_brand, taxon_perms)
+      is_apparel   = taxon_perms.any? { |p| APPAREL_TAXON_PREFIXES.any? { |pf| p.start_with?(pf) } }
+      is_ss26      = product.tags.any? { |t| t.name.casecmp?('ss26') } || product.name.include?('2026')
 
       real_variants   = product.variants.reject { |v| v.deleted_at.present? }
       has_variants    = real_variants.any?
@@ -106,7 +104,7 @@ class FeedsController < ApplicationController
 
       variants_to_use.each do |variant|
         image = variant.images.first || fallback_image
-        next unless image  # Google requires at least one image
+        next unless image
 
         price_obj = variant.prices.find { |p| p.currency == 'EUR' } || variant.prices.first
         next unless price_obj&.amount.to_f > 0
@@ -114,46 +112,47 @@ class FeedsController < ApplicationController
         total_stock      = variant.stock_items.sum(&:count_on_hand)
         is_backorderable = variant.stock_items.any?(&:backorderable?)
 
-        # Exclude out-of-stock variants entirely — Google Ads will still serve
-        # items marked 'out_of_stock', so we remove them from the feed instead.
-        # Backorderable variants stay in (they can be ordered regardless of stock).
-        next if total_stock <= 0 && !is_backorderable
+        # Exclusion: gift cards, shipping insurance, dead old-season stock
+        next if GoogleShoppingOptimizer.exclude?(product.name, total_stock, is_backorderable)
 
         color = variant.option_values.find { |ov| ov.option_type&.name == 'color' }&.presentation
         size  = variant.option_values.find { |ov| ov.option_type&.name == 'size'  }&.presentation
 
-        # Additional images: up to 10 extra, prefer variant images then product images
         all_images = (variant.images + product.master.images).uniq(&:id)
         additional_images = all_images.drop(1).first(10).filter_map { |img| blob_full_url(img.attachment) }
 
-        # Sale price: use compare_at_price if available
-        sale_price = nil
         compare_price = price_obj.respond_to?(:compare_at_amount) ? price_obj.compare_at_amount : nil
-        if compare_price.present? && compare_price > price_obj.amount
-          sale_price = format('%.2f %s', price_obj.amount.to_f, price_obj.currency)
-        end
+        on_sale       = compare_price.present? && compare_price > price_obj.amount
+        display_price = on_sale ? format('%.2f %s', compare_price.to_f, price_obj.currency)
+                                : format('%.2f %s', price_obj.amount.to_f, price_obj.currency)
+        sale_price    = on_sale ? format('%.2f %s', price_obj.amount.to_f, price_obj.currency) : nil
+        numeric_price = price_obj.amount.to_f
 
         raw_id = variant.sku.presence || "spree-#{variant.id}"
+
         items << {
           id:                      raw_id.length > 50 ? "var-#{variant.id}" : raw_id,
           item_group_id:           has_variants ? "spree-#{product.id}" : nil,
-          title:                   build_title(product.name, color, size),
+          title:                   GoogleShoppingOptimizer.build_title(product.name, raw_brand, opt_type, color, size),
           description:             strip_html(product.description),
           link:                    product_url,
           image_link:              blob_full_url(image.attachment),
           additional_image_links:  additional_images,
-          price:                   sale_price ? format('%.2f %s', compare_price.to_f, price_obj.currency) : format('%.2f %s', price_obj.amount.to_f, price_obj.currency),
+          price:                   display_price,
           sale_price:              sale_price,
-          availability:            'in_stock',
+          availability:            GoogleShoppingOptimizer.availability(total_stock, is_backorderable),
           condition:               'new',
           brand:                   brand,
           gtin:                    variant.barcode.presence,
           mpn:                     variant.sku.presence&.slice(0, 70),
           google_product_category: google_cat,
-          product_type:            product_type,
+          product_type:            opt_type,
           color:                   color,
           size:                    size,
           gender:                  is_apparel ? 'unisex' : nil,
+          custom_label_0:          GoogleShoppingOptimizer.custom_label_0_margin(opt_type),
+          custom_label_2:          GoogleShoppingOptimizer.custom_label_2_season(product.name),
+          custom_label_3:          GoogleShoppingOptimizer.custom_label_3_price_bucket(numeric_price),
           custom_label_4:          is_ss26 ? 'bestseller' : nil,
           shipping_weight:         variant.weight.present? && variant.weight > 0 ? format('%.2f kg', variant.weight.to_f) : nil,
         }
@@ -170,50 +169,14 @@ class FeedsController < ApplicationController
     'Sporting Goods > Water Sports'
   end
 
-  def build_title(name, color, size)
-    parts = [name]
-    parts << color if color.present?
-    parts << size  if size.present?
-    parts.join(' - ').truncate(150)
-  end
+  # Kept for reference — title building now delegated to GoogleShoppingOptimizer.build_title
 
   def strip_html(text)
     # Strip tags first, then decode HTML entities (&amp;mdash; → —), then clean whitespace
     CGI.unescapeHTML(text.to_s.gsub(/<[^>]+>/, ' ')).squish.truncate(5000)
   end
 
-  # Maps brands/ permalink slug → clean brand name for Google Shopping
-  BRAND_PERMALINK_MAP = {
-    'nobile'       => 'Nobile',
-    'duotone'      => 'Duotone',
-    'ion'          => 'ION',
-    'cabrinha'     => 'Cabrinha',
-    'neilpryde'    => 'NeilPryde',
-    'jp-australia' => 'JP Australia',
-    'gaastra'      => 'Gaastra',
-    'tabou'        => 'Tabou',
-    'fanatic'      => 'Fanatic',
-    'north'        => 'North',
-    'rrd'          => 'RRD',
-    'f-one'        => 'F-One',
-    'slingshot'    => 'Slingshot',
-    'eleveight'    => 'Eleveight',
-    'point-7'      => 'Point-7',
-    'simmer'       => 'Simmer',
-    'mystic'       => 'Mystic',
-    'severne'      => 'Severne',
-    'naish'        => 'Naish',
-    'starboard'    => 'Starboard',
-    'prolimit'     => 'Prolimit',
-    'manera'       => 'Manera',
-    'dakine'       => 'Dakine',
-    'airush'       => 'Airush',
-    'ozone'        => 'Ozone',
-    'flysurfer'    => 'Flysurfer',
-    'core'         => 'CORE',
-  }.freeze
-
-  # Known brands — longer/more specific names must come before shorter ones
+  # Known brands for fallback name extraction from product title
   KNOWN_BRANDS = %w[
     NeilPryde Duotone Cabrinha Fanatic JP-Australia RRD
     Nobile North Core F-One Slingshot Eleveight Gaastra
