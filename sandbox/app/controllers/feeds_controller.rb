@@ -87,8 +87,13 @@ class FeedsController < ApplicationController
     products.find_each do |product|
       taxon_perms = product.taxons.map(&:permalink)
       brand_taxon = product.taxons.find { |t| t.permalink.start_with?('brands/') }
-      raw_brand   = brand_taxon&.name || extract_brand_from_name(product.name) || ''
-      brand       = GoogleShoppingOptimizer.normalize_brand(raw_brand)
+      raw_brand = if brand_taxon
+        slug = brand_taxon.permalink.delete_prefix('brands/').split('/').first
+        BRAND_SLUG_TO_RAW[slug] || extract_brand_from_name(brand_taxon.name.gsub(/[^\x20-\x7E]/, '').strip) || 'Unknown'
+      else
+        extract_brand_from_name(product.name) || ''
+      end
+      brand = GoogleShoppingOptimizer.normalize_brand(raw_brand)
 
       google_cat   = google_category_for(taxon_perms)
       opt_type     = GoogleShoppingOptimizer.detect_product_type(product.name, raw_brand, taxon_perms)
@@ -175,6 +180,47 @@ class FeedsController < ApplicationController
     # Strip tags first, then decode HTML entities (&amp;mdash; → —), then clean whitespace
     CGI.unescapeHTML(text.to_s.gsub(/<[^>]+>/, ' ')).squish.truncate(5000)
   end
+
+  # Maps brands/ permalink slug → canonical raw brand name (used for type detection + normalisation)
+  BRAND_SLUG_TO_RAW = {
+    'cabrinha'                  => 'Cabrinha',
+    'duotone-kiteboarding'      => 'Duotone Kiteboarding',
+    'duotone-windsurfing'       => 'Duotone Windsurfing',
+    'duotone-foilwing'          => 'Duotone Foilwing',
+    'duotone-wing-foiling'      => 'Duotone Wing Foiling',
+    'duotone-foiling-and-electric' => 'Duotone Foiling & Electric',
+    'duotone-apparel'           => 'Duotone Apparel',
+    'duotone-sup'               => 'Duotone SUP',
+    'fanatic-sup'               => 'Fanatic SUP',
+    'fanatic-windsurfing'       => 'Fanatic Windsurfing',
+    'fanatic-x'                 => 'Fanatic X',
+    'ion'                       => 'ION',
+    'ion-water'                 => 'ION Water',
+    'ion-bike'                  => 'ION Bike',
+    'neilpryde'                 => 'NeilPryde',
+    'nobile'                    => 'Nobile',
+    'gaastra'                   => 'Gaastra',
+    'tabou'                     => 'Tabou',
+    'jp-australia'              => 'JP Australia',
+    'point-7'                   => 'Point-7',
+    'mystic'                    => 'Mystic',
+    'prolimit'                  => 'Prolimit',
+    'manera'                    => 'Manera',
+    'dakine'                    => 'Dakine',
+    'north'                     => 'North',
+    'core'                      => 'CORE',
+    'f-one'                     => 'F-One',
+    'slingshot'                 => 'Slingshot',
+    'eleveight'                 => 'Eleveight',
+    'airush'                    => 'Airush',
+    'ozone'                     => 'Ozone',
+    'flysurfer'                 => 'Flysurfer',
+    'rrd'                       => 'RRD',
+    'severne'                   => 'Severne',
+    'naish'                     => 'Naish',
+    'starboard'                 => 'Starboard',
+    'simmer'                    => 'Simmer',
+  }.freeze
 
   # Known brands for fallback name extraction from product title
   KNOWN_BRANDS = %w[
