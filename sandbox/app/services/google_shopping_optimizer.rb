@@ -4,12 +4,18 @@
 # Centralised logic for title building, brand normalisation, product-type
 # detection, custom labels and feed exclusions.
 # All methods are module-level so they can be called without instantiation.
+#
+# Called from:
+#   FeedsController#build_items  (generates /feeds/google-shopping.xml)
+#   RebuildGoogleFeedJob          (cache-warms the feed every 6 h)
 module GoogleShoppingOptimizer
   # ── Brand normalisation ─────────────────────────────────────────────────────
   BRAND_NORMALIZE = {
+    # ION sub-brands → ION
     'ION Water'                   => 'ION',
     'ION Bike'                    => 'ION',
     'ION'                         => 'ION',
+    # Duotone sub-brands → Duotone
     'Duotone Kiteboarding'        => 'Duotone',
     'Duotone Windsurfing'         => 'Duotone',
     'Duotone Foilwing'            => 'Duotone',
@@ -18,19 +24,24 @@ module GoogleShoppingOptimizer
     'Duotone Apparel'             => 'Duotone',
     'Duotone SUP'                 => 'Duotone',
     'Duotone'                     => 'Duotone',
+    # Fanatic sub-brands → Fanatic
     'Fanatic SUP'                 => 'Fanatic',
     'Fanatic Windsurfing'         => 'Fanatic',
     'Fanatic X'                   => 'Fanatic',
     'Fanatic'                     => 'Fanatic',
+    # NeilPryde capitalisation variants
     'Neilpryde'                   => 'NeilPryde',
     'NEILPRYDE'                   => 'NeilPryde',
     'neilpryde'                   => 'NeilPryde',
     'NeilPryde'                   => 'NeilPryde',
+    # Tabou capitalisation variants
     'TABOU'                       => 'Tabou',
     'tabou'                       => 'Tabou',
     'Tabou'                       => 'Tabou',
+    # JP Australia
     'JP Australia'                => 'JP Australia',
     'jp australia'                => 'JP Australia',
+    # Single-name brands (identity mappings keep lookup uniform)
     'Cabrinha'                    => 'Cabrinha',
     'Nobile'                      => 'Nobile',
     'Gaastra'                     => 'Gaastra',
@@ -56,13 +67,15 @@ module GoogleShoppingOptimizer
     'Simmer'                      => 'Simmer',
   }.freeze
 
-  # Sub-brand noise words to strip when cleaning the model name from the title
+  # Sub-brand noise words stripped when cleaning the model name from the title.
   BRAND_NOISE_WORDS = %w[
     Water Bike Kiteboarding Windsurfing Foilwing Foiling Electric Wing Apparel
   ].freeze
 
+  # Old seasons whose OOS products should be excluded from the feed.
   OLD_SEASONS = %w[2023 2024 2025].freeze
 
+  # Product names matching these patterns are non-physical and excluded.
   EXCLUSION_PATTERNS = [
     /worry.?free.?delivery/i,
     /gift.?card/i,
@@ -73,76 +86,89 @@ module GoogleShoppingOptimizer
 
   # ── Public API ───────────────────────────────────────────────────────────────
 
+  # Returns the canonical brand string for Google Shopping.
+  # Falls back to the raw value (stripped) when not in the map.
   def self.normalize_brand(raw)
     return '' if raw.blank?
     BRAND_NORMALIZE[raw.strip] || raw.strip
   end
 
-  # Returns true when the product/variant should be dropped from the feed.
-  # total_stock: Integer (sum of count_on_hand across all stock locations)
-  # backorderable: Boolean
+  # Returns true when the variant should be dropped from the feed.
+  #
+  #   product_name   – String: product.name
+  #   total_stock    – Integer: sum of count_on_hand across all stock locations
+  #   backorderable  – Boolean: any stock location allows backorders
   def self.exclude?(product_name, total_stock, backorderable)
-    return true if EXCLUSION_PATTERNS.any? { |p| product_name.match?(p) }
+    return true if EXCLUSION_PATTERNS.any? { |p| product_name.to_s.match?(p) }
 
     season = extract_year(product_name.to_s)
     OLD_SEASONS.include?(season) && total_stock <= 0 && !backorderable
   end
 
+  # Extracts a 4-digit year (2023–2039) from a product title string.
+  # Returns nil when no year is found.
   def self.extract_year(title)
     m = title.to_s.match(/20(2[3-9]|3[0-9])/)
     m ? m[0] : nil
   end
 
-  # Availability string for Google Shopping
+  # Returns the Google Shopping availability string.
   def self.availability(total_stock, backorderable)
-    return 'preorder'      if backorderable && total_stock <= 0
-    return 'in_stock'      if total_stock > 0
+    return 'preorder'    if backorderable && total_stock <= 0
+    return 'in_stock'    if total_stock > 0
     'out_of_stock'
   end
 
   # ── Product-type detection ───────────────────────────────────────────────────
   # Returns a short human-readable type string used both in the title and as
   # the g:product_type value.
-  # taxon_permalinks: Array<String>
-  # raw_brand: taxon name (e.g. "ION Water", "Duotone Kiteboarding")
-  # title: product.name
+  #
+  #   title           – String: product.name (lowercased internally)
+  #   raw_brand       – String: taxon name e.g. "ION Water", "Duotone Kiteboarding"
+  #   taxon_permalinks – Array<String>: all taxon permalink slugs for the product
   def self.detect_product_type(title, raw_brand, taxon_permalinks)
-    t    = title.to_s.downcase
+    t     = title.to_s.downcase
     perms = Array(taxon_permalinks)
 
-    # Taxon-first (most reliable)
-    return kite_subtype(t)              if perms.any? { |p| p.include?('kitesurfing/kites') }
-    return kiteboard_subtype(t)         if perms.any? { |p| p.include?('kitesurfing/kiteboards') }
-    return kite_accessory_subtype(t)    if perms.any? { |p| p.include?('kitesurfing/kite-accessories') || p.include?('kitesurfing/kite-foil') }
-    return kite_generic_subtype(t)      if perms.any? { |p| p.include?('kitesurfing') }
-    return 'Wing Foiling Wing'          if perms.any? { |p| p.include?('wingfoil/wings') }
-    return 'Wing Foiling Board'         if perms.any? { |p| p.include?('wingfoil/wing-boards') }
-    return 'Hydrofoil'                  if perms.any? { |p| p.include?('wingfoil/wing-foils') }
-    return wing_foil_subtype(t)         if perms.any? { |p| p.include?('wingfoil') }
-    return 'Windsurfing Sail'           if perms.any? { |p| p.include?('windsurf/windsurf-sails') }
-    return 'Windsurfing Board'          if perms.any? { |p| p.include?('windsurf/windsurf-boards') }
-    return windsurf_gear_subtype(t)     if perms.any? { |p| p.include?('windsurf/windsurf-gear') }
-    return windsurf_harness_subtype(t)  if perms.any? { |p| p.include?('windsurf/windsurf-harnesses') }
-    return windsurf_generic_subtype(t)  if perms.any? { |p| p.include?('windsurf') }
-    return 'SUP Paddle'                 if perms.any? { |p| p.include?('sup-board/sup-paddles') }
-    return 'SUP Board'                  if perms.any? { |p| p.include?('sup-board') }
-    return 'Neoprene Gloves'            if perms.any? { |p| p.include?('neoprene-accessories/gloves') }
-    return 'Surf Shoes'                 if perms.any? { |p| p.include?('neoprene-accessories/surf-shoes') }
-    return wetsuit_acc_subtype(t)       if perms.any? { |p| p.include?('neoprene-accessories') }
-    return wetsuit_subtype(t)           if perms.any? { |p| p.include?('wetsuits') }
-    return 'Boardshorts'                if perms.any? { |p| p.include?('apparel/boardshorts') }
-    return 'Cap'                        if perms.any? { |p| p.include?('apparel/cap') }
-    return 'Poncho'                     if perms.any? { |p| p.include?('apparel/ponchos') }
-    return 'Jacket'                     if perms.any? { |p| p.include?('apparel/coats') }
-    return apparel_subtype(t)           if perms.any? { |p| p.include?('apparel') }
-    return 'E-Foil'                     if perms.any? { |p| p.include?('e-foil') }
+    # ── Taxon-first (most reliable signal) ──────────────────────────────────
+    return kite_subtype(t)             if perms.any? { |p| p.include?('kitesurfing/kites') }
+    return kiteboard_subtype(t)        if perms.any? { |p| p.include?('kitesurfing/kiteboards') }
+    return kite_accessory_subtype(t)   if perms.any? { |p| p.include?('kitesurfing/kite-accessories') ||
+                                                            p.include?('kitesurfing/kite-foil') }
+    return kite_generic_subtype(t)     if perms.any? { |p| p.include?('kitesurfing') }
+    return 'Wing Foiling Wing'         if perms.any? { |p| p.include?('wingfoil/wings') }
+    return 'Wing Foiling Board'        if perms.any? { |p| p.include?('wingfoil/wing-boards') }
+    return 'Hydrofoil'                 if perms.any? { |p| p.include?('wingfoil/wing-foils') }
+    return wing_foil_subtype(t)        if perms.any? { |p| p.include?('wingfoil') }
+    return 'Windsurfing Sail'          if perms.any? { |p| p.include?('windsurf/windsurf-sails') }
+    return 'Windsurfing Board'         if perms.any? { |p| p.include?('windsurf/windsurf-boards') }
+    return windsurf_gear_subtype(t)    if perms.any? { |p| p.include?('windsurf/windsurf-gear') }
+    return windsurf_harness_subtype(t) if perms.any? { |p| p.include?('windsurf/windsurf-harnesses') }
+    return windsurf_generic_subtype(t) if perms.any? { |p| p.include?('windsurf') }
+    return 'SUP Paddle'                if perms.any? { |p| p.include?('sup-board/sup-paddles') }
+    return 'SUP Board'                 if perms.any? { |p| p.include?('sup-board') }
+    return 'Neoprene Gloves'           if perms.any? { |p| p.include?('neoprene-accessories/gloves') }
+    return 'Surf Shoes'                if perms.any? { |p| p.include?('neoprene-accessories/surf-shoes') }
+    return wetsuit_acc_subtype(t)      if perms.any? { |p| p.include?('neoprene-accessories') }
+    return wetsuit_subtype(t)          if perms.any? { |p| p.include?('wetsuits') }
+    return 'Boardshorts'               if perms.any? { |p| p.include?('apparel/boardshorts') }
+    return 'Cap'                       if perms.any? { |p| p.include?('apparel/cap') }
+    return 'Poncho'                    if perms.any? { |p| p.include?('apparel/ponchos') }
+    return 'Jacket'                    if perms.any? { |p| p.include?('apparel/coats') }
+    return apparel_subtype(t)          if perms.any? { |p| p.include?('apparel') }
+    return 'E-Foil'                    if perms.any? { |p| p.include?('e-foil') }
 
-    # Keyword fallback
+    # ── Brand-based secondary signal (no taxon match) ───────────────────────
+    brand_based = brand_type_hint(t, raw_brand.to_s)
+    return brand_based if brand_based
+
+    # ── Keyword-only fallback ────────────────────────────────────────────────
     keyword_detect(t)
   end
 
   # ── Title builder ────────────────────────────────────────────────────────────
   # Format: [Brand] [Model] [Product Type] [Year] [Color] [Size]
+  # Google Shopping hard limit: 150 chars.
   def self.build_title(product_name, raw_brand, product_type, color, size)
     brand = normalize_brand(raw_brand)
     year  = extract_year(product_name.to_s)
@@ -156,31 +182,43 @@ module GoogleShoppingOptimizer
 
   # ── Custom labels ────────────────────────────────────────────────────────────
 
+  # custom_label_0: margin tier derived from product type keywords.
   def self.custom_label_0_margin(product_type)
     return 'mid_margin' if product_type.blank?
     pt = product_type.downcase
-    high = %w[cap t-shirt hoodie bag gloves protector strap leash pump hood boots socks fin pigtail bridle bladder poncho rashguard shoes repair]
-    low  = %w[kite sail board wing mast hydrofoil foil e-foil]
-    return 'high_margin' if high.any? { |k| pt.include?(k) }
-    return 'low_margin'  if low.any?  { |k| pt.include?(k) }
+    high = %w[cap t-shirt hoodie bag gloves protector strap leash pump hood boots socks
+              fin pigtail bridle bladder poncho rashguard shoes repair beanie helmet]
+    # Use multi-word phrases where needed to avoid false positives.
+    # e.g. "kite" alone would fire on "Kite Harness" and "Kite Control Bar".
+    low_phrases = ['kitesurfing kite', 'parawing', 'windsurfing sail', 'wing foiling wing',
+                   'windsurfing board', 'kiteboard', 'kite foil board', 'sup board',
+                   'hydrofoil', 'foil', 'e-foil', 'windsurfing mast', 'windsurfing boom']
+    # Use whole-word boundary matching to avoid false positives like
+    # "fin" matching inside "windsurfing" or "kitesurfing".
+    return 'high_margin' if high.any? { |k| pt.match?(/\b#{Regexp.escape(k)}\b/) }
+    return 'low_margin'  if low_phrases.any? { |phrase| pt.include?(phrase) }
     'mid_margin'
   end
 
+
+  # custom_label_2: model year (e.g. "2026") or "evergreen".
   def self.custom_label_2_season(title)
     extract_year(title.to_s) || 'evergreen'
   end
 
+  # custom_label_3: price bucket for bid segmentation.
   def self.custom_label_3_price_bucket(price)
     p = price.to_f
-    return 'unknown'    if p.zero?
-    return 'under_100'  if p < 100
-    return '100_to_300' if p < 300
-    return '300_to_800' if p < 800
+    return 'unknown'     if p.zero?
+    return 'under_100'   if p < 100
+    return '100_to_300'  if p < 300
+    return '300_to_800'  if p < 800
     return '800_to_1500' if p < 1500
     '1500_plus'
   end
 
   # ── Private helpers ──────────────────────────────────────────────────────────
+  private_class_methods_defined_below = true # rubocop:disable Lint/UselessAssignment
 
   def self.clean_model(name, brand, raw_brand, year)
     m = name.dup
@@ -192,6 +230,33 @@ module GoogleShoppingOptimizer
     m.gsub(/[,\-–—]+$/, '').gsub(/\s{2,}/, ' ').strip
   end
   private_class_method :clean_model
+
+  # Secondary brand-based hint when taxon data is absent.
+  def self.brand_type_hint(t, raw_brand)
+    b = raw_brand.downcase
+    case b
+    when /duotone kiteboarding|cabrinha|nobile/
+      return kite_generic_subtype(t)
+    when /duotone windsurfing|neilpryde|fanatic windsurfing|gaastra|point.?7|tabou|simmer|severne/
+      return windsurf_generic_subtype(t)
+    when /duotone foilwing|duotone wing foiling/
+      return wing_foil_subtype(t)
+    when /fanatic sup/
+      return t.match?(/paddle/) ? 'SUP Paddle' : 'SUP Board'
+    when /ion bike/
+      return mtb_subtype(t)
+    when /ion water|ion/
+      return wetsuit_subtype(t) if t.match?(/wetsuit|neo|dry.?suit|shorty/)
+      return apparel_subtype(t) if t.match?(/hoodie|hoody|t-shirt|jacket|short|cap|bag|rashguard|rash/)
+    when /jp australia/
+      return 'Windsurfing Board' if t.match?(/magic|super.sport|thruster|freestyle/i)
+      return 'SUP Board'         if t.match?(/allround|cruisair|longboard|flatwater/i)
+    end
+    nil # no brand-based hint; fall through to keyword_detect
+  end
+  private_class_method :brand_type_hint
+
+  # ── Sport-specific subtype helpers ──────────────────────────────────────────
 
   def self.kite_subtype(t)
     return 'Parawing' if t.match?(/parawing|para.wing/)
@@ -222,7 +287,7 @@ module GoogleShoppingOptimizer
     return 'Kite Control Bar' if t.match?(/\bbar\b/)
     return 'Kite Harness'     if t.match?(/harness/)
     return 'Hydrofoil'        if t.match?(/foil/)
-    'Kitesurfing'
+    'Kitesurfing Kite'
   end
   private_class_method :kite_generic_subtype
 
@@ -291,6 +356,16 @@ module GoogleShoppingOptimizer
     'Apparel'
   end
   private_class_method :apparel_subtype
+
+  def self.mtb_subtype(t)
+    return 'MTB Helmet'     if t.match?(/helmet/)
+    return 'MTB Gloves'     if t.match?(/glove/)
+    return 'MTB Shorts'     if t.match?(/short/)
+    return 'MTB Jersey'     if t.match?(/jersey/)
+    return 'MTB Protection' if t.match?(/pad|guard|protect/)
+    'MTB Apparel'
+  end
+  private_class_method :mtb_subtype
 
   def self.keyword_detect(t)
     return 'Kitesurfing Kite'  if t.match?(/\bkite\b/) && !t.match?(/board|foil/)

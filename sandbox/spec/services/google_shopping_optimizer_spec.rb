@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
-require 'rails_helper'
+# GoogleShoppingOptimizer is a pure Ruby module (no DB / Rails dependencies).
+# We load it directly so the spec runs without the full Rails stack.
+require 'spec_helper'
+require 'active_support/core_ext/object/blank'
+require 'active_support/core_ext/string/filters'
+require_relative '../../app/services/google_shopping_optimizer'
 
 RSpec.describe GoogleShoppingOptimizer do
   # ── Brand normalisation ────────────────────────────────────────────────────
