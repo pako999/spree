@@ -227,6 +227,9 @@ module GoogleShoppingOptimizer
       b.to_s.split(/\s+/).each { |w| m = m.gsub(/\b#{Regexp.escape(w)}\b/i, '') if w.length > 2 }
     end
     BRAND_NOISE_WORDS.each { |w| m = m.gsub(/\b#{Regexp.escape(w)}\b/i, '') }
+    # Bug 4: Strip redundant "Cab" abbreviation from Cabrinha product names.
+    # e.g. "Cabrinha Cab Prestige Front" → "Cabrinha Prestige Front"
+    m = m.gsub(/\bCab\b/i, '') if brand == 'Cabrinha' || raw_brand.to_s.match?(/cabrinha/i)
     m.gsub(/[,\-–—]+$/, '').gsub(/\s{2,}/, ' ').strip
   end
   private_class_method :clean_model
@@ -235,8 +238,10 @@ module GoogleShoppingOptimizer
   def self.brand_type_hint(t, raw_brand)
     b = raw_brand.downcase
     case b
-    when /duotone kiteboarding|cabrinha|nobile/
+    when /duotone kiteboarding|nobile/
       return kite_generic_subtype(t)
+    when /cabrinha/
+      return cabrinha_subtype(t)
     when /duotone windsurfing|neilpryde|fanatic windsurfing|gaastra|point.?7|tabou|simmer|severne/
       return windsurf_generic_subtype(t)
     when /duotone foilwing|duotone wing foiling/
@@ -249,8 +254,11 @@ module GoogleShoppingOptimizer
       return wetsuit_subtype(t) if t.match?(/wetsuit|neo|dry.?suit|shorty/)
       return apparel_subtype(t) if t.match?(/hoodie|hoody|t-shirt|jacket|short|cap|bag|rashguard|rash/)
     when /jp australia/
-      return 'Windsurfing Board' if t.match?(/magic|super.sport|thruster|freestyle/i)
-      return 'SUP Board'         if t.match?(/allround|cruisair|longboard|flatwater/i)
+      # Bug 2: Check hydrofoil and wing-specific lines BEFORE defaulting to windsurf
+      return 'Hydrofoil'        if t.match?(/hydrofoil/)
+      return 'Wing Foiling Board' if t.match?(/\bwinger\b|freefoil|foilair|super.?lightwind/)
+      return 'SUP Board'         if t.match?(/allround|cruisair|longboard|flatwater/)
+      return 'Windsurfing Board' if t.match?(/magic|super.sport|thruster|freestyle/)
     end
     nil # no brand-based hint; fall through to keyword_detect
   end
@@ -281,6 +289,23 @@ module GoogleShoppingOptimizer
     'Kite Accessory'
   end
   private_class_method :kite_accessory_subtype
+
+  # Bug 3: Cabrinha-specific subtype detection — handles foil parts and bar components
+  # that would otherwise be misclassified by the generic kite_generic_subtype.
+  def self.cabrinha_subtype(t)
+    # Foil masts and structural foil parts → Foil Mast / Hydrofoil
+    return 'Foil Mast'                       if t.match?(/carbon mast|alloy mast/)
+    # Prestige is Cabrinha's foil wing system; "prestige" always means a foil part
+    return 'Hydrofoil'                        if t.match?(/foil|prestige/) && !t.match?(/\bbar\b|harness|board/)
+    # Control bar components (Unify system)
+    return 'Kitesurfing Control Bar Component' if t.match?(/unify/)
+    # Generic kite fallbacks
+    return 'Kiteboard'        if t.match?(/\bboard\b/)
+    return 'Kite Control Bar' if t.match?(/\bbar\b/)
+    return 'Kite Harness'     if t.match?(/harness/)
+    'Kitesurfing Kite'
+  end
+  private_class_method :cabrinha_subtype
 
   def self.kite_generic_subtype(t)
     return 'Kiteboard'        if t.match?(/\bboard\b/)
