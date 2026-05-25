@@ -4,12 +4,47 @@
       - themes/surf_shop/spree/orders/show.html.erb         (Saferpay + bank transfer redirect)
     Both pages gate rendering with order_just_completed?, which checks:
       @order.completed? && session[:checkout_completed].present?
-    The SaferpayController sets session[:checkout_completed] before redirecting. %>
+    The SaferpayController sets session[:checkout_completed] before redirecting.
+
+    Key GCM v2 notes:
+      - user_data MUST be set before any event calls (Enhanced Conversions requirement)
+      - conversion event fires regardless of ad_storage consent state — GCM v2 uses
+        it for modeled conversions even when consent is denied
+      - localStorage deduplication prevents double-firing on page refresh %>
 <% if order_just_completed? %>
 <script>
 (function() {
+  // Deduplication guard — prevents double-counting on page refresh or
+  // Turbo back-navigation. Key is per-order-number, expires after 30 min.
+  var dedupKey = 'conv_fired_<%= j(@order.number) %>';
+  try {
+    var fired = localStorage.getItem(dedupKey);
+    if (fired && (Date.now() - parseInt(fired, 10)) < 1800000) return;
+    localStorage.setItem(dedupKey, Date.now().toString());
+  } catch(e) {}
+
+  // gtag() is always defined (set inline at top of <head> before gtag.js loads).
+  // All calls below queue into dataLayer and are processed once gtag.js loads.
   if (typeof gtag !== 'function') return;
 
+  // ── Step 1: Set user_data FIRST — required for Enhanced Conversions ──────
+  // Google hashes this client-side before sending. Do NOT pre-hash.
+  // Must be called before any event() calls to attach to those events.
+  gtag('set', 'user_data', {
+    email:        '<%= j(@order.email.to_s.downcase.strip) %>',
+    phone_number: '<%= j((@order.ship_address&.phone || @order.bill_address&.phone).to_s.gsub(/\s/, '')) %>',
+    address: {
+      first_name:  '<%= j(@order.ship_address&.firstname.to_s) %>',
+      last_name:   '<%= j(@order.ship_address&.lastname.to_s) %>',
+      street:      '<%= j(@order.ship_address&.address1.to_s) %>',
+      city:        '<%= j(@order.ship_address&.city.to_s) %>',
+      region:      '<%= j(@order.ship_address&.state_name.to_s) %>',
+      postal_code: '<%= j(@order.ship_address&.zipcode.to_s) %>',
+      country:     '<%= j(@order.ship_address&.country&.iso.to_s.downcase) %>'
+    }
+  });
+
+  // ── Step 2: Build order payload ──────────────────────────────────────────
   var orderData = {
     transaction_id: '<%= j(@order.number) %>',
     value:          <%= @order.total.to_f.round(2) %>,
@@ -29,31 +64,19 @@
     ]
   };
 
-  // GA4 purchase event
+  // ── Step 3: GA4 purchase event ───────────────────────────────────────────
   gtag('event', 'purchase', orderData);
 
-  // Enhanced Conversions — pass user identity for improved match rates.
-  // Google hashes this server-side over HTTPS. Do NOT pre-hash client-side.
-  gtag('set', 'user_data', {
-    email:        '<%= j(@order.email.to_s.downcase.strip) %>',
-    phone_number: '<%= j((@order.ship_address&.phone || @order.bill_address&.phone).to_s.gsub(/\s/, '')) %>',
-    address: {
-      first_name:  '<%= j(@order.ship_address&.firstname.to_s) %>',
-      last_name:   '<%= j(@order.ship_address&.lastname.to_s) %>',
-      street:      '<%= j(@order.ship_address&.address1.to_s) %>',
-      city:        '<%= j(@order.ship_address&.city.to_s) %>',
-      region:      '<%= j(@order.ship_address&.state_name.to_s) %>',
-      postal_code: '<%= j(@order.ship_address&.zipcode.to_s) %>',
-      country:     '<%= j(@order.ship_address&.country&.iso.to_s.downcase) %>'
-    }
-  });
-
-  // Google Ads conversion
+  // ── Step 4: Google Ads conversion ────────────────────────────────────────
+  // This fires regardless of ad_storage consent state. Under GCM v2, Google
+  // uses the signal for conversion modeling even when ad_storage is denied.
+  // When ad_storage is granted (user consented to marketing), it counts fully.
   gtag('event', 'conversion', {
-    send_to:        '<%= ENV.fetch("GOOGLE_ADS_CONVERSION_ID", "AW-11446870184") %>/<%= ENV.fetch("GOOGLE_ADS_CONVERSION_LABEL", "e9mkCOO-pqccEKjBpdIq") %>',
-    value:          orderData.value,
-    currency:       orderData.currency,
-    transaction_id: orderData.transaction_id
+    send_to:                    '<%= ENV.fetch("GOOGLE_ADS_CONVERSION_ID", "AW-11446870184") %>/<%= ENV.fetch("GOOGLE_ADS_CONVERSION_LABEL", "e9mkCOO-pqccEKjBpdIq") %>',
+    value:                      orderData.value,
+    currency:                   orderData.currency,
+    transaction_id:             orderData.transaction_id,
+    allow_enhanced_conversions: true
   });
 })();
 </script>

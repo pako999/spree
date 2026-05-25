@@ -171,12 +171,14 @@
       // GA4 — personalization signals follow marketing consent
       gtag('config', '<%= ga4_id %>', {
         'allow_google_signals': marketing,
-        'allow_ad_personalization_signals': marketing
+        'allow_ad_personalization_signals': marketing,
+        'allow_enhanced_conversions': true
       });
       // Google Ads — same marketing consent gate
       gtag('config', '<%= gads_id %>', {
         'allow_google_signals': marketing,
-        'allow_ad_personalization_signals': marketing
+        'allow_ad_personalization_signals': marketing,
+        'allow_enhanced_conversions': true
       });
     } catch(e) {
       // Fallback: safe defaults (already set by GCM default block above)
