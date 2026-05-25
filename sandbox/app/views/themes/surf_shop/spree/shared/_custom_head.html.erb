@@ -155,14 +155,36 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=<%= gtm_id %>"></script>
 <script>
   gtag('js', new Date());
-  // Consent Mode v2: configs pass consent_aware flags so Google respects
-  // the default/update signals on the initial page view hit.
-  gtag('config', '<%= gtm_id %>', { 'allow_google_signals': false });
-  gtag('config', '<%= ga4_id %>', {   // GA4
-    'allow_google_signals': false,
-    'allow_ad_personalization_signals': false
-  });
-  gtag('config', '<%= gads_id %>'); // Google Ads
+
+  // Read consent cookie synchronously so returning users get correct signal
+  // state on the very first config call — before any event fires.
+  (function() {
+    try {
+      var m = document.cookie.match('(?:^|;)\\s*cookie_consent_v2=([^;]+)');
+      var c = m ? JSON.parse(decodeURIComponent(m[1])) : null;
+      var marketing = !!(c && c.version >= 2 && c.marketing);
+
+      // GTM container
+      gtag('config', '<%= gtm_id %>', {
+        'allow_google_signals': marketing
+      });
+      // GA4 — personalization signals follow marketing consent
+      gtag('config', '<%= ga4_id %>', {
+        'allow_google_signals': marketing,
+        'allow_ad_personalization_signals': marketing
+      });
+      // Google Ads — same marketing consent gate
+      gtag('config', '<%= gads_id %>', {
+        'allow_google_signals': marketing,
+        'allow_ad_personalization_signals': marketing
+      });
+    } catch(e) {
+      // Fallback: safe defaults (already set by GCM default block above)
+      gtag('config', '<%= gtm_id %>');
+      gtag('config', '<%= ga4_id %>');
+      gtag('config', '<%= gads_id %>');
+    }
+  })();
 
   // url_passthrough: passes consent state via URL params for cross-site measurement.
   // ads_data_redaction: redacts ad click identifiers (gclid) for denied users.
