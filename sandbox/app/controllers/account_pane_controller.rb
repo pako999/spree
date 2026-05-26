@@ -5,6 +5,9 @@
 # doesn't need to rely on spree_current_user being available in the layout.
 class AccountPaneController < ApplicationController
   def show
+    # Never let Cloudflare or any CDN cache this — it's auth-sensitive
+    response.headers['Cache-Control'] = 'no-store, private'
+    response.headers['Vary'] = 'Cookie'
     # Renders app/views/account_pane/show.html.erb
   end
 end
