@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  # Account pane turbo-frame — auth-aware, shows login or account nav
+  get '/account_pane', to: 'account_pane#show'
   # CSRF token refresh for pages served from Cloudflare cache (no session cookie)
   get '/csrf_token', to: 'csrf_tokens#show'
 

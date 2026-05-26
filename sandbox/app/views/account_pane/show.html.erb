@@ -1,0 +1,53 @@
+<%= turbo_frame_tag "login" do %>
+  <% if spree_current_user %>
+    <%# ── Logged-in view ─────────────────────────────────────────── %>
+    <div class="flex-1 overflow-y-auto p-4">
+      <div class="mb-4 text-sm text-muted"><%= spree_current_user.email %></div>
+      <nav class="flex flex-col gap-1">
+        <%= link_to "#{Spree.t(:orders)} & #{Spree.t(:returns)}", spree.account_orders_path,
+              class: "block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              data: { turbo_frame: "_top" } %>
+        <%= link_to Spree.t(:addresses), spree.account_addresses_path,
+              class: "block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              data: { turbo_frame: "_top" } %>
+        <%= link_to Spree.t(:personal_details), spree.edit_account_profile_path,
+              class: "block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              data: { turbo_frame: "_top" } %>
+        <%= link_to Spree.t(:wishlist), spree.account_wishlist_path,
+              class: "block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              data: { turbo_frame: "_top" } %>
+        <%= link_to Spree.t(:store_credits), spree.account_store_credits_path,
+              class: "block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              data: { turbo_frame: "_top" } %>
+      </nav>
+      <div class="mt-6 border-t border-default pt-4">
+        <%= button_to Spree.t(:logout), spree_logout_path,
+              class: "w-full text-left px-3 py-3 rounded hover:bg-accent-100 text-text font-medium",
+              method: :delete,
+              data: { turbo: false } %>
+      </div>
+    </div>
+  <% else %>
+    <%# ── Logged-out view — render the login form ─────────────────── %>
+    <div class="card-dialog max-w-xl mx-auto py-10 px-4">
+      <h2 class="text-xl font-medium mb-4"><%= Spree.t(:login) %></h2>
+      <%= form_for(Spree.user_class.new, as: :spree_user, url: spree_login_path, data: { turbo: false }) do |f| %>
+        <div class="flex flex-col mb-4">
+          <%= f.label :email, Spree.t(:email) %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "text-input", required: true %>
+        </div>
+        <div class="flex flex-col mb-4">
+          <%= f.label :password, Spree.t(:password) %>
+          <%= f.password_field :password, autocomplete: "current-password", class: "text-input", required: true %>
+        </div>
+        <div class="actions">
+          <%= f.submit Spree.t(:login), class: "btn btn-primary w-full", id: "login-button" %>
+        </div>
+      <% end %>
+      <div class="mt-4 flex flex-col gap-1 text-sm">
+        <p><%= link_to Spree.t(:sign_up), spree_signup_path, data: { turbo_frame: "_top" } %></p>
+        <p><%= link_to Spree.t(:forgot_password), spree_forgot_password_path, data: { turbo_frame: "_top" } %></p>
+      </div>
+    </div>
+  <% end %>
+<% end %>
