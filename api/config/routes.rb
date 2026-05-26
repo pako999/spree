@@ -64,6 +64,12 @@ Spree::Core::Engine.add_routes do
         # Digital Downloads
         # Access via token in URL
         get 'digitals/:token', to: 'digitals#download', as: :digital_download
+
+        # Blog Posts API — full CRUD for automated publishing (e.g. MCP integrations)
+        resources :posts, only: [:index, :show, :create, :update, :destroy]
+
+        # Blog image upload — returns signed_id to pass as post[image] on create/update
+        post 'blog_assets', to: 'blog_assets#create'
       end
     end
   end
