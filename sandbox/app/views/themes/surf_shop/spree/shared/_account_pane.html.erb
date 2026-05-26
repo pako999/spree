@@ -23,6 +23,41 @@
       <span class='text-xl font-medium uppercase leading-none'><%= Spree.t(:account) %></span>
       <span></span>
     </div>
-    <%= turbo_frame_tag "login", src: "/users/sign_in", loading: "lazy" %>
+
+    <% if spree_current_user %>
+      <%# Logged-in: show account navigation directly in the pane %>
+      <div class='flex-1 overflow-y-auto p-4'>
+        <div class='mb-4 text-sm text-muted'>
+          <%= spree_current_user.email %>
+        </div>
+        <nav class='flex flex-col gap-1'>
+          <%= link_to "#{Spree.t(:orders)} & #{Spree.t(:returns)}", spree.account_orders_path,
+            class: 'block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            data: { turbo_frame: '_top' } %>
+          <%= link_to Spree.t(:addresses), spree.account_addresses_path,
+            class: 'block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            data: { turbo_frame: '_top' } %>
+          <%= link_to Spree.t(:personal_details), spree.edit_account_profile_path,
+            class: 'block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            data: { turbo_frame: '_top' } %>
+          <%= link_to Spree.t(:wishlist), spree.account_wishlist_path,
+            class: 'block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            data: { turbo_frame: '_top' } %>
+          <%= link_to Spree.t(:store_credits), spree.account_store_credits_path,
+            class: 'block px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            data: { turbo_frame: '_top' } %>
+        </nav>
+
+        <div class='mt-6 border-t border-default pt-4'>
+          <%= button_to Spree.t(:logout), spree_logout_path,
+            class: 'w-full text-left px-3 py-3 rounded hover:bg-accent-100 text-text font-medium',
+            method: :delete,
+            data: { turbo: false } %>
+        </div>
+      </div>
+    <% else %>
+      <%# Logged-out: lazy-load the login form into the turbo frame %>
+      <%= turbo_frame_tag "login", src: "/users/sign_in", loading: "lazy" %>
+    <% end %>
   </div>
 </div>
