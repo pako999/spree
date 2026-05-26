@@ -57,8 +57,8 @@ env:
     - DHL_SUBSCRIPTION_KEY
   clear:
     SOLID_QUEUE_IN_PUMA: true
-    DATABASE_URL: "postgresql://ubuntu:kite@172.17.0.1/my_kite_shop_production"
-    DB_HOST: "172.17.0.1"
+    DATABASE_URL: "postgresql://ubuntu:kite@host.docker.internal/my_kite_shop_production"
+    DB_HOST: "host.docker.internal"
     DHL_SENDER_NAME: "Surf-Store d.o.o."
     DHL_SENDER_STREET: "Vojkova cesta 58"
     DHL_SENDER_CITY: "Ljubljana"
