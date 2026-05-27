@@ -11,10 +11,12 @@ servers:
       - 51.195.110.240
     options:
       add-host: host.docker.internal:host-gateway
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+  job:
+    hosts:
+      - 51.195.110.240
+    cmd: bundle exec rake solid_queue:start
+    options:
+      add-host: host.docker.internal:host-gateway
 
 # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
 # If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
