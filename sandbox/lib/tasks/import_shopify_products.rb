@@ -50,11 +50,18 @@ end
 def find_or_create_option_value(option_type, name)
   return nil if name.blank?
   normalized = normalize_ov_name(name)
-  Spree::OptionValue.find_or_create_by!(option_type: option_type, name: normalized) do |ov|
-    ov.presentation = name.to_s.strip  # keep original as human-readable presentation
-  end
-rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
-  Spree::OptionValue.find_by!(option_type: option_type, name: normalized)
+  # 1. Exact match
+  existing = Spree::OptionValue.find_by(option_type: option_type, name: normalized)
+  return existing if existing
+  # 2. Try to create
+  ov = Spree::OptionValue.new(option_type: option_type, name: normalized,
+                               presentation: name.to_s.strip)
+  return ov if ov.save
+  # 3. Creation failed (uniqueness) — find via LOWER() to catch encoding/case edge cases
+  Spree::OptionValue
+    .where(option_type_id: option_type.id)
+    .where("LOWER(name) = LOWER(?)", normalized)
+    .first
 end
 
 # ---------------------------------------------------------------------------
