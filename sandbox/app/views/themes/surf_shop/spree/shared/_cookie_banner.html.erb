@@ -346,14 +346,18 @@
 
   function applyConsentToGtag(c) {
     if (typeof gtag !== 'function') return;
-    gtag('consent', 'update', {
+    var state = {
       'ad_storage':              c.marketing       ? 'granted' : 'denied',
       'ad_user_data':            c.marketing       ? 'granted' : 'denied',
       'ad_personalization':      c.marketing       ? 'granted' : 'denied',
       'analytics_storage':       c.analytics       ? 'granted' : 'denied',
       'functionality_storage':   c.personalization ? 'granted' : 'denied',
       'personalization_storage': c.personalization ? 'granted' : 'denied'
-    });
+    };
+    gtag('consent', 'update', state);
+    if (window.location.search.indexOf('consent_debug') !== -1) {
+      console.log('[Consent] Update fired:', state);
+    }
   }
 
   function saveConsent(choices) {
@@ -366,7 +370,7 @@
       personalization: !!choices.personalization
     };
     writeConsentCookie(consent);
-    applyConsentToGtag(consent);
+    applyConsentToGtag(consent);  // fires gtag('consent','update',...) + debug log
     window.dispatchEvent(new CustomEvent('cookieConsentUpdate', { detail: consent }));
     return consent;
   }
@@ -386,6 +390,10 @@
     if (firstBtn) setTimeout(function(){ firstBtn.focus(); }, 450);
   }
 
+  // Works with Turbo AND standard page loads
+  // Use a flag to avoid double-binding events when initBanner is called multiple times
+  var _bannerInitialized = false;
+
   function initBanner() {
     var stored = readConsentCookie();
     if (stored) {
@@ -398,6 +406,10 @@
 
     // No valid consent — show banner after short delay
     setTimeout(showBanner, 400);
+
+    // Only bind button events once to avoid stacking multiple listeners
+    if (_bannerInitialized) return;
+    _bannerInitialized = true;
 
     var prefs = { analytics: false, marketing: false, personalization: false };
 
@@ -455,14 +467,13 @@
     });
   }
 
-  // Works with Turbo AND standard page loads
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBanner);
   } else {
     initBanner();
   }
 
-  // Turbo navigation — re-check on each page
+  // Turbo navigation — re-check consent on each page visit
   document.addEventListener('turbo:load', function() {
     var stored = readConsentCookie();
     if (!stored) {
