@@ -121,11 +121,17 @@
     'ad_user_data':            'denied',
     'ad_personalization':      'denied',
     'analytics_storage':       'denied',
-    'functionality_storage':   'denied',
-    'personalization_storage': 'denied',
-    'security_storage':        'granted', // always needed
-    'wait_for_update':         500        // ms to wait for consent update before firing
+    'functionality_storage':   'granted',   // shopping cart, wishlist — always needed
+    'personalization_storage': 'granted',   // recently viewed, preferences — always needed
+    'security_storage':        'granted',   // login, CSRF — always needed
+    'wait_for_update':         500          // ms to wait for banner consent update before firing
   });
+
+  // url_passthrough: preserves GCLID across redirects when ad_storage is denied
+  // ads_data_redaction: redacts PII before sending to Google in denied state
+  // Both must be set BEFORE gtag.js loads so they apply from the very first hit
+  gtag('set', 'url_passthrough', true);
+  gtag('set', 'ads_data_redaction', true);
 
   // If user already consented on a previous visit — upgrade immediately
   // Reads from cookie_consent_v2 cookie (set by _cookie_banner.html.erb)
@@ -135,14 +141,19 @@
       if (!match) return;
       var c = JSON.parse(decodeURIComponent(match[1]));
       if (!c || !c.version) return;
-      gtag('consent', 'update', {
+      var state = {
         'ad_storage':              c.marketing       ? 'granted' : 'denied',
         'ad_user_data':            c.marketing       ? 'granted' : 'denied',
         'ad_personalization':      c.marketing       ? 'granted' : 'denied',
         'analytics_storage':       c.analytics       ? 'granted' : 'denied',
         'functionality_storage':   c.personalization ? 'granted' : 'denied',
         'personalization_storage': c.personalization ? 'granted' : 'denied'
-      });
+      };
+      gtag('consent', 'update', state);
+      // Debug helper: add ?consent_debug=1 to URL to see consent state in console
+      if (window.location.search.indexOf('consent_debug') !== -1) {
+        console.log('[Consent] Restored from cookie:', state);
+      }
     } catch(e) {}
   })();
 </script>
@@ -188,10 +199,8 @@
     }
   })();
 
-  // url_passthrough: passes consent state via URL params for cross-site measurement.
-  // ads_data_redaction: redacts ad click identifiers (gclid) for denied users.
-  gtag('set', 'url_passthrough', true);
-  gtag('set', 'ads_data_redaction', true);
+  // url_passthrough and ads_data_redaction are set BEFORE gtag.js loads (above).
+  // No need to repeat them here — they're already queued in dataLayer.
 </script>
 
 
