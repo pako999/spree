@@ -44,8 +44,11 @@ size_option  = Spree::OptionType.find_or_create_by!(name: 'size')  { |o| o.prese
 def find_or_create_option_value(option_type, name)
   return nil if name.blank?
   clean = name.to_s.strip
-  Spree::OptionValue.find_by(option_type: option_type, name: clean) ||
-    Spree::OptionValue.create!(option_type: option_type, name: clean, presentation: clean)
+  Spree::OptionValue.find_or_create_by!(option_type: option_type, name: clean) do |ov|
+    ov.presentation = clean
+  end
+rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+  Spree::OptionValue.find_by!(option_type: option_type, name: clean)
 end
 
 # ---------------------------------------------------------------------------
@@ -181,6 +184,41 @@ product_groups.each do |handle, variant_rows|
   # ------------------------------------------------------------------
   # Create missing variants
   # ------------------------------------------------------------------
+
+  # For single-variant products (one row only) → set barcode on master variant
+  if variant_rows.size == 1
+    row     = variant_rows.first
+    barcode = row['Variant Barcode'].to_s.strip
+    next if barcode.blank?
+
+    if existing_barcodes.include?(barcode)
+      log "    SKIP master variant barcode=#{barcode}"
+      skipped_variants += 1
+      next
+    end
+
+    begin
+      master = product.master
+      master.update!(
+        barcode:  barcode,
+        sku:      row['Variant SKU'].to_s.strip.presence || "#{slug}-#{barcode}"
+      )
+      p_rec = master.prices.find_or_initialize_by(currency: 'EUR')
+      p_rec.amount = row['Variant Price'].to_s.to_f.then { |v| v > 0 ? v : price }
+      p_rec.save!
+      si = master.stock_items.find_or_create_by!(stock_location: stock_loc)
+      si.update!(count_on_hand: 0, backorderable: false)
+      existing_barcodes.add(barcode)
+      created_variants += 1
+      log "    + master barcode=#{barcode}"
+    rescue => e
+      msg = "ERROR updating master barcode=#{barcode}: #{e.message[0..120]}"
+      log "  #{msg}"; errors << msg
+    end
+    next
+  end
+
+  # Multi-variant products → create proper variants with option values
   variant_rows.each do |row|
     barcode = row['Variant Barcode'].to_s.strip
     next if barcode.blank?
@@ -192,27 +230,31 @@ product_groups.each do |handle, variant_rows|
     end
 
     begin
-      opt1_val = row['Option1 Value'].to_s.strip
-      opt2_val = row['Option2 Value'].to_s.strip
-      sku      = row['Variant SKU'].to_s.strip.presence || "#{slug}-#{barcode}"
+      opt1_val  = row['Option1 Value'].to_s.strip
+      opt2_val  = row['Option2 Value'].to_s.strip
+      sku       = row['Variant SKU'].to_s.strip.presence || "#{slug}-#{barcode}"
       var_price = row['Variant Price'].to_s.to_f
       var_price = price if var_price <= 0
       compare_at = row['Variant Compare At Price'].to_s.to_f
 
       option_values = []
-      if has_color && opt1_val.present?
-        option_values << find_or_create_option_value(color_option, opt1_val)
-      elsif !has_color && !has_size && opt1_val.present?
-        # Generic option1
-        opt_type = Spree::OptionType.find_or_create_by!(name: opt1_name.downcase) do |o|
-          o.presentation = opt1_name
+
+      if opt1_val.present?
+        ov1 = Spree::OptionValue.where(option_type: color_option, name: opt1_val).first_or_initialize do |ov|
+          ov.presentation = opt1_val
         end
-        product.option_types << opt_type unless product.option_types.include?(opt_type)
-        option_values << find_or_create_option_value(opt_type, opt1_val)
+        ov1.save! if ov1.new_record?
+        option_values << ov1
+        product.option_types << color_option unless product.option_types.include?(color_option)
       end
 
       if opt2_val.present?
-        option_values << find_or_create_option_value(size_option, opt2_val)
+        ov2 = Spree::OptionValue.where(option_type: size_option, name: opt2_val).first_or_initialize do |ov|
+          ov.presentation = opt2_val
+        end
+        ov2.save! if ov2.new_record?
+        option_values << ov2
+        product.option_types << size_option unless product.option_types.include?(size_option)
       end
 
       variant = product.variants.create!(
@@ -222,32 +264,20 @@ product_groups.each do |handle, variant_rows|
         option_values: option_values.compact
       )
 
-      # Price
       price_rec = variant.prices.find_or_initialize_by(currency: 'EUR')
       price_rec.amount = var_price
       price_rec.save!
 
-      # Compare-at price
-      if compare_at > 0 && compare_at > var_price
-        cp = variant.prices.find_or_initialize_by(currency: 'EUR', role: 'compare_at')
-        cp.amount = compare_at
-        cp.save!
-      end
-
-      # Stock item at Boards And More
       si = variant.stock_items.find_or_create_by!(stock_location: stock_loc)
       si.update!(count_on_hand: 0, backorderable: false)
 
-      # Variant image
       var_img_url = row['Variant Image'].to_s.strip
       if var_img_url.present? && var_img_url != image_url
         begin
-          io       = URI.open(var_img_url, read_timeout: 20, open_timeout: 10,
-                              'User-Agent' => 'Mozilla/5.0')
-          vfilename = var_img_url.split('/').last.split('?').first
-          vfilename = "#{barcode}.jpg" if vfilename.blank?
+          io = URI.open(var_img_url, read_timeout: 20, open_timeout: 10, 'User-Agent' => 'Mozilla/5.0')
+          vf = var_img_url.split('/').last.split('?').first.presence || "#{barcode}.jpg"
           vimg = Spree::Image.new(viewable: variant)
-          vimg.attachment.attach(io: io, filename: vfilename, content_type: 'image/jpeg')
+          vimg.attachment.attach(io: io, filename: vf, content_type: 'image/jpeg')
           vimg.save!
         rescue => e
           log "    Variant IMG FAILED: #{e.message[0..60]}"
@@ -256,11 +286,10 @@ product_groups.each do |handle, variant_rows|
 
       existing_barcodes.add(barcode)
       created_variants += 1
-      log "    + variant sku=#{sku} barcode=#{barcode} price=#{var_price}"
+      log "    + variant sku=#{sku} barcode=#{barcode}"
     rescue => e
       msg = "ERROR creating variant barcode=#{barcode}: #{e.message[0..120]}"
-      log "  #{msg}"
-      errors << msg
+      log "  #{msg}"; errors << msg
     end
   end
 end
