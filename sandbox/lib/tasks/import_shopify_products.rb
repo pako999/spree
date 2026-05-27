@@ -41,14 +41,20 @@ stock_loc     = Spree::StockLocation.find_by!(name: 'Boards And More')
 color_option = Spree::OptionType.find_or_create_by!(name: 'color') { |o| o.presentation = 'Color' }
 size_option  = Spree::OptionType.find_or_create_by!(name: 'size')  { |o| o.presentation = 'Size' }
 
+# Spree normalizes option value names: lowercase, colons/spaces → hyphens
+# e.g. "C56:grey" → "c56-grey", "C99:random" → "c99-random"
+def normalize_ov_name(name)
+  name.to_s.strip.downcase.gsub(/[:\s]+/, '-').gsub(/-+/, '-').chomp('-')
+end
+
 def find_or_create_option_value(option_type, name)
   return nil if name.blank?
-  clean = name.to_s.strip
-  Spree::OptionValue.find_or_create_by!(option_type: option_type, name: clean) do |ov|
-    ov.presentation = clean
+  normalized = normalize_ov_name(name)
+  Spree::OptionValue.find_or_create_by!(option_type: option_type, name: normalized) do |ov|
+    ov.presentation = name.to_s.strip  # keep original as human-readable presentation
   end
 rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
-  Spree::OptionValue.find_by!(option_type: option_type, name: clean)
+  Spree::OptionValue.find_by!(option_type: option_type, name: normalized)
 end
 
 # ---------------------------------------------------------------------------
@@ -240,20 +246,14 @@ product_groups.each do |handle, variant_rows|
       option_values = []
 
       if opt1_val.present?
-        ov1 = Spree::OptionValue.where(option_type: color_option, name: opt1_val).first_or_initialize do |ov|
-          ov.presentation = opt1_val
-        end
-        ov1.save! if ov1.new_record?
-        option_values << ov1
+        ov1 = find_or_create_option_value(color_option, opt1_val)
+        option_values << ov1 if ov1
         product.option_types << color_option unless product.option_types.include?(color_option)
       end
 
       if opt2_val.present?
-        ov2 = Spree::OptionValue.where(option_type: size_option, name: opt2_val).first_or_initialize do |ov|
-          ov.presentation = opt2_val
-        end
-        ov2.save! if ov2.new_record?
-        option_values << ov2
+        ov2 = find_or_create_option_value(size_option, opt2_val)
+        option_values << ov2 if ov2
         product.option_types << size_option unless product.option_types.include?(size_option)
       end
 
