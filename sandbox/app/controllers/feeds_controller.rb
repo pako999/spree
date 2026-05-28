@@ -69,11 +69,13 @@ class FeedsController < ApplicationController
   private
 
   def build_items
-    items = []
+    items   = []
+    skipped = Hash.new(0)
 
     products = Spree::Product
       .active
       .where(deleted_at: nil)
+      .where('discontinue_on IS NULL OR discontinue_on > ?', Time.current)
       .joins(:stores).where(spree_stores: { id: STORE_ID })
       .includes(
         :taxons,
@@ -115,16 +117,25 @@ class FeedsController < ApplicationController
 
       variants_to_use.each do |variant|
         image = variant.images.first || fallback_image
-        next unless image
+        unless image
+          skipped[:no_image] += 1
+          next
+        end
 
         price_obj = variant.prices.find { |p| p.currency == 'EUR' } || variant.prices.first
-        next unless price_obj&.amount.to_f > 0
+        unless price_obj&.amount.to_f > 0
+          skipped[:no_price] += 1
+          next
+        end
 
         total_stock      = variant.stock_items.sum(&:count_on_hand)
         is_backorderable = variant.stock_items.any?(&:backorderable?)
 
-        # Exclusion: gift cards, shipping insurance, dead old-season stock
-        next if GoogleShoppingOptimizer.exclude?(product.name, total_stock, is_backorderable)
+        # Exclusion: gift cards, shipping insurance, dead old-season stock (2023/2024/2025 zero-stock)
+        if GoogleShoppingOptimizer.exclude?(product.name, total_stock, is_backorderable)
+          skipped[:old_season_zero_stock] += 1
+          next
+        end
 
         color = variant.option_values.find { |ov| ov.option_type&.name == 'color' }&.presentation
         size  = variant.option_values.find { |ov| ov.option_type&.name == 'size'  }&.presentation
@@ -170,6 +181,8 @@ class FeedsController < ApplicationController
       end
     end
 
+    Rails.logger.info "[GoogleFeed] Built #{items.size} feed items from #{products.size} products. " \
+                      "Skipped variants: #{skipped.map { |k, v| "#{k}=#{v}" }.join(', ')}"
     items
   end
 
