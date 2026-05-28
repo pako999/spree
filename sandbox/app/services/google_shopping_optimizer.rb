@@ -72,8 +72,7 @@ module GoogleShoppingOptimizer
     Water Bike Kiteboarding Windsurfing Foilwing Foiling Electric Wing Apparel
   ].freeze
 
-  # Old seasons whose OOS products should be excluded from the feed.
-  OLD_SEASONS = %w[2023 2024 2025].freeze
+  # (Removed OLD_SEASONS — zero-stock exclusion now applies to ALL products regardless of year)
 
   # Product names matching these patterns are non-physical and excluded.
   EXCLUSION_PATTERNS = [
@@ -98,11 +97,14 @@ module GoogleShoppingOptimizer
   #   product_name   – String: product.name
   #   total_stock    – Integer: sum of count_on_hand across all stock locations
   #   backorderable  – Boolean: any stock location allows backorders
+  #
+  # Rule: exclude ANY zero-stock, non-backorderable variant.
+  # Feed rebuilds every 6 hours from live stock data, so products reappear
+  # automatically when restocked.
   def self.exclude?(product_name, total_stock, backorderable)
     return true if EXCLUSION_PATTERNS.any? { |p| product_name.to_s.match?(p) }
 
-    season = extract_year(product_name.to_s)
-    OLD_SEASONS.include?(season) && total_stock <= 0 && !backorderable
+    total_stock <= 0 && !backorderable
   end
 
   # Extracts a 4-digit year (2023–2039) from a product title string.
