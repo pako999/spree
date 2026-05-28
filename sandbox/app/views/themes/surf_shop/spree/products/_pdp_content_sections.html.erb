@@ -1,0 +1,189 @@
+<%# ─────────────────────────────────────────────────────────────────────────
+   Global PDP content sections (rendered for every product).
+   Editorial content is sourced from product PROPERTIES so each product can be
+   filled in via admin (Products → Properties). Every editorial section hides
+   itself when its property is blank, so products without content stay clean.
+
+   Authoring format (all optional):
+     feature_1_title / feature_1_text / feature_1_image (image URL)
+     feature_2_title / feature_2_text / feature_2_image
+     materials   → one per line:  Name | Short description
+     materials_image (image URL, shown in the centre of the materials band)
+     faq         → one per line:  Question | Answer
+   Reviews are intentionally not built yet — a placeholder hook is left below.
+─────────────────────────────────────────────────────────────────────────── %>
+
+<%
+  f1_title = product.property('feature_1_title')
+  f2_title = product.property('feature_2_title')
+  has_features = f1_title.present? || f2_title.present?
+
+  materials = product.property('materials').to_s
+                     .split(/\r?\n/)
+                     .map { |l| l.split('|', 2).map(&:strip) }
+                     .select { |pair| pair.size == 2 && pair.all?(&:present?) }
+
+  faqs = product.property('faq').to_s
+                .split(/\r?\n/)
+                .map { |l| l.split('|', 2).map(&:strip) }
+                .select { |pair| pair.size == 2 && pair.all?(&:present?) }
+%>
+
+<section class="pdp-extras">
+  <style>
+    .pdp-extras{--px-ink:#111418;--px-muted:#6b7280;--px-line:#e7e9ee;--px-soft:#f4f5f7;--px-radius:14px;color:var(--px-ink);font-family:inherit}
+    .pdp-extras *{box-sizing:border-box}
+    .pdp-wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+    .pdp-extras h2{font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.01em;text-align:center;margin:0 0 6px}
+    .pdp-extras .px-sub{text-align:center;color:var(--px-muted);max-width:620px;margin:0 auto 34px;font-size:15px;line-height:1.6}
+
+    /* TRUST BAR */
+    .px-trust{background:var(--px-soft);border-top:1px solid var(--px-line);border-bottom:1px solid var(--px-line);margin-top:48px}
+    .px-trust .pdp-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-top:34px;padding-bottom:34px}
+    .px-trust-item{text-align:center}
+    .px-trust-item svg{width:30px;height:30px;color:var(--px-ink);margin:0 auto 10px;display:block}
+    .px-trust-item b{display:block;font-size:15px;font-weight:600}
+    .px-trust-item small{color:var(--px-muted);font-size:13px}
+
+    /* FEATURE BLOCKS */
+    .px-features{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .px-feature{position:relative;min-height:300px;border-radius:var(--px-radius);overflow:hidden;display:flex;align-items:flex-end;background:#dfe3ea}
+    .px-feature img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .px-feature::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.72) 100%)}
+    .px-feature-body{position:relative;z-index:1;padding:26px 28px;color:#fff}
+    .px-feature-body h3{font-size:21px;font-weight:600;margin:0 0 6px}
+    .px-feature-body p{font-size:14px;line-height:1.55;margin:0;color:rgba(255,255,255,.85);max-width:430px}
+
+    /* MATERIALS */
+    .px-materials{margin-top:14px;border-radius:var(--px-radius);overflow:hidden;background:linear-gradient(135deg,#2b2f36,#3b4049);color:#fff;padding:44px 28px}
+    .px-materials-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:28px;align-items:center;max-width:980px;margin:0 auto}
+    .px-materials-col{display:flex;flex-direction:column;gap:26px}
+    .px-materials-col.right{text-align:right}
+    .px-mat h4{font-size:18px;font-weight:600;margin:0 0 4px}
+    .px-mat p{font-size:13.5px;line-height:1.5;margin:0;color:rgba(255,255,255,.72)}
+    .px-materials-img{width:200px;height:230px;object-fit:contain}
+    .px-materials-img-fallback{width:160px;height:200px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+
+    /* FAQ */
+    .px-faq{padding:60px 0}
+    .px-faq-list{max-width:820px;margin:0 auto}
+    .px-faq details{border-bottom:1px solid var(--px-line)}
+    .px-faq summary{cursor:pointer;list-style:none;padding:20px 4px;font-size:16px;font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:16px}
+    .px-faq summary::-webkit-details-marker{display:none}
+    .px-faq summary::after{content:"+";font-size:22px;color:var(--px-muted);transition:transform .2s ease;line-height:1}
+    .px-faq details[open] summary::after{transform:rotate(45deg)}
+    .px-faq details p{padding:0 4px 22px;margin:0;color:var(--px-muted);font-size:14.5px;line-height:1.65}
+
+    @media(max-width:860px){
+      .px-features{grid-template-columns:1fr}
+      .px-materials-grid{grid-template-columns:1fr;text-align:center}
+      .px-materials-col.right{text-align:center}
+      .px-materials-img,.px-materials-img-fallback{margin:0 auto}
+    }
+    @media(max-width:560px){
+      .px-trust .pdp-wrap{grid-template-columns:1fr}
+    }
+  </style>
+
+  <%# ── TRUST BAR (always shown) ─────────────────────────────────────────── %>
+  <div class="px-trust">
+    <div class="pdp-wrap">
+      <div class="px-trust-item">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h11v8H3zM14 10h3.5L20 13v2h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.6" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="17" r="1.6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <b>Fast EU shipping</b><small>Tracked &amp; insured delivery</small>
+      </div>
+      <div class="px-trust-item">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 109-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 5v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <b>30-day money-back</b><small>Shop with peace of mind</small>
+      </div>
+      <div class="px-trust-item">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <b>Secure checkout</b><small>Encrypted payments</small>
+      </div>
+    </div>
+  </div>
+
+  <%# ── FEATURE BLOCKS (from properties feature_1_* / feature_2_*) ────────── %>
+  <% if has_features %>
+    <div class="pdp-wrap" style="padding-top:56px">
+      <div class="px-features">
+        <% [1, 2].each do |i| %>
+          <% title = product.property("feature_#{i}_title") %>
+          <% next if title.blank? %>
+          <% text = product.property("feature_#{i}_text") %>
+          <% img  = product.property("feature_#{i}_image") %>
+          <div class="px-feature">
+            <% if img.present? %><img src="<%= img %>" alt="<%= title %>" loading="lazy"><% end %>
+            <div class="px-feature-body">
+              <h3><%= title %></h3>
+              <% if text.present? %><p><%= text %></p><% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ── MATERIALS (from property "materials": Name | description per line) ── %>
+  <% if materials.any? %>
+    <% mat_img = product.property('materials_image') %>
+    <% half = (materials.size / 2.0).ceil %>
+    <div class="pdp-wrap" style="padding-top:14px">
+      <div class="px-materials">
+        <div class="px-materials-grid">
+          <div class="px-materials-col">
+            <% materials.first(half).each do |name, desc| %>
+              <div class="px-mat"><h4><%= name %></h4><p><%= desc %></p></div>
+            <% end %>
+          </div>
+          <div class="px-materials-center">
+            <% if mat_img.present? %>
+              <img class="px-materials-img" src="<%= mat_img %>" alt="<%= product.name %> materials" loading="lazy">
+            <% else %>
+              <div class="px-materials-img-fallback"></div>
+            <% end %>
+          </div>
+          <div class="px-materials-col right">
+            <% materials.drop(half).each do |name, desc| %>
+              <div class="px-mat"><h4><%= name %></h4><p><%= desc %></p></div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ── REVIEWS PLACEHOLDER ──────────────────────────────────────────────── %>
+  <%# Reviews are not built yet (no Review model). This anchor is the future
+      home for the rating summary + reviews list. Render nothing for now. %>
+  <div id="product-reviews" data-reviews-placeholder></div>
+
+  <%# ── FAQ (from property "faq": Question | Answer per line) ─────────────── %>
+  <% if faqs.any? %>
+    <div class="px-faq">
+      <div class="pdp-wrap">
+        <h2>Frequently Asked Questions</h2>
+        <div class="px-sub">Everything you need to know before you buy.</div>
+        <div class="px-faq-list">
+          <% faqs.each_with_index do |(q, a), idx| %>
+            <details <%= 'open' if idx.zero? %>>
+              <summary><%= q %></summary>
+              <p><%= simple_format(a) %></p>
+            </details>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/ld+json">
+    <%= {
+      "@context" => "https://schema.org",
+      "@type"    => "FAQPage",
+      "mainEntity" => faqs.map { |q, a| {
+        "@type" => "Question", "name" => q,
+        "acceptedAnswer" => { "@type" => "Answer", "text" => a }
+      } }
+    }.to_json.html_safe %>
+    </script>
+  <% end %>
+</section>

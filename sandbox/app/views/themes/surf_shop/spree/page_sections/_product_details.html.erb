@@ -316,3 +316,7 @@
     <%= render 'spree/products/description', product: product, block: block, section: section %>
   </div>
 <% end %>
+
+<%# Global PDP editorial content: trust badges, feature blocks, materials, FAQ.
+    Sourced from product properties; each part hides itself when empty. %>
+<%= render 'spree/products/pdp_content_sections', product: product %>
