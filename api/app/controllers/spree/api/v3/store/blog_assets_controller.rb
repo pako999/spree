@@ -9,9 +9,14 @@ module Spree
         # post[image] when creating/updating a post.
         #
         # POST /api/v3/store/blog_assets
+        # Auth: secret key required
         # Params: file (multipart)
         # Response: { signed_id, url, filename, content_type, byte_size }
         class BlogAssetsController < ResourceController
+          # Image upload is a write operation — require secret key, not publishable.
+          skip_before_action :authenticate_api_key!, raise: false
+          before_action :authenticate_secret_key!
+
           def create
             file = params.require(:file)
 
