@@ -55,18 +55,29 @@
                       data-toggle-class='hidden'
                       class="w-full flex flex-col gap-2">
                       <% unless presenter.columns.size == 1 %>
-                        <button
-                          type="button"
-                          class="text-base font-semibold tracking-widest uppercase w-full inline-flex justify-between py-3"
-                          data-action='click->toggle#toggle'>
-                          <%= column.title %>
-                          <span data-toggle-target='toggleable'>
-                            <%= render 'spree/shared/icons/chevron_down' %>
-                          </span>
-                          <span data-toggle-target='toggleable' class="hidden rotate-180">
-                            <%= render 'spree/shared/icons/chevron_down' %>
-                          </span>
-                        </button>
+                        <%# Split into link (navigates) + chevron button (toggle only) %>
+                        <div class="inline-flex w-full items-center border-b border-default">
+                          <% if column.view_all_linkable.present? %>
+                            <%= link_to spree_storefront_resource_url(column.view_all_linkable),
+                                class: "flex-1 text-base font-semibold tracking-widest uppercase py-3 pr-2" do %>
+                              <%= column.title %>
+                            <% end %>
+                          <% else %>
+                            <span class="flex-1 text-base font-semibold tracking-widest uppercase py-3 pr-2"><%= column.title %></span>
+                          <% end %>
+                          <button
+                            type="button"
+                            class="p-3 flex items-center justify-center shrink-0"
+                            data-action='click->toggle#toggle'
+                            aria-label="Toggle <%= column.title %>">
+                            <span data-toggle-target='toggleable'>
+                              <%= render 'spree/shared/icons/chevron_down' %>
+                            </span>
+                            <span data-toggle-target='toggleable' class="hidden rotate-180">
+                              <%= render 'spree/shared/icons/chevron_down' %>
+                            </span>
+                          </button>
+                        </div>
                       <% end %>
                       <div
                         class="<%= class_names(hidden: presenter.columns.size != 1) %>"
