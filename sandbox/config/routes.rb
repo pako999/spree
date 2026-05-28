@@ -3,6 +3,9 @@ Rails.application.routes.draw do
   get '/csrf_token', to: 'csrf_tokens#show'
 
   Spree::Core::Engine.add_routes do
+    # Marketing landing pages for paid-traffic campaigns (e.g. /lp/e-foil-duotone)
+    get '/lp/:slug', to: 'landings#show', as: :landing_page
+
     # AI Description routes
     namespace :admin do
       resources :stock_syncs, only: [:index] do
