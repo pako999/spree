@@ -4,12 +4,13 @@
    filled in via admin (Products → Properties). Every editorial section hides
    itself when its property is blank, so products without content stay clean.
 
-   Authoring format (all optional):
+   Authoring format (all optional). NOTE: Spree stores property values on a
+   single line (newlines are stripped), so rows are separated by "||".
      feature_1_title / feature_1_text / feature_1_image (image URL)
      feature_2_title / feature_2_text / feature_2_image
-     materials   → one per line:  Name | Short description
+     materials   → Name | description || Name | description || ...
      materials_image (image URL, shown in the centre of the materials band)
-     faq         → one per line:  Question | Answer
+     faq         → Question | Answer || Question | Answer || ...
    Reviews are intentionally not built yet — a placeholder hook is left below.
 ─────────────────────────────────────────────────────────────────────────── %>
 
@@ -18,15 +19,14 @@
   f2_title = product.property('feature_2_title')
   has_features = f1_title.present? || f2_title.present?
 
-  materials = product.property('materials').to_s
-                     .split(/\r?\n/)
-                     .map { |l| l.split('|', 2).map(&:strip) }
-                     .select { |pair| pair.size == 2 && pair.all?(&:present?) }
-
-  faqs = product.property('faq').to_s
-                .split(/\r?\n/)
-                .map { |l| l.split('|', 2).map(&:strip) }
-                .select { |pair| pair.size == 2 && pair.all?(&:present?) }
+  # Rows separated by "||" (newlines are stripped by Spree); fields by "|".
+  row_split = ->(raw) {
+    raw.to_s.split(/\s*\|\|\s*|\r?\n/)
+       .map { |l| l.split('|', 2).map(&:strip) }
+       .select { |pair| pair.size == 2 && pair.all?(&:present?) }
+  }
+  materials = row_split.call(product.property('materials'))
+  faqs      = row_split.call(product.property('faq'))
 %>
 
 <section class="pdp-extras">
