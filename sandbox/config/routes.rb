@@ -62,6 +62,10 @@ Rails.application.routes.draw do
   get '/de',        to: redirect('/', status: 301)
   get '/de/*path',  to: redirect('/%{path}', status: 301)
 
+  # Landing pages (rich marketing pages with embedded product grids)
+  # e.g. /lp/e-foil-duotone
+  get '/lp/:slug', to: 'spree/landings#show', as: :landing_page
+
   mount Spree::Core::Engine, at: '/'
   devise_for :admin_users, class_name: "Spree::AdminUser",
              controllers: {
@@ -87,6 +91,11 @@ Rails.application.routes.draw do
   get 'feeds/google-shopping.xml', to: 'feeds#google_shopping', as: :google_shopping_feed, defaults: { format: :xml }
   get 'sitemap-seo.xml', to: 'feeds#sitemap_seo', as: :seo_sitemap, defaults: { format: :xml }
 
+  # Blog hero image upload — used by MCP tooling to set Post#image via ActiveStorage signed_id.
+  # POST /blog_assets  (X-Spree-Api-Key header required, multipart file field named "file")
+  # Returns: { "signed_id": "eyJfcmFpbHMi..." }
+  post 'blog_assets', to: 'blog_assets#create', as: :blog_assets
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
@@ -106,7 +115,7 @@ Rails.application.routes.draw do
   # Handles old Shopify /collections/*, unsupported locale /sl/*, *.html URLs, etc.
   # Excludes API, admin, Rails internals, static assets, and product feeds
   match '*path', to: redirect('/'), via: :all,
-        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap|blogs|pages|login|logout|signup|users|account|cart|checkout|orders|wishlist|posts|policies|t/|products|locale)} }
+        constraints: ->(req) { req.path !~ %r{\A/(api|admin|rails|assets|packs|images|icon|favicon|up|q1qf|olaf|cdn|feeds|sitemap|blogs|pages|login|logout|signup|users|account|cart|checkout|orders|wishlist|posts|policies|lp|t/|products|locale)} }
 
   # Defines the root path route ("/")
   # root "posts#index"
