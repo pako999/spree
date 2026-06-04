@@ -275,6 +275,26 @@
           <a href="#products" class="lp-btn lp-btn--outline" data-lp-cta="model-cruise">Shop Cruise Set</a>
         </div>
       </div>
+
+      <%# ── E-Foil Sets product cards ── %>
+      <% if @sets.present? %>
+        <div class="lp-sets-divider"></div>
+        <h3 class="lp-section__subtitle">Shop E-Foil Sets</h3>
+        <p class="lp-section__sub" style="margin-bottom: 32px;">Complete packages — everything you need to start electric foiling.</p>
+        <div class="lp-sets-grid">
+          <% @sets.each do |product| %>
+            <div class="lp-product-card-wrap">
+              <%= render 'spree/products/product', product: product, show_variant_picker: false %>
+            </div>
+          <% end %>
+        </div>
+        <div class="lp-cta-row" style="margin-top: 32px;">
+          <a href="/t/categories/e-foil/e-foil-sets" class="lp-btn lp-btn--outline" data-lp-cta="sets-view-all"
+             onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_sets',creative_slot:'view_all'})">
+            View all E-Foil Sets →
+          </a>
+        </div>
+      <% end %>
     </div>
   </section>
 
@@ -875,6 +895,28 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .lp-model-card .lp-btn { width: 100%; }
 
+/* ── E. SETS GRID (after model cards) ── */
+.lp-sets-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,194,255,0.25), transparent);
+  margin: 56px 0 40px;
+}
+.lp-section__subtitle {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--lp-white);
+}
+.lp-sets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
 /* ── F. BOX GRID ── */
 .lp-box-grid {
   display: grid;
@@ -1107,6 +1149,7 @@ details[open] .lp-faq__q::after {
   .lp-cards--3 { grid-template-columns: 1fr; }
   .lp-stats__grid { grid-template-columns: repeat(2, 1fr); }
   .lp-box-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-sets-grid { grid-template-columns: repeat(2, 1fr); }
   .lp-steps { grid-template-columns: 1fr; gap: 40px; }
   .lp-product-grid { grid-template-columns: repeat(2, 1fr); }
   .lp-section { padding: 60px 0; }
@@ -1117,6 +1160,7 @@ details[open] .lp-faq__q::after {
   .lp-stats__grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .lp-box-grid { grid-template-columns: 1fr; }
   .lp-product-grid { grid-template-columns: 1fr; }
+  .lp-sets-grid { grid-template-columns: 1fr; }
   .lp-hero { min-height: 70vh; }
   .lp-hero__content { padding: 80px 16px 60px; }
   .lp-hero__ctas { flex-direction: column; align-items: center; }

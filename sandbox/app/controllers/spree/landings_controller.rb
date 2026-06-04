@@ -26,9 +26,15 @@ module Spree
       store = current_store
 
       efoil_taxon  = Spree::Taxon.find_by(permalink: 'categories/e-foil')
+      sets_taxon   = Spree::Taxon.find_by(permalink: 'categories/e-foil/e-foil-sets')
       brand_taxon  = Spree::Taxon.find_by(permalink: 'brands/duotone')
 
       @shop_url = efoil_taxon ? "/t/#{efoil_taxon.permalink}" : '/t/categories/e-foil'
+
+      eager_includes = {
+        master: [:images, :prices, { stock_items: :stock_location }],
+        variants: [:images, :prices, { stock_items: :stock_location }, { option_values: :option_type }]
+      }
 
       if efoil_taxon && brand_taxon
         @products = Spree::Product
@@ -39,13 +45,25 @@ module Spree
           .where(spree_taxons: { id: [efoil_taxon.id] + efoil_taxon.descendants.ids })
           .merge(Spree::Product.joins(:taxons).where(spree_taxons: { id: brand_taxon.id }))
           .distinct
-          .includes(
-            master: [:images, :prices, { stock_items: :stock_location }],
-            variants: [:images, :prices, { stock_items: :stock_location }, { option_values: :option_type }]
-          )
+          .includes(eager_includes)
           .order(:name)
       else
         @products = Spree::Product.none
+      end
+
+      # E-Foil Sets — rendered after "Choose your setup"
+      if sets_taxon
+        @sets = Spree::Product
+          .active
+          .where(deleted_at: nil)
+          .joins(:stores).where(spree_stores: { id: store.id })
+          .joins(:taxons)
+          .where(spree_taxons: { id: sets_taxon.id })
+          .distinct
+          .includes(eager_includes)
+          .order(:name)
+      else
+        @sets = Spree::Product.none
       end
     end
   end
