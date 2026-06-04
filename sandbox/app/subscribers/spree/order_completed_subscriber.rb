@@ -6,7 +6,9 @@ module Spree
   class OrderCompletedSubscriber < Spree::Subscriber
     subscribes_to 'order.completed'
 
-    def handle(event)
+    on 'order.completed', :notify_and_subscribe
+
+    def notify_and_subscribe(event)
       oid = event.payload['id']
       order = Spree::Order.find_by(prefix_id: oid) || Spree::Order.find_by(id: oid)
 
