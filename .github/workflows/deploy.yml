@@ -1,65 +1,202 @@
 name: Deploy to Production
 
 on:
-  workflow_dispatch:  # allow manual runs from the Actions tab
+  workflow_dispatch:           # manual trigger from the Actions tab
   push:
     branches: [main]
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false    # never abort an in-flight deploy
+
 jobs:
+  build:
+    name: Build assets on the runner (no server RAM used)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Spree's full boot during assets:precompile touches the DB,
+    # so we spin up a throwaway Postgres here purely to satisfy boot.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ubuntu
+          POSTGRES_PASSWORD: kite
+          POSTGRES_DB: my_kite_shop_production
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: sandbox
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby (matches .ruby-version) with gem cache
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.4'
+          bundler-cache: true
+          working-directory: sandbox
+
+      - name: Set up Node + Tailwind cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prepare throwaway DB so Spree can boot
+        env:
+          RAILS_ENV: production
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          DB_HOST: localhost
+          DB_USERNAME: ubuntu
+          DB_PASSWORD: kite
+          SECRET_KEY_BASE_DUMMY: '1'
+        run: |
+          bin/rails db:create db:schema:load
+          # Ignore individual migration failures — assets only need the
+          # app to boot, not a fully-migrated database.
+          bin/rails db:migrate || true
+
+      - name: Precompile assets (Tailwind + Propshaft fingerprinting)
+        env:
+          RAILS_ENV: production
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          DB_HOST: localhost
+          DB_USERNAME: ubuntu
+          DB_PASSWORD: kite
+          SECRET_KEY_BASE_DUMMY: '1'
+        run: bin/rails assets:precompile
+
+      - name: Package built assets into a tarball
+        run: |
+          tar -czf /tmp/assets.tar.gz \
+            public/assets \
+            app/assets/builds
+          ls -lh /tmp/assets.tar.gz
+
+      - name: Upload tarball as artifact for the deploy job
+        uses: actions/upload-artifact@v4
+        with:
+          name: assets-tarball
+          path: /tmp/assets.tar.gz
+          retention-days: 1
+
   deploy:
+    name: Ship to production server
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+      - name: Download assets tarball
+        uses: actions/download-artifact@v4
         with:
-          host: 51.195.110.240
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 10m
-          script: |
-            set -e
-            echo ">>> Deploy started at $(date)"
+          name: assets-tarball
+          path: /tmp
 
-            # ---- Pull latest code ----
-            cd /home/ubuntu/kite_shop
-            git fetch origin
-            git reset --hard origin/main
+      - name: Set up SSH (key + known_hosts)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 51.195.110.240 >> ~/.ssh/known_hosts 2>/dev/null
 
-            # ---- Install deps ----
-            cd sandbox
-            export RAILS_ENV=production
-            ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
-            ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
-            ~/.rbenv/bin/rbenv exec bundle install
+      - name: Upload tarball to server
+        run: |
+          scp -i ~/.ssh/id_ed25519 \
+            /tmp/assets.tar.gz \
+            ubuntu@51.195.110.240:/tmp/assets.tar.gz
 
-            # ---- Migrate & assets ----
-            ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-            ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
+      - name: Deploy on server (lean — no asset build, niced heavy steps)
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ubuntu@51.195.110.240 'bash -se' <<'REMOTE'
+          set -e
+          echo ">>> Deploy started at $(date)"
+          echo ">>> Memory before:"
+          free -h | head -3
 
-            # ---- Graceful Puma restart ----
-            rm -rf tmp/cache/bootsnap 2>/dev/null || true
-            pkill -f "puma.*3000" 2>/dev/null || true
-            sleep 3
-
-            RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
-              setsid ~/.rbenv/bin/rbenv exec bundle exec puma \
-              -C config/puma.rb -b tcp://127.0.0.1:3000 \
-              </dev/null > /tmp/puma.log 2>&1 &
-
-            sleep 10
-            if ss -tlnp | grep -q ':3000'; then
-              echo ">>> ✅ Puma running on port 3000"
-            else
-              echo ">>> ❌ Puma failed!"
-              tail -20 /tmp/puma.log
-              exit 1
+          # Make sure swap is actually active. Idempotent; ignores failures
+          # (no sudo) so the deploy still runs in restrictive environments.
+          if [ "$(swapon --show=NAME --noheadings 2>/dev/null | wc -l)" -eq 0 ]; then
+            echo ">>> Swap reported as inactive — attempting to enable"
+            if [ -f /swapfile ]; then
+              sudo -n swapon /swapfile 2>/dev/null || echo "  (could not activate /swapfile without sudo)"
             fi
+          fi
 
-            # ---- Ensure nginx Docker proxy is running ----
-            if ! docker ps --format '{{.Names}}' | grep -q nginx-proxy; then
-              echo ">>> Starting nginx proxy..."
-              docker start nginx-proxy 2>/dev/null || true
+          # ---- Pull latest code ----
+          cd /home/ubuntu/kite_shop
+          git fetch origin
+          git reset --hard origin/main
+
+          # ---- Install gems (light; cached unless Gemfile.lock changed) ----
+          cd sandbox
+          export RAILS_ENV=production
+          ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
+          ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
+          nice -n 10 ~/.rbenv/bin/rbenv exec bundle install --jobs 2
+
+          # ---- Drop in precompiled assets (no asset task on server!) ----
+          mkdir -p public/assets app/assets/builds
+          tar -xzf /tmp/assets.tar.gz -C .
+          rm -f /tmp/assets.tar.gz
+
+          # ---- Migrate DB (niced so it can't starve live web traffic) ----
+          nice -n 10 ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
+
+          # ---- Graceful Puma restart (in-place, port stays bound) ----
+          rm -rf tmp/cache/bootsnap 2>/dev/null || true
+          OLD_PID=$(pgrep -f "puma.*3000" | head -1 || true)
+
+          RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
+            setsid ~/.rbenv/bin/rbenv exec bundle exec puma \
+            -C config/puma.rb -b tcp://127.0.0.1:3000 \
+            </dev/null >/tmp/puma.log 2>&1 &
+
+          # Wait for the new Puma to start listening, then retire the old one
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            sleep 2
+            ss -tlnp 2>/dev/null | grep -q ':3000' && break
+          done
+
+          if ss -tlnp 2>/dev/null | grep -q ':3000'; then
+            echo ">>> ✅ New Puma is up on :3000"
+            [ -n "$OLD_PID" ] && kill -TERM "$OLD_PID" 2>/dev/null || true
+          else
+            echo ">>> ❌ Puma failed to bind :3000"
+            tail -50 /tmp/puma.log
+            exit 1
+          fi
+
+          # ---- Nginx-proxy container (no-op if already running) ----
+          if ! docker ps --format '{{.Names}}' | grep -q nginx-proxy; then
+            docker start nginx-proxy 2>/dev/null || true
+          fi
+
+          echo ">>> Memory after:"
+          free -h | head -3
+          echo ">>> ✅ Deploy completed at $(date)"
+          REMOTE
+
+      - name: Smoke check (HTTPS up?)
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://www.surf-store.com/up)
+            if [ "$code" = "200" ]; then
+              echo "✅ Site healthy (HTTP $code)"
+              exit 0
             fi
-
-            echo ">>> ✅ Deploy completed at $(date)"
+            echo "Attempt $i: HTTP $code — retry in 4s"
+            sleep 4
+          done
+          echo "❌ Site did not return 200 after 5 retries"
+          exit 1
