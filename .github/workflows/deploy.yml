@@ -38,8 +38,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add server to known_hosts
-        run: ssh-keyscan -H 46.224.5.25 >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Configure SSH for Kamal (disable strict host key check)
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          cat >> ~/.ssh/config <<'EOF'
+          Host 46.224.5.25
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
