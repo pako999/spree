@@ -26,16 +26,21 @@ spree/
 
 ## Production Server
 
-- **IP:** 46.224.5.25 (Hetzner, Ubuntu 24.04)
-- **SSH:** `ssh ubuntu@46.224.5.25`
+- **IP:** 51.195.110.240 (Hetzner, Ubuntu 24.04)
+- **SSH:** `ssh ubuntu@51.195.110.240`
 - **Domain:** www.surf-store.com
-- **Container name:** `surf-store`
-- **App port:** 3000 (internal), Nginx proxies 80/443
+- **Container name:** Kamal-managed, named `sandbox-web-<git-hash>` — changes on each deploy
+- **App port:** 3000 (internal), kamal-proxy handles 80/443
 - **Database:** `my_kite_shop_production` (PostgreSQL, user: ubuntu, pass: kite, host: 127.0.0.1)
+
+### Get current container name:
+```bash
+ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1"
+```
 
 ## Deployment
 
-### Deploy new code changes:
+### Deploy new code changes (from sandbox/):
 ```bash
 cd sandbox
 bin/kamal deploy
@@ -43,30 +48,30 @@ bin/kamal deploy
 
 ### Quick: copy a file and restart (faster than full deploy):
 ```bash
-# Copy single file to container
-docker cp ./sandbox/lib/tasks/some_task.rb surf-store:/rails/lib/tasks/some_task.rb
-
-# Restart app
-ssh ubuntu@46.224.5.25 "docker restart surf-store"
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
+scp sandbox/lib/tasks/some_task.rb ubuntu@51.195.110.240:/tmp/
+ssh ubuntu@51.195.110.240 "docker cp /tmp/some_task.rb $CONTAINER:/rails/lib/tasks/ && docker restart $CONTAINER"
 ```
 
 ### Run Rails commands on server:
 ```bash
-ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rails runner 'puts Spree::Product.count'"
-ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rake some:task"
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
+ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bundle exec rails runner 'puts Spree::Product.count'"
+ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bundle exec rake some:task"
 ```
 
 ### Run a script on server:
 ```bash
-# Upload and run
-scp sandbox/script/my_script.rb ubuntu@46.224.5.25:/tmp/
-ssh ubuntu@46.224.5.25 "docker cp /tmp/my_script.rb surf-store:/rails/tmp/ && docker exec surf-store bundle exec rails runner /rails/tmp/my_script.rb"
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
+scp sandbox/script/my_script.rb ubuntu@51.195.110.240:/tmp/
+ssh ubuntu@51.195.110.240 "docker cp /tmp/my_script.rb $CONTAINER:/tmp/ && docker exec $CONTAINER bundle exec rails runner /tmp/my_script.rb"
 ```
 
 ### View logs:
 ```bash
-ssh ubuntu@46.224.5.25 "docker logs surf-store --tail 100 -f"
-ssh ubuntu@46.224.5.25 "docker exec surf-store tail -f /rails/log/production.log"
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
+ssh ubuntu@51.195.110.240 "docker logs $CONTAINER --tail 100 -f"
+ssh ubuntu@51.195.110.240 "docker exec $CONTAINER tail -f /rails/log/production.log"
 ```
 
 ## Key Environment Variables (on server)
@@ -89,10 +94,11 @@ Set in Docker via Kamal secrets (`.kamal/secrets`):
 
 ```bash
 # From host:
-ssh ubuntu@46.224.5.25 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
+ssh ubuntu@51.195.110.240 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
 
 # From inside container:
-ssh ubuntu@46.224.5.25 "docker exec -it surf-store bash -c 'cd /rails && bundle exec rails dbconsole'"
+CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
+ssh ubuntu@51.195.110.240 "docker exec -it $CONTAINER bash -c 'cd /rails && bundle exec rails dbconsole'"
 ```
 
 ## Key Product Import Sheets (Google Sheets)
@@ -118,7 +124,7 @@ If product images are missing (ENOENT 500 errors):
 
 ```bash
 # 1. Find missing blobs
-ssh ubuntu@46.224.5.25 "docker run --rm -v sandbox_storage:/storage:ro -v /tmp/blobs.txt:/blobs.txt python:3.11-slim python3 -c '...'"
+ssh ubuntu@51.195.110.240 "docker run --rm -v sandbox_storage:/storage:ro -v /tmp/blobs.txt:/blobs.txt python:3.11-slim python3 -c '...'"
 
 # 2. Build filename→URL index from all CSVs (local)
 python3 sandbox/lib/tasks/restore_images.rb  # see script for details
