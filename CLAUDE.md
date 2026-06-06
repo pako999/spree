@@ -36,54 +36,56 @@ spree/
 
 ## Deployment
 
+Kamal deploys a Docker image (`ghcr.io/pako999/surf-store`) to the server.
+Container name: `surf-store`. Registry: GitHub Container Registry (ghcr.io).
+Kamal config: `sandbox/config/deploy.yml`.
+
 ### Automatic: push to main (GitHub Actions)
-`.github/workflows/deploy.yml` — runs assets:precompile on the runner, then SSHes in to pull + migrate + restart Puma.
+`.github/workflows/deploy.yml` — builds Docker image on runner, pushes to ghcr.io, runs `bin/kamal deploy`.
 
-### Manual deploy (from server):
+### Manual deploy (from your Mac, inside sandbox/):
 ```bash
-ssh ubuntu@46.224.5.25
-cd /home/ubuntu/kite_shop/sandbox
-git fetch origin && git reset --hard origin/main
-RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle install --jobs 2
-RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-# Then restart Puma (see below)
+cd sandbox
+bin/kamal deploy
 ```
 
-### Quick: copy a file and restart (faster than full deploy):
+### Quick: copy a file into running container (no rebuild):
 ```bash
-scp sandbox/lib/tasks/some_task.rb ubuntu@46.224.5.25:/home/ubuntu/kite_shop/sandbox/lib/tasks/
-ssh ubuntu@46.224.5.25 "kill -HUP \$(pgrep -f 'puma.*3000' | head -1)"
+scp sandbox/path/to/file.rb ubuntu@46.224.5.25:/tmp/
+ssh ubuntu@46.224.5.25 "docker cp /tmp/file.rb surf-store:/rails/path/to/file.rb && docker restart surf-store"
 ```
+⚠️ Changes made this way are lost on the next `kamal deploy` (rebuilds from image).
 
 ### Run Rails commands on server:
 ```bash
-ssh ubuntu@46.224.5.25 "cd /home/ubuntu/kite_shop/sandbox && RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails runner 'puts Spree::Product.count'"
+ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rails runner 'puts Spree::Product.count'"
 ```
 
 ### Run a script on server:
 ```bash
 scp sandbox/script/my_script.rb ubuntu@46.224.5.25:/tmp/
-ssh ubuntu@46.224.5.25 "cd /home/ubuntu/kite_shop/sandbox && RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails runner /tmp/my_script.rb"
+ssh ubuntu@46.224.5.25 "docker cp /tmp/my_script.rb surf-store:/tmp/ && docker exec surf-store bundle exec rails runner /tmp/my_script.rb"
 ```
 
 ### View logs:
 ```bash
-ssh ubuntu@46.224.5.25 "tail -f /home/ubuntu/kite_shop/sandbox/log/production.log"
-ssh ubuntu@46.224.5.25 "tail -100 /tmp/puma.log"
+ssh ubuntu@46.224.5.25 "docker logs surf-store --tail 100 -f"
+ssh ubuntu@46.224.5.25 "docker exec surf-store tail -f /rails/log/production.log"
 ```
 
 ## Key Environment Variables (on server)
 
-Set via rbenv/Puma startup env:
+Injected into the Docker container by Kamal (from `.kamal/secrets` on your Mac):
 - `RAILS_MASTER_KEY` — required for credential decryption
-- `POSTGRES_PASSWORD=kite`
 - `RAILS_ENV=production`
-- `SOLID_QUEUE_IN_PUMA=1`
-- `WEB_CONCURRENCY=4`
+- `SOLID_QUEUE_IN_PUMA=true`
+- `DATABASE_URL` — postgres unix socket connection
+- Plus: TELEGRAM, KLAVIYO, ANTHROPIC, ERACUNI, SMTP, DHL, R2 secrets
 
 ## ActiveStorage Configuration
 
-- **Service:** Local disk at `storage/` inside app directory
+- **Service:** Local disk (`/rails/storage/` inside container)
+- **Docker volume:** `sandbox_storage` (persisted across deploys)
 - Files stored at: `storage/XX/YY/KEY` (2-level hash directory)
 
 ## Database Access

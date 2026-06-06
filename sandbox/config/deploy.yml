@@ -8,12 +8,12 @@ image: pako999/surf-store
 servers:
   web:
     hosts:
-      - 51.195.110.240
+      - 46.224.5.25
     options:
       add-host: host.docker.internal:host-gateway
   job:
     hosts:
-      - 51.195.110.240
+      - 46.224.5.25
     cmd: bundle exec rake solid_queue:start
     options:
       add-host: host.docker.internal:host-gateway
