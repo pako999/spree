@@ -5,23 +5,31 @@ service: sandbox
 image: pako999/surf-store
 
 # Deploy to these servers.
-# proxy: false on each server tells Kamal NOT to manage kamal-proxy.
-# Existing native Nginx on host handles SSL/443 and proxies to localhost:3000.
+# kamal-proxy handles zero-downtime container swap + SSL termination on 80/443.
+# Native Nginx must be stopped/disabled on the host before the first deploy.
 servers:
   web:
     hosts:
       - 46.224.5.25
-    proxy: false
     options:
       add-host: host.docker.internal:host-gateway
-      publish: "127.0.0.1:3000:3000"
   job:
     hosts:
       - 46.224.5.25
-    proxy: false
     cmd: bundle exec rake solid_queue:start
     options:
       add-host: host.docker.internal:host-gateway
+
+# kamal-proxy: zero-downtime container swap + Let's Encrypt SSL on 80/443.
+# Cloudflare must be in "Full" SSL/TLS mode to validate the LE cert.
+proxy:
+  ssl: true
+  host: surf-store.com,www.surf-store.com
+  app_port: 3000
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 30
 
 # Where you keep your container images.
 registry:
