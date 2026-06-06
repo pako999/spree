@@ -1,65 +1,81 @@
 name: Deploy to Production
 
 on:
-  workflow_dispatch:  # manual trigger only until SSH connectivity is fixed
-  # push:
-  #   branches: [main]
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    name: Build image and deploy via Kamal
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write   # needed to push to ghcr.io
+
+    defaults:
+      run:
+        working-directory: sandbox
+
     steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby (for Kamal CLI)
+        uses: ruby/setup-ruby@v1
         with:
-          host: 51.195.110.240
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 10m
-          script: |
-            set -e
-            echo ">>> Deploy started at $(date)"
+          ruby-version: '3.3.4'
+          bundler-cache: true
+          working-directory: sandbox
 
-            # ---- Pull latest code ----
-            cd /home/ubuntu/kite_shop
-            git fetch origin
-            git reset --hard origin/main
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-            # ---- Install deps ----
-            cd sandbox
-            export RAILS_ENV=production
-            ~/.rbenv/bin/rbenv exec bundle config set --local deployment true
-            ~/.rbenv/bin/rbenv exec bundle config set --local without 'development test'
-            ~/.rbenv/bin/rbenv exec bundle install
+      - name: Add server to known_hosts
+        run: ssh-keyscan -H 46.224.5.25 >> ~/.ssh/known_hosts 2>/dev/null
 
-            # ---- Migrate & assets ----
-            ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
-            ~/.rbenv/bin/rbenv exec bundle exec rails assets:precompile
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            # ---- Graceful Puma restart ----
-            rm -rf tmp/cache/bootsnap 2>/dev/null || true
-            pkill -f "puma.*3000" 2>/dev/null || true
-            sleep 3
+      - name: Deploy with Kamal
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          KLAVIYO_PRIVATE_KEY: ${{ secrets.KLAVIYO_PRIVATE_KEY }}
+          KLAVIYO_PUBLIC_KEY: ${{ secrets.KLAVIYO_PUBLIC_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ERACUNI_API_USERNAME: ${{ secrets.ERACUNI_API_USERNAME }}
+          ERACUNI_API_SECRET_KEY: ${{ secrets.ERACUNI_API_SECRET_KEY }}
+          ERACUNI_API_TOKEN: ${{ secrets.ERACUNI_API_TOKEN }}
+          SMTP_ADDRESS: ${{ secrets.SMTP_ADDRESS }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          DHL_API_KEY: ${{ secrets.DHL_API_KEY }}
+          DHL_SUBSCRIPTION_KEY: ${{ secrets.DHL_SUBSCRIPTION_KEY }}
+        run: bin/kamal deploy
 
-            RAILS_ENV=production SOLID_QUEUE_IN_PUMA=1 WEB_CONCURRENCY=4 \
-              setsid ~/.rbenv/bin/rbenv exec bundle exec puma \
-              -C config/puma.rb -b tcp://127.0.0.1:3000 \
-              </dev/null > /tmp/puma.log 2>&1 &
-
-            sleep 10
-            if ss -tlnp | grep -q ':3000'; then
-              echo ">>> ✅ Puma running on port 3000"
-            else
-              echo ">>> ❌ Puma failed!"
-              tail -20 /tmp/puma.log
-              exit 1
+      - name: Smoke check (HTTPS up?)
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://www.surf-store.com/up)
+            if [ "$code" = "200" ]; then
+              echo "Site healthy (HTTP $code)"
+              exit 0
             fi
-
-            # ---- Ensure nginx Docker proxy is running ----
-            if ! docker ps --format '{{.Names}}' | grep -q nginx-proxy; then
-              echo ">>> Starting nginx proxy..."
-              docker start nginx-proxy 2>/dev/null || true
-            fi
-
-            echo ">>> ✅ Deploy completed at $(date)"
+            echo "Attempt $i: HTTP $code - retry in 4s"
+            sleep 4
+          done
+          echo "Site did not return 200 after 5 retries"
+          exit 1

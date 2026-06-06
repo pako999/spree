@@ -29,38 +29,42 @@ spree/
 - **IP:** 46.224.5.25 (Hetzner, Ubuntu 24.04)
 - **SSH:** `ssh ubuntu@46.224.5.25`
 - **Domain:** www.surf-store.com
-- **Container name:** `surf-store`
-- **App port:** 3000 (internal), Nginx proxies 80/443
+- **App:** Plain Puma on port 3000, Nginx proxies 80/443 → 3000 (no Docker)
+- **App path:** `/home/ubuntu/kite_shop/sandbox`
+- **Ruby:** rbenv 3.3.4 at `~/.rbenv`
 - **Database:** `my_kite_shop_production` (PostgreSQL, user: ubuntu, pass: kite, host: 127.0.0.1)
 
 ## Deployment
 
-### Deploy new code changes:
+Kamal deploys a Docker image (`ghcr.io/pako999/surf-store`) to the server.
+Container name: `surf-store`. Registry: GitHub Container Registry (ghcr.io).
+Kamal config: `sandbox/config/deploy.yml`.
+
+### Automatic: push to main (GitHub Actions)
+`.github/workflows/deploy.yml` — builds Docker image on runner, pushes to ghcr.io, runs `bin/kamal deploy`.
+
+### Manual deploy (from your Mac, inside sandbox/):
 ```bash
 cd sandbox
 bin/kamal deploy
 ```
 
-### Quick: copy a file and restart (faster than full deploy):
+### Quick: copy a file into running container (no rebuild):
 ```bash
-# Copy single file to container
-docker cp ./sandbox/lib/tasks/some_task.rb surf-store:/rails/lib/tasks/some_task.rb
-
-# Restart app
-ssh ubuntu@46.224.5.25 "docker restart surf-store"
+scp sandbox/path/to/file.rb ubuntu@46.224.5.25:/tmp/
+ssh ubuntu@46.224.5.25 "docker cp /tmp/file.rb surf-store:/rails/path/to/file.rb && docker restart surf-store"
 ```
+⚠️ Changes made this way are lost on the next `kamal deploy` (rebuilds from image).
 
 ### Run Rails commands on server:
 ```bash
 ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rails runner 'puts Spree::Product.count'"
-ssh ubuntu@46.224.5.25 "docker exec surf-store bundle exec rake some:task"
 ```
 
 ### Run a script on server:
 ```bash
-# Upload and run
 scp sandbox/script/my_script.rb ubuntu@46.224.5.25:/tmp/
-ssh ubuntu@46.224.5.25 "docker cp /tmp/my_script.rb surf-store:/rails/tmp/ && docker exec surf-store bundle exec rails runner /rails/tmp/my_script.rb"
+ssh ubuntu@46.224.5.25 "docker cp /tmp/my_script.rb surf-store:/tmp/ && docker exec surf-store bundle exec rails runner /tmp/my_script.rb"
 ```
 
 ### View logs:
@@ -71,28 +75,23 @@ ssh ubuntu@46.224.5.25 "docker exec surf-store tail -f /rails/log/production.log
 
 ## Key Environment Variables (on server)
 
-Set in Docker via Kamal secrets (`.kamal/secrets`):
+Injected into the Docker container by Kamal (from `.kamal/secrets` on your Mac):
 - `RAILS_MASTER_KEY` — required for credential decryption
-- `RAILS_STORAGE=cloudflare` — ActiveStorage service name
-- `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — Cloudflare R2 (legacy, now using local)
-- `POSTGRES_PASSWORD=kite`
 - `RAILS_ENV=production`
+- `SOLID_QUEUE_IN_PUMA=true`
+- `DATABASE_URL` — postgres unix socket connection
+- Plus: TELEGRAM, KLAVIYO, ANTHROPIC, ERACUNI, SMTP, DHL, R2 secrets
 
 ## ActiveStorage Configuration
 
 - **Service:** Local disk (`/rails/storage/` inside container)
-- **Docker volume:** `sandbox_storage` (persisted across restarts)
-- **Volume path:** `/var/lib/docker/volumes/sandbox_storage/_data/` (on host)
+- **Docker volume:** `sandbox_storage` (persisted across deploys)
 - Files stored at: `storage/XX/YY/KEY` (2-level hash directory)
 
 ## Database Access
 
 ```bash
-# From host:
 ssh ubuntu@46.224.5.25 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
-
-# From inside container:
-ssh ubuntu@46.224.5.25 "docker exec -it surf-store bash -c 'cd /rails && bundle exec rails dbconsole'"
 ```
 
 ## Key Product Import Sheets (Google Sheets)
@@ -118,7 +117,7 @@ If product images are missing (ENOENT 500 errors):
 
 ```bash
 # 1. Find missing blobs
-ssh ubuntu@46.224.5.25 "docker run --rm -v sandbox_storage:/storage:ro -v /tmp/blobs.txt:/blobs.txt python:3.11-slim python3 -c '...'"
+ssh ubuntu@46.224.5.25 "python3 -c '...'"
 
 # 2. Build filename→URL index from all CSVs (local)
 python3 sandbox/lib/tasks/restore_images.rb  # see script for details

@@ -1,0 +1,1186 @@
+<%# ================================================================
+  Duotone E-Foil / Foil Assist — Rich Landing Page
+  Route:  /lp/e-foil-duotone
+  Layout: Spree storefront (header/footer automatic)
+  All copy & specs sourced from duotonesports.com
+================================================================ %>
+
+<%# ── SEO ── %>
+<% content_for :title, "Duotone E-Foil / Foil Assist — Electric Foiling | Surf Store" %>
+
+<% content_for :head do %>
+  <meta name="description" content="Duotone Foil Assist — the electric foil assist system. Motor integrated in the mast, batteries on your hips. 30–60 min runtime, airline-friendly batteries. Official EU dealer.">
+  <link rel="canonical" href="https://www.surf-store.com/lp/e-foil-duotone">
+
+  <%# Open Graph %>
+  <meta property="og:type" content="product.group">
+  <meta property="og:title" content="Duotone Foil Assist — Electric Foiling | Surf Store">
+  <meta property="og:description" content="Power when you need it. Pure foiling when you don't. Duotone's electric foil assist with waist-mounted batteries and integrated motor mast.">
+  <meta property="og:url" content="https://www.surf-store.com/lp/e-foil-duotone">
+  <meta property="og:image" content="https://cdn.duotonesports.com/media/catalog/product/cache/foil_assist_hero.jpg">
+  <meta property="og:site_name" content="Surf Store">
+
+  <%# Twitter Card %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Duotone Foil Assist — Electric Foiling">
+  <meta name="twitter:description" content="Power when you need it. Pure foiling when you don't.">
+
+  <%# JSON-LD: BreadcrumbList %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.surf-store.com/" },
+      { "@type": "ListItem", "position": 2, "name": "E-Foil", "item": "https://www.surf-store.com/t/categories/e-foil" },
+      { "@type": "ListItem", "position": 3, "name": "Duotone Foil Assist", "item": "https://www.surf-store.com/lp/e-foil-duotone" }
+    ]
+  }
+  </script>
+
+  <%# JSON-LD: Product %>
+  <% if @products.present? %>
+    <% lowest = @products.flat_map { |p| p.master.prices.select { |pr| pr.currency == 'EUR' } }.compact.min_by(&:amount) %>
+    <% if lowest %>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Duotone Foil Assist",
+      "brand": { "@type": "Brand", "name": "Duotone" },
+      "description": "Electric foil assist system with integrated motor mast and waist-mounted batteries. 30-60 min runtime, airline-friendly.",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "<%= lowest.amount.to_f %>",
+        "offerCount": "<%= @products.size %>",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.surf-store.com/lp/e-foil-duotone"
+      }
+    }
+    </script>
+    <% end %>
+  <% end %>
+
+  <%# JSON-LD: FAQPage %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is the Duotone Foil Assist an eFoil?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. It's a Foil Assist — it provides power for take-offs and light-wind sessions but preserves the natural feel of traditional foiling. It's not designed for continuous motorised riding like a full eFoil."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does the battery last?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "30–60+ minutes per charge depending on rider weight, foil size, riding style, and conditions. Using the motor in short bursts provides the longest sessions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I fly with the batteries?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Each battery is 159.6 Wh, designed to be under the 160 Wh airline limit. Always verify your specific airline's lithium battery policy before travelling."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Will it work with my existing foil?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Most likely yes. The system is compatible with boards using standard US foil tracks. You'll need a brand-specific fuselage adapter (sold separately). Compatible brands include Duotone, Armstrong, AFS, Axis, Code Foils, F-One, North, SAB, Lift, KT, and Gong."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What's the difference between Standard and Cruise?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Standard (AL / D/LAB) has the motor at the top of the mast — ideal as a launch-assist for waves and downwind. Cruise has the motor at the bottom with a prop guard — designed for flatwater cruising and learning."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you ship across the EU?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Surf Store ships to all EU countries. Lithium batteries are shipped via ground transport in compliance with IATA DGR regulations."
+        }
+      }
+    ]
+  }
+  </script>
+<% end %>
+
+<div class="lp-efoil">
+
+  <%# ═══════════════════════════════════════════════════════════
+      A. HERO
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-hero" aria-label="Hero">
+    <div class="lp-hero__overlay"></div>
+    <div class="lp-hero__content">
+      <span class="lp-chip">Duotone × Foil Drive — Official Dealer</span>
+      <h1 class="lp-hero__h1">Electric Foil Assist.<br>Flat-water freedom.</h1>
+      <p class="lp-hero__sub">
+        Power when you need it. Pure foiling when you don't.
+        The Duotone Foil Assist adds electric propulsion for take-offs, wave catching, and light-wind sessions
+        — while preserving the natural, agile feel of traditional foiling.
+      </p>
+      <div class="lp-hero__ctas">
+        <a href="#products" class="lp-btn lp-btn--primary" data-lp-cta="hero-shop"
+           onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_hero',creative_slot:'hero_cta'})">
+          Shop the range
+        </a>
+        <a href="#video" class="lp-btn lp-btn--ghost" data-lp-cta="hero-video"
+           onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_hero',creative_slot:'hero_video'})">
+          ▶ Watch the film
+        </a>
+      </div>
+      <div class="lp-trust">
+        <span>✓ Official Dealer</span>
+        <span>✓ EU Shipping</span>
+        <span>✓ 2-Year Warranty</span>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      B. PRODUCT VIDEO
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section" id="video" aria-label="Product video">
+    <div class="lp-container">
+      <h2 class="lp-section__title">See it in action</h2>
+      <div class="lp-video">
+        <div class="lp-video__wrapper" id="lp-yt-wrapper">
+          <img src="https://img.youtube.com/vi/Wj6xwO_FDqU/maxresdefault.jpg"
+               alt="Duotone Foil Assist 2026 — official video"
+               class="lp-video__poster" loading="lazy" id="lp-yt-poster">
+          <button class="lp-video__play" aria-label="Play video" id="lp-yt-play">
+            <svg viewBox="0 0 68 48" width="68"><path d="M66.5 7.7s-.7-4.7-2.7-6.8C61.2.1 58.3 0 57 0H11C9.7 0 6.8.1 4.2.9 2.2 3 1.5 7.7 1.5 7.7S.8 13.2.8 18.7v5.6c0 5.5.7 11 .7 11s.7 4.7 2.7 6.8c2.6 2.7 6 2.6 7.5 2.9 5.5.5 23.3.8 23.3.8s14.4 0 23.9-.8c1.3-.1 4.2-.2 6.8-2.9 2-2.1 2.7-6.8 2.7-6.8s.7-5.5.7-11v-5.6c0-5.5-.6-11-.6-11z" fill="#212121" opacity=".8"/><path d="M27 33V13l18 10z" fill="#fff"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      C. WHAT IS IT — 3-up benefit cards
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section lp-section--dark" aria-label="Benefits">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Not an eFoil — a Foil Assist</h2>
+      <p class="lp-section__sub">An electric assist system that adds power for take-offs, wave catching, and light-wind sessions while preserving the natural feel of traditional foiling.</p>
+      <div class="lp-cards lp-cards--3">
+        <div class="lp-card">
+          <div class="lp-card__icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--lp-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v4M24 38v4M10.9 10.9l2.8 2.8M34.3 34.3l2.8 2.8M6 24h4M38 24h4M10.9 37.1l2.8-2.8M34.3 13.7l2.8-2.8"/><circle cx="24" cy="24" r="8"/><path d="M20 24l2 2 4-4" stroke="var(--lp-teal)"/></svg></div>
+          <h3 class="lp-card__title">Silent electric power</h3>
+          <p class="lp-card__text">Motor fully integrated into the mast profile — clean hydrodynamics, minimal drag, whisper-quiet propulsion. The 2-blade folding propeller deploys only when engaged.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card__icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--lp-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 30c4-4 8-6 12-6s8 2 12 6 8 6 12 6" stroke-width="2.5"/><path d="M4 22c4-4 8-6 12-6s8 2 12 6 8 6 12 6" opacity=".5"/><path d="M4 14c4-4 8-6 12-6s8 2 12 6 8 6 12 6" opacity=".25"/><circle cx="24" cy="38" r="3" fill="var(--lp-teal)" stroke="none"/></svg></div>
+          <h3 class="lp-card__title">Ride anywhere</h3>
+          <p class="lp-card__text">Wave riding, downwinding, flat-water cruising, or light-wind wing foiling. The Foil Assist extends every session and opens up conditions you'd normally skip.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card__icon"><svg viewBox="0 0 48 48" fill="none" stroke="var(--lp-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 42V18"/><path d="M16 26l8-8 8 8"/><path d="M12 10h24" stroke="var(--lp-teal)" stroke-dasharray="3 3"/><circle cx="24" cy="10" r="3"/></svg></div>
+          <h3 class="lp-card__title">Up and flying fast</h3>
+          <p class="lp-card__text">Squeeze the ring remote and the motor boosts you onto the foil in seconds. Release, and you're gliding on pure foil feel — no motor drag, no extra weight underfoot.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      D. STATS STRIP
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-stats" aria-label="Key specifications">
+    <div class="lp-container">
+      <div class="lp-stats__grid">
+        <div class="lp-stat">
+          <span class="lp-stat__num">33</span>
+          <span class="lp-stat__unit">kg thrust</span>
+          <span class="lp-stat__label">Max power</span>
+        </div>
+        <div class="lp-stat">
+          <span class="lp-stat__num">60<sup>+</sup></span>
+          <span class="lp-stat__unit">minutes</span>
+          <span class="lp-stat__label">Runtime per charge</span>
+        </div>
+        <div class="lp-stat">
+          <span class="lp-stat__num">319</span>
+          <span class="lp-stat__unit">Wh total</span>
+          <span class="lp-stat__label">Battery capacity</span>
+        </div>
+        <div class="lp-stat">
+          <span class="lp-stat__num">3.45</span>
+          <span class="lp-stat__unit">kg</span>
+          <span class="lp-stat__label">eMast AL weight</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      E. RANGE / MODELS
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section" aria-label="Model comparison">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Choose your setup</h2>
+      <p class="lp-section__sub">Three configurations for every style of foiling — from wave-riding performance to flatwater cruising.</p>
+      <div class="lp-cards lp-cards--3">
+        <div class="lp-model-card">
+          <div class="lp-model-card__badge">Performance</div>
+          <h3 class="lp-model-card__name">Foil Assist Set AL</h3>
+          <ul class="lp-model-card__specs">
+            <li><strong>Mast:</strong> 84 cm Aluminum</li>
+            <li><strong>Motor:</strong> Top-mounted, 17 cm below plate</li>
+            <li><strong>Weight:</strong> 3.45 kg (mast)</li>
+            <li><strong>Best for:</strong> Waves, downwind, wing foiling</li>
+          </ul>
+          <p class="lp-model-card__desc">The go-to setup for intermediate to advanced riders. Motor at the top provides launch assist — once you're on foil, the folding prop closes for zero drag.</p>
+          <a href="#products" class="lp-btn lp-btn--outline" data-lp-cta="model-al">Shop AL Set</a>
+        </div>
+        <div class="lp-model-card lp-model-card--featured">
+          <div class="lp-model-card__badge">Premium</div>
+          <h3 class="lp-model-card__name">Foil Assist Set D/LAB</h3>
+          <ul class="lp-model-card__specs">
+            <li><strong>Mast:</strong> 84 cm High-modulus carbon</li>
+            <li><strong>Motor:</strong> Top-mounted, 17 cm below plate</li>
+            <li><strong>Weight:</strong> Lighter than AL</li>
+            <li><strong>Best for:</strong> Advanced riders, maximum performance</li>
+          </ul>
+          <p class="lp-model-card__desc">Ultra-lightweight D/LAB carbon mast with lower drag and higher stiffness. The ultimate setup for riders who demand peak performance.</p>
+          <a href="#products" class="lp-btn lp-btn--primary" data-lp-cta="model-dlab">Shop D/LAB Set</a>
+        </div>
+        <div class="lp-model-card">
+          <div class="lp-model-card__badge">Cruise</div>
+          <h3 class="lp-model-card__name">Foil Assist Cruise Set</h3>
+          <ul class="lp-model-card__specs">
+            <li><strong>Mast:</strong> 80 cm Aluminum</li>
+            <li><strong>Motor:</strong> Bottom-mounted with prop guard</li>
+            <li><strong>Weight:</strong> ~3.45 kg (mast)</li>
+            <li><strong>Best for:</strong> Flat water, training, schools</li>
+          </ul>
+          <p class="lp-model-card__desc">Motor at the bottom of the mast provides continuous, consistent propulsion. Perfect for flatwater cruising, learning to foil, and rental operations.</p>
+          <a href="#products" class="lp-btn lp-btn--outline" data-lp-cta="model-cruise">Shop Cruise Set</a>
+        </div>
+      </div>
+
+      <%# ── E-Foil Sets product cards ── %>
+      <% if @sets.present? %>
+        <div class="lp-sets-divider"></div>
+        <h3 class="lp-section__subtitle">Shop E-Foil Sets</h3>
+        <p class="lp-section__sub" style="margin-bottom: 32px;">Complete packages — everything you need to start electric foiling.</p>
+        <div class="lp-sets-grid">
+          <% @sets.each do |product| %>
+            <div class="lp-product-card-wrap">
+              <%= render 'spree/products/product', product: product, show_variant_picker: false %>
+            </div>
+          <% end %>
+        </div>
+        <div class="lp-cta-row" style="margin-top: 32px;">
+          <a href="/t/categories/e-foil/e-foil-sets" class="lp-btn lp-btn--outline" data-lp-cta="sets-view-all"
+             onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_sets',creative_slot:'view_all'})">
+            View all E-Foil Sets →
+          </a>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      F. WHAT'S IN THE BOX
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section lp-section--dark" aria-label="What's in the box">
+    <div class="lp-container">
+      <h2 class="lp-section__title">What's in the box</h2>
+      <p class="lp-section__sub">Every Foil Assist Set ships as a complete, ready-to-ride package.</p>
+      <div class="lp-box-grid">
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="21" y="4" width="6" height="40" rx="2"/><ellipse cx="24" cy="14" rx="8" ry="4" stroke-dasharray="2 2"/><path d="M20 38l-4 4M28 38l4 4" stroke="var(--lp-cyan)"/><circle cx="24" cy="14" r="2" fill="var(--lp-cyan)" stroke="none"/></svg></div>
+          <h4>eMast</h4>
+          <p>Motorized mast with integrated motor pod and folding propeller. AL&nbsp;84 cm, Cruise&nbsp;AL&nbsp;80 cm, or D/LAB&nbsp;84 cm.</p>
+        </div>
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16c0-4 4.5-8 10-8s10 4 10 8"/><path d="M10 16v12c0 6 6 10 14 10s14-4 14-10V16"/><rect x="18" y="22" width="12" height="8" rx="2" fill="rgba(0,194,255,0.15)" stroke="var(--lp-cyan)"/><path d="M24 22v8" stroke="var(--lp-cyan)" stroke-dasharray="2 2"/><path d="M14 18h20" opacity=".4"/></svg></div>
+          <h4>eHarness Set</h4>
+          <p>Buoyant waist harness with waterproof battery housing and neoprene cover. Quick-release safety system.</p>
+        </div>
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="10" width="16" height="20" rx="4"/><circle cx="20" cy="20" r="5" stroke="var(--lp-cyan)"/><path d="M20 17v6l3-2" stroke="var(--lp-cyan)"/><circle cx="36" cy="30" r="6" fill="rgba(0,194,255,0.15)" stroke="var(--lp-cyan)"/><path d="M36 26v8M32 30h8" stroke="var(--lp-cyan)" stroke-width="1.5"/><path d="M28 10h-4c-2 0-4-2-4-4" opacity=".4"/></svg></div>
+          <h4>Watch Ring Remote</h4>
+          <p>Waterproof smartwatch controller + finger ring. Multiple power levels and Boost mode. Double-click activation.</p>
+        </div>
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="8" width="20" height="32" rx="4"/><path d="M20 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/><rect x="18" y="16" width="12" height="16" rx="2" fill="rgba(0,194,255,0.15)" stroke="var(--lp-cyan)"/><path d="M24 20v8" stroke="var(--lp-cyan)"/><path d="M21 24h6" stroke="var(--lp-cyan)"/></svg></div>
+          <h4>eBattery Set</h4>
+          <p>2× high-performance LiPo batteries — 159.6 Wh each (airline-friendly). 319.2 Wh total capacity.</p>
+        </div>
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="20" width="28" height="18" rx="3"/><path d="M18 20v-4a6 6 0 0112 0v4" stroke="var(--lp-cyan)"/><circle cx="24" cy="30" r="3" stroke="var(--lp-cyan)"/><path d="M24 33v3" stroke="var(--lp-cyan)"/><path d="M16 38h16" opacity=".4"/></svg></div>
+          <h4>Charger Set</h4>
+          <p>Dual-battery charging dock with power adapter. Full charge in under 1 hour.</p>
+        </div>
+        <div class="lp-box-item">
+          <div class="lp-box-item__icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 38V14l6-6h20l6 6v24a2 2 0 01-2 2H10a2 2 0 01-2-2z"/><path d="M8 14h32" opacity=".4"/><path d="M20 24h8M20 30h8M20 36h4" stroke="var(--lp-cyan)" stroke-dasharray="0"/><circle cx="34" cy="10" r="4" fill="var(--lp-cyan)" stroke="none"/><path d="M32.5 10l1 1 2-2" stroke="var(--lp-dark)" stroke-width="1.5"/></svg></div>
+          <h4>Accessories</h4>
+          <p>Cables, leash, motor covers, propeller covers, mounting screws, and tools. Fuselage adapter sold separately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      G. HOW IT WORKS
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section" aria-label="How it works">
+    <div class="lp-container">
+      <h2 class="lp-section__title">How it works</h2>
+      <div class="lp-steps">
+        <div class="lp-step">
+          <div class="lp-step__num">1</div>
+          <h3 class="lp-step__title">Power up</h3>
+          <p class="lp-step__text">Clip the eHarness around your waist, connect the cable to the mast, and double-click the Watch Ring Remote to activate. The system is ready in seconds.</p>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step__num">2</div>
+          <h3 class="lp-step__title">Squeeze &amp; launch</h3>
+          <p class="lp-step__text">Press the ring on your finger to engage the motor. The folding propeller opens and provides instant thrust — you're on the foil in moments, even in zero wind or flat water.</p>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step__num">3</div>
+          <h3 class="lp-step__title">Rise &amp; glide</h3>
+          <p class="lp-step__text">Release the ring and the propeller folds flat. You're now riding pure foil — no motor drag, no extra weight on the board. Use the assist whenever you need a boost.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      H. TECH SPECS TABLE
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section lp-section--dark" id="specs" aria-label="Technical specifications">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Technical specifications</h2>
+      <div class="lp-specs-table-wrap">
+        <table class="lp-specs-table">
+          <thead>
+            <tr>
+              <th>Specification</th>
+              <th>eMast AL</th>
+              <th>eMast D/LAB</th>
+              <th>eMast Cruise AL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mast length</td><td>84 cm</td><td>84 cm</td><td>80 cm</td></tr>
+            <tr><td>Chord</td><td>120 mm</td><td>—</td><td>—</td></tr>
+            <tr><td>Thickness (min)</td><td>18 mm</td><td>—</td><td>—</td></tr>
+            <tr><td>Construction</td><td>Aluminum</td><td>High-mod prepreg carbon</td><td>Aluminum</td></tr>
+            <tr><td>Mast weight</td><td>3.45 kg (±5%)</td><td>Lighter</td><td>~3.45 kg</td></tr>
+            <tr><td>Motor position</td><td>17 cm below top plate</td><td>17 cm below top plate</td><td>Bottom of mast</td></tr>
+            <tr><td>Max thrust</td><td colspan="3">33 kg</td></tr>
+            <tr><td>Propeller</td><td colspan="3">2-blade folding (standard); 3-blade & SLS aluminum optional</td></tr>
+            <tr><td>Battery capacity</td><td colspan="3">2 × 159.6 Wh = 319.2 Wh total (high-voltage LiPo)</td></tr>
+            <tr><td>Airline-friendly</td><td colspan="3">Yes — each battery under 160 Wh limit</td></tr>
+            <tr><td>Runtime</td><td colspan="3">30–60+ min (depends on usage, rider weight, conditions)</td></tr>
+            <tr><td>Charge time</td><td colspan="3">Under 1 hour (dual-battery charger included)</td></tr>
+            <tr><td>Control</td><td colspan="3">Watch Ring Remote — smartwatch + finger ring, waterproof</td></tr>
+            <tr><td>Board compatibility</td><td colspan="3">Standard US foil tracks</td></tr>
+            <tr><td>Battery housing</td><td colspan="3">Buoyant waterproof box with neoprene cover, quick-release</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      I. COMPATIBLE FOILS
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section" aria-label="Compatible foils">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Compatible with your foil</h2>
+      <p class="lp-section__sub">The Foil Assist works with most major foil brands via brand-specific fuselage adapters. AL masts support all brands listed. D/LAB has direct Duotone fit plus Armstrong adapter.</p>
+      <div class="lp-compat-grid">
+        <% %w[Duotone Armstrong AFS Axis Code\ Foils F-One North SAB\ Foil Lift KT Gong].each do |brand| %>
+          <div class="lp-compat-brand">
+            <span class="lp-compat-brand__name"><%= brand %></span>
+          </div>
+        <% end %>
+      </div>
+      <p class="lp-section__note">Fuselage adapters are brand-specific and sold separately. Check product pages for availability.</p>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      J. FAQ ACCORDION
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section lp-section--dark" id="faq" aria-label="Frequently asked questions">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Frequently asked questions</h2>
+      <div class="lp-faq">
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">Is the Duotone Foil Assist an eFoil?</summary>
+          <div class="lp-faq__a"><p>No. It's a "Foil Assist" — it provides power for take-offs and light-wind sessions but preserves the natural feel of traditional foiling. Unlike a full eFoil, it's not designed for continuous motorised riding. You use the motor when you need a boost, and ride pure foil the rest of the time.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">How long does the battery last?</summary>
+          <div class="lp-faq__a"><p>30–60+ minutes per charge depending on rider weight, foil size, riding style, and conditions. Using the motor in short, efficient bursts to catch waves provides the longest sessions (60+ minutes), while continuous heavy use results in runtimes closer to 30–35 minutes.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">Can I fly with the batteries?</summary>
+          <div class="lp-faq__a"><p>Yes. Each battery is 159.6 Wh — designed to be under the 160 Wh airline limit for lithium batteries. Always verify your specific airline's policy before travelling, as regulations can vary.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">Will it work with my existing foil?</summary>
+          <div class="lp-faq__a"><p>Most likely yes. The system is compatible with boards using standard US foil tracks. You'll need a brand-specific fuselage adapter (sold separately). Compatible brands include Duotone, Armstrong, AFS, Axis, Code Foils, F-One, North, SAB, Lift, KT, and Gong.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">What's the difference between Standard (AL/D-LAB) and Cruise?</summary>
+          <div class="lp-faq__a"><p>Standard (AL / D/LAB) has the motor at the top of the mast — 17 cm below the top plate. It's ideal as a launch-assist for wave riding, downwinding, and wing foiling. The motor boosts you onto the foil, then the folding prop closes for zero-drag gliding.</p><p>Cruise has the motor at the bottom of the mast with an optional prop guard. It provides continuous, consistent propulsion — perfect for flatwater cruising, learning to foil, and rental/school operations.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">What's the difference between AL and D/LAB?</summary>
+          <div class="lp-faq__a"><p>AL (aluminum) is the durable, proven option. D/LAB uses high-modulus prepreg carbon for lower weight, lower drag, and higher stiffness — the ultimate performance choice for advanced riders.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">How do I control the motor?</summary>
+          <div class="lp-faq__a"><p>Via the Watch Ring Remote — a waterproof smartwatch on your wrist paired with a finger ring. Double-click the + button to activate, then press the ring to engage the motor. Release the ring to stop instantly. Multiple power levels plus a Boost mode are available on the watch interface.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">Do you ship across the EU?</summary>
+          <div class="lp-faq__a"><p>Yes. Surf Store ships to all EU countries. Lithium batteries are shipped via ground transport in compliance with IATA DGR regulations. You can expect delivery within 3–7 business days depending on your location.</p></div>
+        </details>
+        <details class="lp-faq__item">
+          <summary class="lp-faq__q">What warranty is included?</summary>
+          <div class="lp-faq__a"><p>All Duotone Foil Assist products sold through Surf Store come with a 2-year manufacturer warranty covering defects in materials and workmanship. Batteries are covered for 1 year or 300 charge cycles, whichever comes first.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      K. PRODUCT GRID
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-section" id="products" aria-label="Shop the collection">
+    <div class="lp-container">
+      <h2 class="lp-section__title">Shop the Duotone E-Foil collection</h2>
+      <% if @products.present? %>
+        <div class="lp-product-grid">
+          <% @products.each do |product| %>
+            <div class="lp-product-card-wrap">
+              <%= render 'spree/products/product', product: product, show_variant_picker: false %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="lp-section__sub">Products are being updated. Check back soon or <a href="<%= @shop_url %>" class="lp-link">browse the full E-Foil category</a>.</p>
+      <% end %>
+      <div class="lp-cta-row">
+        <a href="<%= @shop_url %>" class="lp-btn lp-btn--primary lp-btn--lg" data-lp-cta="grid-view-all"
+           onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_grid',creative_slot:'view_all'})">
+          View all E-Foil gear →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <%# ═══════════════════════════════════════════════════════════
+      L. FINAL CTA BAND
+  ═══════════════════════════════════════════════════════════ %>
+  <section class="lp-cta-band" aria-label="Call to action">
+    <div class="lp-container">
+      <h2 class="lp-cta-band__title">Ready to ride electric?</h2>
+      <p class="lp-cta-band__sub">Explore the full Duotone Foil Assist range — from complete sets to individual components and accessories.</p>
+      <a href="#products" class="lp-btn lp-btn--primary lp-btn--lg" data-lp-cta="final-cta"
+         onclick="typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_final_cta',creative_slot:'bottom_band'})">
+        Shop the range
+      </a>
+    </div>
+  </section>
+
+</div><!-- /.lp-efoil -->
+
+<%# ── VIDEO PLAYER JS ── %>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var poster = document.getElementById('lp-yt-poster');
+  var playBtn = document.getElementById('lp-yt-play');
+  var wrapper = document.getElementById('lp-yt-wrapper');
+  function loadVideo() {
+    if (!wrapper || wrapper.dataset.loaded) return;
+    wrapper.dataset.loaded = '1';
+    wrapper.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/Wj6xwO_FDqU?autoplay=1&rel=0" title="Duotone Foil Assist 2026" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"></iframe>';
+    typeof gtag==='function'&&gtag('event','select_promotion',{promotion_name:'efoil_video',creative_slot:'video_play'});
+  }
+  if (poster) poster.addEventListener('click', loadVideo);
+  if (playBtn) playBtn.addEventListener('click', loadVideo);
+});
+</script>
+
+<%# ── SCOPED STYLES ── %>
+<style>
+/* ============================================================
+   .lp-efoil — Duotone E-Foil landing page
+   Brand: cyan #00C2FF / teal #0FE0C4 / dark #0B0E14 / #111620
+   Fonts: Barlow Condensed (display) + Barlow (body)
+   ============================================================ */
+.lp-efoil {
+  --lp-cyan: #00C2FF;
+  --lp-teal: #0FE0C4;
+  --lp-dark: #0B0E14;
+  --lp-dark2: #111620;
+  --lp-dark3: #1A1F2E;
+  --lp-light: #E8EDF5;
+  --lp-white: #ffffff;
+  --lp-muted: #8A95A9;
+  --lp-font-display: 'Barlow Condensed', Impact, sans-serif;
+  --lp-font-body: 'Barlow', -apple-system, sans-serif;
+  --lp-radius: 12px;
+  --lp-max: 1180px;
+  font-family: var(--lp-font-body);
+  color: var(--lp-light);
+  background: var(--lp-dark);
+}
+
+/* ── Container ── */
+.lp-container {
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── Sections ── */
+.lp-section {
+  padding: 80px 0;
+}
+.lp-section--dark {
+  background: var(--lp-dark2);
+}
+.lp-section__title {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-bottom: 12px;
+  color: var(--lp-white);
+}
+.lp-section__sub {
+  text-align: center;
+  color: var(--lp-muted);
+  font-size: 1.05rem;
+  max-width: 680px;
+  margin: 0 auto 48px;
+  line-height: 1.6;
+}
+.lp-section__note {
+  text-align: center;
+  color: var(--lp-muted);
+  font-size: 0.875rem;
+  margin-top: 24px;
+}
+
+/* ── Chip ── */
+.lp-chip {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(0,194,255,0.15);
+  color: var(--lp-cyan);
+  border: 1px solid rgba(0,194,255,0.3);
+  margin-bottom: 24px;
+}
+
+/* ── Buttons ── */
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-family: var(--lp-font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+}
+.lp-btn--primary {
+  background: linear-gradient(135deg, var(--lp-cyan), var(--lp-teal));
+  color: var(--lp-dark);
+}
+.lp-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,194,255,0.35);
+}
+.lp-btn--ghost {
+  background: transparent;
+  color: var(--lp-white);
+  border-color: rgba(255,255,255,0.3);
+}
+.lp-btn--ghost:hover {
+  border-color: var(--lp-cyan);
+  color: var(--lp-cyan);
+}
+.lp-btn--outline {
+  background: transparent;
+  color: var(--lp-cyan);
+  border-color: var(--lp-cyan);
+}
+.lp-btn--outline:hover {
+  background: var(--lp-cyan);
+  color: var(--lp-dark);
+}
+.lp-btn--lg {
+  padding: 16px 40px;
+  font-size: 1.05rem;
+}
+.lp-link { color: var(--lp-cyan); text-decoration: underline; }
+
+/* ── A. HERO ── */
+.lp-hero {
+  position: relative;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(11,14,20,0.3) 0%, rgba(11,14,20,0.85) 100%),
+    url('https://img.youtube.com/vi/Wj6xwO_FDqU/maxresdefault.jpg') center/cover no-repeat;
+}
+.lp-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(11,14,20,0.2) 0%,
+    rgba(11,14,20,0.7) 60%,
+    var(--lp-dark) 100%);
+  z-index: 1;
+}
+.lp-hero__content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  padding: 120px 20px 80px;
+}
+.lp-hero__h1 {
+  font-family: var(--lp-font-display);
+  font-weight: 900;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  color: var(--lp-white);
+}
+.lp-hero__h1 br { display: block; }
+.lp-hero__sub {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.65;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 32px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.lp-hero__ctas {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.lp-trust {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+  font-weight: 500;
+}
+.lp-trust span { white-space: nowrap; }
+
+/* ── B. VIDEO ── */
+.lp-video__wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  border-radius: var(--lp-radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--lp-dark3);
+}
+.lp-video__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lp-video__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  z-index: 2;
+}
+.lp-video__play:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+/* ── C. BENEFIT CARDS ── */
+.lp-cards {
+  display: grid;
+  gap: 24px;
+}
+.lp-cards--3 { grid-template-columns: repeat(3, 1fr); }
+.lp-card {
+  background: var(--lp-dark3);
+  border-radius: var(--lp-radius);
+  padding: 36px 28px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.lp-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,194,255,0.2);
+}
+.lp-card__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,194,255,0.08);
+  border-radius: 16px;
+  border: 1px solid rgba(0,194,255,0.15);
+}
+.lp-card__icon svg {
+  width: 36px;
+  height: 36px;
+}
+.lp-card__title {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  color: var(--lp-white);
+  margin-bottom: 12px;
+}
+.lp-card__text {
+  color: var(--lp-muted);
+  font-size: 0.925rem;
+  line-height: 1.6;
+}
+
+/* ── D. STATS STRIP ── */
+.lp-stats {
+  padding: 48px 0;
+  background: linear-gradient(135deg, rgba(0,194,255,0.08), rgba(15,224,196,0.06));
+  border-top: 1px solid rgba(0,194,255,0.1);
+  border-bottom: 1px solid rgba(0,194,255,0.1);
+}
+.lp-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+.lp-stat__num {
+  font-family: var(--lp-font-display);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  color: var(--lp-cyan);
+  line-height: 1;
+  display: block;
+}
+.lp-stat__num sup { font-size: 0.5em; }
+.lp-stat__unit {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--lp-white);
+  margin-top: 4px;
+}
+.lp-stat__label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--lp-muted);
+  margin-top: 4px;
+}
+
+/* ── E. MODEL CARDS ── */
+.lp-model-card {
+  background: var(--lp-dark2);
+  border-radius: var(--lp-radius);
+  padding: 36px 28px;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease;
+}
+.lp-model-card:hover { transform: translateY(-4px); }
+.lp-model-card--featured {
+  border-color: var(--lp-cyan);
+  box-shadow: 0 0 30px rgba(0,194,255,0.1);
+}
+.lp-model-card__badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  width: fit-content;
+  background: rgba(0,194,255,0.1);
+  color: var(--lp-cyan);
+}
+.lp-model-card--featured .lp-model-card__badge {
+  background: var(--lp-cyan);
+  color: var(--lp-dark);
+}
+.lp-model-card__name {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+  color: var(--lp-white);
+  margin-bottom: 16px;
+}
+.lp-model-card__specs {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.lp-model-card__specs li {
+  font-size: 0.875rem;
+  color: var(--lp-muted);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.lp-model-card__specs li strong { color: var(--lp-light); }
+.lp-model-card__desc {
+  color: var(--lp-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 24px;
+}
+.lp-model-card .lp-btn { width: 100%; }
+
+/* ── E. SETS GRID (after model cards) ── */
+.lp-sets-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,194,255,0.25), transparent);
+  margin: 56px 0 40px;
+}
+.lp-section__subtitle {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--lp-white);
+}
+.lp-sets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* ── F. BOX GRID ── */
+.lp-box-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.lp-box-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--lp-radius);
+  padding: 28px 24px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: border-color 0.25s;
+}
+.lp-box-item:hover { border-color: rgba(0,194,255,0.2); }
+.lp-box-item__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,194,255,0.06);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.lp-box-item__icon svg {
+  width: 32px;
+  height: 32px;
+}
+.lp-box-item h4 {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  color: var(--lp-white);
+  margin: 0 0 8px;
+}
+.lp-box-item p {
+  color: var(--lp-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── G. STEPS ── */
+.lp-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  counter-reset: step;
+}
+.lp-step { text-align: center; }
+.lp-step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lp-cyan), var(--lp-teal));
+  color: var(--lp-dark);
+  font-family: var(--lp-font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+.lp-step__title {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  color: var(--lp-white);
+  margin-bottom: 10px;
+}
+.lp-step__text {
+  color: var(--lp-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── H. SPECS TABLE ── */
+.lp-specs-table-wrap { overflow-x: auto; }
+.lp-specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.lp-specs-table th,
+.lp-specs-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.lp-specs-table th {
+  font-family: var(--lp-font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--lp-cyan);
+  background: rgba(0,194,255,0.05);
+  position: sticky;
+  top: 0;
+}
+.lp-specs-table td:first-child {
+  font-weight: 600;
+  color: var(--lp-white);
+  white-space: nowrap;
+}
+.lp-specs-table td { color: var(--lp-muted); }
+.lp-specs-table tbody tr:hover { background: rgba(0,194,255,0.03); }
+
+/* ── I. COMPATIBLE FOILS ── */
+.lp-compat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.lp-compat-brand {
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: var(--lp-dark2);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: border-color 0.2s, background 0.2s;
+}
+.lp-compat-brand:hover {
+  border-color: var(--lp-cyan);
+  background: rgba(0,194,255,0.06);
+}
+.lp-compat-brand__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--lp-light);
+}
+
+/* ── J. FAQ ── */
+.lp-faq { max-width: 800px; margin: 0 auto; }
+.lp-faq__item {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.lp-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  font-family: var(--lp-font-body);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--lp-white);
+  cursor: pointer;
+  list-style: none;
+}
+.lp-faq__q::-webkit-details-marker { display: none; }
+.lp-faq__q::after {
+  content: '+';
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--lp-cyan);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+details[open] .lp-faq__q::after {
+  content: '−';
+}
+.lp-faq__a {
+  padding: 0 0 20px;
+}
+.lp-faq__a p {
+  color: var(--lp-muted);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin: 0 0 12px;
+}
+.lp-faq__a p:last-child { margin-bottom: 0; }
+
+/* ── K. PRODUCT GRID ── */
+.lp-product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.lp-product-card-wrap {
+  background: var(--lp-white);
+  border-radius: var(--lp-radius);
+  padding: 12px;
+  overflow: hidden;
+}
+/* Ensure product card text is readable on white background */
+.lp-product-card-wrap .product-card-title,
+.lp-product-card-wrap .product-card-brand { color: #1a1a1a !important; }
+.lp-product-card-wrap .product-card-price { color: #333 !important; }
+.lp-product-card-wrap .product-card { color: #1a1a1a; }
+.lp-cta-row { text-align: center; }
+
+/* ── L. FINAL CTA BAND ── */
+.lp-cta-band {
+  padding: 80px 0;
+  text-align: center;
+  background: linear-gradient(180deg, var(--lp-dark) 0%, var(--lp-dark2) 100%);
+  border-top: 1px solid rgba(0,194,255,0.1);
+}
+.lp-cta-band__title {
+  font-family: var(--lp-font-display);
+  font-weight: 900;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  text-transform: uppercase;
+  color: var(--lp-white);
+  margin-bottom: 16px;
+}
+.lp-cta-band__sub {
+  color: var(--lp-muted);
+  font-size: 1.05rem;
+  max-width: 580px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1180px) {
+  .lp-product-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .lp-cards--3 { grid-template-columns: 1fr; }
+  .lp-stats__grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-box-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-sets-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-steps { grid-template-columns: 1fr; gap: 40px; }
+  .lp-product-grid { grid-template-columns: repeat(2, 1fr); }
+  .lp-section { padding: 60px 0; }
+  .lp-hero { min-height: 75vh; }
+}
+
+@media (max-width: 560px) {
+  .lp-stats__grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .lp-box-grid { grid-template-columns: 1fr; }
+  .lp-product-grid { grid-template-columns: 1fr; }
+  .lp-sets-grid { grid-template-columns: 1fr; }
+  .lp-hero { min-height: 70vh; }
+  .lp-hero__content { padding: 80px 16px 60px; }
+  .lp-hero__ctas { flex-direction: column; align-items: center; }
+  .lp-trust { flex-direction: column; gap: 8px; }
+  .lp-section { padding: 48px 0; }
+  .lp-specs-table { font-size: 0.8rem; }
+  .lp-specs-table th,
+  .lp-specs-table td { padding: 10px 10px; }
+}
+</style>
+
+<%# ── GA4 view_promotion on page load ── %>
+<script>
+document.addEventListener('turbo:load', function() {
+  if (typeof gtag === 'function') {
+    gtag('event', 'view_promotion', {
+      promotion_name: 'efoil_landing_page',
+      creative_name: 'Duotone Foil Assist LP',
+      creative_slot: 'full_page'
+    });
+  }
+});
+</script>
