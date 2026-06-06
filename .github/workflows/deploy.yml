@@ -108,17 +108,17 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 51.195.110.240 >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H 46.224.5.25 >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Upload tarball to server
         run: |
           scp -i ~/.ssh/id_ed25519 \
             /tmp/assets.tar.gz \
-            ubuntu@51.195.110.240:/tmp/assets.tar.gz
+            ubuntu@46.224.5.25:/tmp/assets.tar.gz
 
       - name: Deploy on server (lean — no asset build, niced heavy steps)
         run: |
-          ssh -i ~/.ssh/id_ed25519 ubuntu@51.195.110.240 'bash -se' <<'REMOTE'
+          ssh -i ~/.ssh/id_ed25519 ubuntu@46.224.5.25 'bash -se' <<'REMOTE'
           set -e
           echo ">>> Deploy started at $(date)"
           echo ">>> Memory before:"

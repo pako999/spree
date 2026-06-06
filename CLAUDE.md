@@ -26,79 +26,70 @@ spree/
 
 ## Production Server
 
-- **IP:** 51.195.110.240 (Hetzner, Ubuntu 24.04)
-- **SSH:** `ssh ubuntu@51.195.110.240`
+- **IP:** 46.224.5.25 (Hetzner, Ubuntu 24.04)
+- **SSH:** `ssh ubuntu@46.224.5.25`
 - **Domain:** www.surf-store.com
-- **Container name:** Kamal-managed, named `sandbox-web-<git-hash>` — changes on each deploy
-- **App port:** 3000 (internal), kamal-proxy handles 80/443
+- **App:** Plain Puma on port 3000, Nginx proxies 80/443 → 3000 (no Docker)
+- **App path:** `/home/ubuntu/kite_shop/sandbox`
+- **Ruby:** rbenv 3.3.4 at `~/.rbenv`
 - **Database:** `my_kite_shop_production` (PostgreSQL, user: ubuntu, pass: kite, host: 127.0.0.1)
-
-### Get current container name:
-```bash
-ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1"
-```
 
 ## Deployment
 
-### Deploy new code changes (from sandbox/):
+### Automatic: push to main (GitHub Actions)
+`.github/workflows/deploy.yml` — runs assets:precompile on the runner, then SSHes in to pull + migrate + restart Puma.
+
+### Manual deploy (from server):
 ```bash
-cd sandbox
-bin/kamal deploy
+ssh ubuntu@46.224.5.25
+cd /home/ubuntu/kite_shop/sandbox
+git fetch origin && git reset --hard origin/main
+RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle install --jobs 2
+RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails db:migrate
+# Then restart Puma (see below)
 ```
 
 ### Quick: copy a file and restart (faster than full deploy):
 ```bash
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
-scp sandbox/lib/tasks/some_task.rb ubuntu@51.195.110.240:/tmp/
-ssh ubuntu@51.195.110.240 "docker cp /tmp/some_task.rb $CONTAINER:/rails/lib/tasks/ && docker restart $CONTAINER"
+scp sandbox/lib/tasks/some_task.rb ubuntu@46.224.5.25:/home/ubuntu/kite_shop/sandbox/lib/tasks/
+ssh ubuntu@46.224.5.25 "kill -HUP \$(pgrep -f 'puma.*3000' | head -1)"
 ```
 
 ### Run Rails commands on server:
 ```bash
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
-ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bundle exec rails runner 'puts Spree::Product.count'"
-ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bundle exec rake some:task"
+ssh ubuntu@46.224.5.25 "cd /home/ubuntu/kite_shop/sandbox && RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails runner 'puts Spree::Product.count'"
 ```
 
 ### Run a script on server:
 ```bash
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
-scp sandbox/script/my_script.rb ubuntu@51.195.110.240:/tmp/
-ssh ubuntu@51.195.110.240 "docker cp /tmp/my_script.rb $CONTAINER:/tmp/ && docker exec $CONTAINER bundle exec rails runner /tmp/my_script.rb"
+scp sandbox/script/my_script.rb ubuntu@46.224.5.25:/tmp/
+ssh ubuntu@46.224.5.25 "cd /home/ubuntu/kite_shop/sandbox && RAILS_ENV=production ~/.rbenv/bin/rbenv exec bundle exec rails runner /tmp/my_script.rb"
 ```
 
 ### View logs:
 ```bash
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
-ssh ubuntu@51.195.110.240 "docker logs $CONTAINER --tail 100 -f"
-ssh ubuntu@51.195.110.240 "docker exec $CONTAINER tail -f /rails/log/production.log"
+ssh ubuntu@46.224.5.25 "tail -f /home/ubuntu/kite_shop/sandbox/log/production.log"
+ssh ubuntu@46.224.5.25 "tail -100 /tmp/puma.log"
 ```
 
 ## Key Environment Variables (on server)
 
-Set in Docker via Kamal secrets (`.kamal/secrets`):
+Set via rbenv/Puma startup env:
 - `RAILS_MASTER_KEY` — required for credential decryption
-- `RAILS_STORAGE=cloudflare` — ActiveStorage service name
-- `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — Cloudflare R2 (legacy, now using local)
 - `POSTGRES_PASSWORD=kite`
 - `RAILS_ENV=production`
+- `SOLID_QUEUE_IN_PUMA=1`
+- `WEB_CONCURRENCY=4`
 
 ## ActiveStorage Configuration
 
-- **Service:** Local disk (`/rails/storage/` inside container)
-- **Docker volume:** `sandbox_storage` (persisted across restarts)
-- **Volume path:** `/var/lib/docker/volumes/sandbox_storage/_data/` (on host)
+- **Service:** Local disk at `storage/` inside app directory
 - Files stored at: `storage/XX/YY/KEY` (2-level hash directory)
 
 ## Database Access
 
 ```bash
-# From host:
-ssh ubuntu@51.195.110.240 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
-
-# From inside container:
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter 'name=sandbox-web' --format '{{.Names}}' | head -1")
-ssh ubuntu@51.195.110.240 "docker exec -it $CONTAINER bash -c 'cd /rails && bundle exec rails dbconsole'"
+ssh ubuntu@46.224.5.25 "PGPASSWORD=kite psql -h 127.0.0.1 -U ubuntu -d my_kite_shop_production"
 ```
 
 ## Key Product Import Sheets (Google Sheets)
@@ -124,7 +115,7 @@ If product images are missing (ENOENT 500 errors):
 
 ```bash
 # 1. Find missing blobs
-ssh ubuntu@51.195.110.240 "docker run --rm -v sandbox_storage:/storage:ro -v /tmp/blobs.txt:/blobs.txt python:3.11-slim python3 -c '...'"
+ssh ubuntu@46.224.5.25 "python3 -c '...'"
 
 # 2. Build filename→URL index from all CSVs (local)
 python3 sandbox/lib/tasks/restore_images.rb  # see script for details
