@@ -1,0 +1,13 @@
+<%# Override of spree_storefront 5.3.3's _products.html.erb.
+    The only change: .uniq(&:id) before rendering.
+    Products that belong to multiple matching taxons (e.g. category +
+    sub-category + brand) get duplicated by the products finder despite
+    Spree's .distinct, because the storefront chains .includes() for
+    eager loading which can re-introduce duplicates.
+    Ruby-side .uniq is cheap and immune to whatever the relation looks like. %>
+<% unique_products = products.uniq(&:id) %>
+<% unless page_builder_enabled? %>
+  <%= render partial: 'spree/products/product', collection: unique_products, cached: ->(product) { product_cache_key(product) } %>
+<% else %>
+  <%= render partial: 'spree/products/product', collection: unique_products %>
+<% end %>
