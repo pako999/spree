@@ -1,0 +1,826 @@
+/* ============================================================
+   surf-store-blog.css  v6
+   ------------------------------------------------------------
+   v3 change: every rule inside .ss-article uses !important to
+   defeat the storefront's dark-theme inheritance. The previous
+   v2 was being overridden by higher-specificity theme selectors,
+   producing white-on-white text inside the white card.
+
+   Deployment: replace the existing /surf-store-blog.css on the
+   web root entirely with this file. NO append, NO merge.
+
+   Brand tokens:
+     - Ink/Dark:       #0F0F1A
+     - Ink-2:          #1F2937
+     - Accent:         #3F8BFF (logo blue)
+     - Accent deep:    #1F5FD9 (hover)
+     - Accent soft:    #EAF2FF
+     - SALE orange:    #FF6B00
+     - Warn (mistake): #E76F51
+     - Gold (tip):     #F4A261
+   ============================================================ */
+
+/* =====================================================
+   0. FULL-WIDTH WHITE BACKGROUND — breakout pattern
+   ===================================================== */
+.ss-post-body {
+  background: #ffffff !important;
+  width: 100vw !important;
+  position: relative !important;
+  left: 50% !important;
+  right: 50% !important;
+  margin-left: -50vw !important;
+  margin-right: -50vw !important;
+  padding: 56px 0 80px !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 768px) {
+  .ss-post-body { padding: 36px 0 56px !important; }
+}
+
+/* =====================================================
+   1. THE WHITE CARD WRAPPER — defeats dark page theme
+   ===================================================== */
+.ss-article {
+  background: #ffffff !important;
+  color: #1F2937 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.7 !important;
+  max-width: 800px !important;
+  margin: -48px auto 32px !important;
+  padding: 48px 56px !important;
+  border-radius: 16px !important;
+  position: relative !important;
+  z-index: 5 !important;
+  box-shadow: 0 2px 4px rgba(15,15,26,.04), 0 12px 40px rgba(15,15,26,.18) !important;
+}
+@media (max-width: 768px) {
+  .ss-article {
+    padding: 32px 24px !important;
+    margin: -24px 12px 24px !important;
+    border-radius: 12px !important;
+  }
+}
+@media (max-width: 480px) {
+  .ss-article {
+    padding: 24px 16px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Force ALL text inside the article card to be readable */
+.ss-article,
+.ss-article *,
+.ss-article p,
+.ss-article li,
+.ss-article span,
+.ss-article div,
+.ss-article td,
+.ss-article th,
+.ss-article label,
+.ss-article time,
+.ss-article small {
+  color: #1F2937 !important;
+}
+
+.ss-article h1,
+.ss-article h2,
+.ss-article h3,
+.ss-article h4,
+.ss-article h5,
+.ss-article h6 {
+  color: #0F0F1A !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em !important;
+  line-height: 1.2 !important;
+  background: transparent !important;
+}
+.ss-article h2 { font-size: 28px !important; margin: 40px 0 16px !important; }
+.ss-article h3 { font-size: 22px !important; margin: 28px 0 12px !important; }
+
+.ss-article strong,
+.ss-article b {
+  color: #0F0F1A !important;
+  font-weight: 700 !important;
+}
+
+.ss-article a {
+  color: #1F5FD9 !important;
+  text-decoration: underline !important;
+}
+.ss-article a:hover {
+  color: #3F8BFF !important;
+}
+
+.ss-article p {
+  margin: 0 0 18px !important;
+  color: #1F2937 !important;
+}
+
+.ss-article ul,
+.ss-article ol {
+  margin: 0 0 18px !important;
+  padding-left: 24px !important;
+}
+.ss-article li {
+  margin: 6px 0 !important;
+  color: #1F2937 !important;
+}
+
+.ss-article img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px !important;
+}
+
+
+/* =====================================================
+   2. BREADCRUMB (above the hero pill)
+   ===================================================== */
+.ss-article .ss-breadcrumb {
+  font-size: 13px !important;
+  color: #6B7280 !important;
+  margin: 0 0 18px !important;
+  background: transparent !important;
+}
+.ss-article .ss-breadcrumb a {
+  color: #6B7280 !important;
+  text-decoration: none !important;
+}
+.ss-article .ss-breadcrumb a:hover {
+  color: #3F8BFF !important;
+}
+.ss-article .ss-breadcrumb__sep {
+  color: #D1D5DB !important;
+  margin: 0 6px !important;
+}
+
+
+/* =====================================================
+   3. HERO PILL CHIP (blue rounded label)
+   ===================================================== */
+.ss-article .ss-hero-tag,
+.ss-hero-tag {
+  display: inline-block !important;
+  background: #3F8BFF !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  margin: 0 0 16px !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+}
+
+
+/* =====================================================
+   4. LEDE (large intro paragraph)
+   ===================================================== */
+.ss-article .ss-lede,
+.ss-lede {
+  font-size: 19px !important;
+  line-height: 1.6 !important;
+  color: #1F2937 !important;
+  margin: 12px 0 28px !important;
+  font-weight: 400 !important;
+}
+
+
+/* =====================================================
+   5. HERO FIGURE PLACEHOLDER (blue gradient box)
+   ===================================================== */
+.ss-article .ss-hero-figure,
+.ss-hero-figure {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 16/9 !important;
+  background: linear-gradient(135deg, #3F8BFF 0%, #1F5FD9 60%, #0F0F1A 100%) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  margin: 0 0 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+.ss-article .ss-hero-figure img,
+.ss-hero-figure img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+}
+.ss-article .ss-hero-figure__caption,
+.ss-hero-figure__caption {
+  color: rgba(255,255,255,.92) !important;
+  font-size: 14px !important;
+  font-style: italic !important;
+  padding: 20px 40px !important;
+  max-width: 80% !important;
+}
+
+
+/* =====================================================
+   6. BYLINE (avatar + author + meta row)
+   ===================================================== */
+.ss-article .ss-byline,
+.ss-byline {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 16px 0 !important;
+  border-top: 1px solid #E5E7EB !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  margin: 24px 0 32px !important;
+  font-size: 13px !important;
+  color: #6B7280 !important;
+  flex-wrap: wrap !important;
+  background: transparent !important;
+}
+.ss-article .ss-byline > span {
+  color: #6B7280 !important;
+}
+.ss-article .ss-byline__avatar,
+.ss-byline__avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #3F8BFF, #1F5FD9) !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+}
+.ss-article .ss-byline__name,
+.ss-byline__name {
+  font-weight: 600 !important;
+  color: #0F0F1A !important;
+}
+.ss-article .ss-byline__meta {
+  color: #6B7280 !important;
+  margin-left: auto !important;
+}
+
+
+/* =====================================================
+   7. INLINE TOC
+   ===================================================== */
+.ss-article .ss-toc,
+.ss-toc {
+  background: #F7F8FA !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 8px !important;
+  padding: 20px 24px !important;
+  margin: 0 0 36px !important;
+}
+.ss-article .ss-toc__title,
+.ss-toc__title {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .12em !important;
+  color: #6B7280 !important;
+  margin-bottom: 12px !important;
+}
+.ss-article .ss-toc ol,
+.ss-toc ol {
+  list-style: none !important;
+  counter-reset: ss-toc !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.ss-article .ss-toc li,
+.ss-toc li {
+  counter-increment: ss-toc !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  font-size: 14px !important;
+  list-style: none !important;
+}
+.ss-article .ss-toc li:last-child,
+.ss-toc li:last-child { border-bottom: none !important; }
+.ss-article .ss-toc li::before,
+.ss-toc li::before {
+  content: counter(ss-toc, decimal-leading-zero) !important;
+  color: #3F8BFF !important;
+  font-weight: 800 !important;
+  margin-right: 12px !important;
+  font-size: 13px !important;
+}
+.ss-article .ss-toc a,
+.ss-toc a {
+  color: #1F2937 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+.ss-article .ss-toc a:hover,
+.ss-toc a:hover { color: #3F8BFF !important; }
+
+
+/* =====================================================
+   8. NUMBERED SECTION HEADING (02 — Sizing  Why size...)
+   ===================================================== */
+.ss-article h2 .ss-section-num,
+.ss-article .ss-section-num,
+.ss-section-num {
+  display: inline !important;
+  color: #3F8BFF !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: .14em !important;
+  margin-right: 14px !important;
+  text-transform: uppercase !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+
+/* =====================================================
+   9. QUICK-ANSWER BOX (light blue, accent border)
+   ===================================================== */
+.ss-article .ss-quick-answer,
+.ss-quick-answer {
+  background: #EAF2FF !important;
+  border-left: 4px solid #3F8BFF !important;
+  padding: 22px 26px !important;
+  border-radius: 8px !important;
+  margin: 24px 0 32px !important;
+}
+.ss-article .ss-quick-answer__label,
+.ss-quick-answer__label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .12em !important;
+  color: #1F5FD9 !important;
+  margin-bottom: 10px !important;
+}
+.ss-article .ss-quick-answer p,
+.ss-quick-answer p {
+  font-size: 17px !important;
+  color: #0F0F1A !important;
+  margin: 0 !important;
+  line-height: 1.6 !important;
+}
+.ss-article .ss-quick-answer strong,
+.ss-quick-answer strong {
+  color: #0F0F1A !important;
+  background: rgba(63, 139, 255, .15) !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+}
+
+
+/* =====================================================
+   10. DIV-BASED COMPARISON TABLE
+   ===================================================== */
+.ss-article .ss-cmp,
+.ss-cmp {
+  margin: 28px 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 2px rgba(15,15,26,.04), 0 8px 24px rgba(15,15,26,.08) !important;
+  font-size: 14px !important;
+  background: #ffffff !important;
+  border: 1px solid #E5E7EB !important;
+}
+.ss-article .ss-cmp__row,
+.ss-cmp__row {
+  display: grid !important;
+  grid-template-columns: 1fr 2fr 1.5fr !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+.ss-article .ss-cmp__row > div,
+.ss-cmp__row > div {
+  padding: 14px 16px !important;
+  color: #1F2937 !important;
+}
+.ss-article .ss-cmp__row:last-child,
+.ss-cmp__row:last-child { border-bottom: none !important; }
+.ss-article .ss-cmp__row:nth-child(even),
+.ss-cmp__row:nth-child(even) { background: #F7F8FA !important; }
+.ss-article .ss-cmp__row--head,
+.ss-cmp__row--head {
+  background: #0F0F1A !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+}
+.ss-article .ss-cmp__row--head > div,
+.ss-cmp__row--head > div { color: #ffffff !important; }
+@media (max-width: 640px) {
+  .ss-article .ss-cmp__row,
+  .ss-cmp__row { grid-template-columns: 1fr !important; }
+  .ss-article .ss-cmp__row > div,
+  .ss-cmp__row > div { padding: 10px 14px !important; }
+}
+
+
+/* =====================================================
+   11. DIV-BASED FAQ
+   ===================================================== */
+.ss-article .ss-faq-block,
+.ss-faq-block { margin: 28px 0 !important; }
+.ss-article .ss-faq-item,
+.ss-faq-item {
+  border-bottom: 1px solid #E5E7EB !important;
+  padding: 20px 0 !important;
+}
+.ss-article .ss-faq-q,
+.ss-faq-q {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #0F0F1A !important;
+  margin-bottom: 10px !important;
+  position: relative !important;
+  padding-left: 36px !important;
+}
+.ss-article .ss-faq-q::before,
+.ss-faq-q::before {
+  content: "Q" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #3F8BFF !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+.ss-article .ss-faq-a,
+.ss-faq-a {
+  color: #1F2937 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  padding-left: 36px !important;
+}
+.ss-article .ss-faq-a p,
+.ss-faq-a p {
+  margin: 0 !important;
+  color: #1F2937 !important;
+}
+
+
+/* =====================================================
+   12. PRODUCT CARD
+   ===================================================== */
+.ss-article .ss-product-card,
+.ss-product-card {
+  display: flex !important;
+  gap: 16px !important;
+  align-items: center !important;
+  padding: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 12px !important;
+  margin: 24px 0 !important;
+  box-shadow: 0 1px 2px rgba(15,15,26,.04), 0 8px 24px rgba(15,15,26,.08) !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  text-decoration: none !important;
+}
+.ss-article .ss-product-card__image,
+.ss-product-card__image {
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  height: 120px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #F7F8FA !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+.ss-article .ss-product-card__image img,
+.ss-product-card__image img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+.ss-article .ss-product-card__body,
+.ss-product-card__body { flex: 1 !important; min-width: 0 !important; }
+.ss-article .ss-product-card__brand,
+.ss-product-card__brand {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #6B7280 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+.ss-article .ss-product-card__name,
+.ss-product-card__name {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #0F0F1A !important;
+  margin: 4px 0 8px !important;
+  line-height: 1.25 !important;
+}
+.ss-article .ss-product-card__reason,
+.ss-product-card__reason {
+  font-size: 14px !important;
+  color: #1F2937 !important;
+  line-height: 1.5 !important;
+}
+.ss-article .ss-product-card__specs,
+.ss-product-card__specs {
+  font-size: 12px !important;
+  color: #6B7280 !important;
+  margin-top: 10px !important;
+  letter-spacing: .02em !important;
+}
+.ss-article .ss-product-card__side,
+.ss-product-card__side {
+  flex: 0 0 auto !important;
+  text-align: right !important;
+  min-width: 140px !important;
+}
+.ss-article .ss-product-card__price,
+.ss-product-card__price {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0F0F1A !important;
+  margin-bottom: 10px !important;
+  white-space: nowrap !important;
+}
+
+
+/* =====================================================
+   13. BUTTONS
+   ===================================================== */
+.ss-article .ss-btn,
+.ss-btn {
+  display: inline-block !important;
+  padding: 10px 18px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  transition: background .15s, color .15s, border-color .15s !important;
+}
+.ss-article .ss-btn--primary,
+.ss-btn--primary {
+  background: #0F0F1A !important;
+  color: #ffffff !important;
+}
+.ss-article .ss-btn--primary:hover,
+.ss-btn--primary:hover {
+  background: #1F5FD9 !important;
+  color: #ffffff !important;
+}
+.ss-article .ss-btn--accent,
+.ss-btn--accent {
+  background: #3F8BFF !important;
+  color: #ffffff !important;
+}
+.ss-article .ss-btn--accent:hover,
+.ss-btn--accent:hover {
+  background: #1F5FD9 !important;
+  color: #ffffff !important;
+}
+.ss-article .ss-btn--ghost,
+.ss-btn--ghost {
+  background: transparent !important;
+  color: #0F0F1A !important;
+  border-color: #E5E7EB !important;
+}
+.ss-article .ss-btn--ghost:hover,
+.ss-btn--ghost:hover { border-color: #0F0F1A !important; }
+
+
+/* =====================================================
+   14. TIP CALLOUT (yellow)
+   ===================================================== */
+.ss-article .ss-tip,
+.ss-tip {
+  background: #FFF8EE !important;
+  border: 1px solid #FCE3B6 !important;
+  border-radius: 8px !important;
+  padding: 18px 22px !important;
+  margin: 28px 0 !important;
+  font-size: 15px !important;
+  color: #1F2937 !important;
+  line-height: 1.6 !important;
+}
+.ss-article .ss-tip__label,
+.ss-tip__label {
+  font-weight: 800 !important;
+  color: #8A5A00 !important;
+  margin-right: 6px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+  font-size: 12px !important;
+}
+
+
+/* =====================================================
+   15. MISTAKE CALLOUT (red)
+   ===================================================== */
+.ss-article .ss-mistake,
+.ss-mistake {
+  background: #FFF5F3 !important;
+  border-left: 4px solid #E76F51 !important;
+  padding: 18px 22px !important;
+  margin: 24px 0 !important;
+  border-radius: 8px !important;
+}
+.ss-article .ss-mistake__label,
+.ss-mistake__label {
+  display: block !important;
+  color: #E76F51 !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .08em !important;
+  margin-bottom: 8px !important;
+}
+.ss-article .ss-mistake p,
+.ss-mistake p {
+  margin: 0 !important;
+  color: #1F2937 !important;
+}
+
+
+/* =====================================================
+   16. BIG DARK CTA BLOCK
+   ===================================================== */
+.ss-article .ss-cta,
+.ss-cta {
+  background: #0F0F1A !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  padding: 40px 36px !important;
+  margin: 48px 0 32px !important;
+  text-align: center !important;
+}
+.ss-article .ss-cta h3,
+.ss-cta h3 {
+  color: #ffffff !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  margin: 0 0 10px !important;
+  letter-spacing: -.01em !important;
+}
+.ss-article .ss-cta p,
+.ss-cta p {
+  color: rgba(255,255,255,.78) !important;
+  margin: 0 0 24px !important;
+  font-size: 15px !important;
+}
+.ss-article .ss-cta__actions,
+.ss-cta__actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+}
+.ss-article .ss-cta .ss-btn--ghost,
+.ss-cta .ss-btn--ghost {
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.35) !important;
+}
+.ss-article .ss-cta .ss-btn--ghost:hover,
+.ss-cta .ss-btn--ghost:hover {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+.ss-article .ss-cta__trust,
+.ss-cta__trust {
+  display: flex !important;
+  gap: 24px !important;
+  justify-content: center !important;
+  margin-top: 22px !important;
+  font-size: 12px !important;
+  color: rgba(255,255,255,.65) !important;
+  flex-wrap: wrap !important;
+}
+.ss-article .ss-cta__trust span,
+.ss-cta__trust span {
+  color: rgba(255,255,255,.65) !important;
+}
+
+
+/* =====================================================
+   17. RELATED POSTS GRID
+   ===================================================== */
+.ss-article .ss-related,
+.ss-related {
+  margin: 48px 0 24px !important;
+  padding-top: 32px !important;
+  border-top: 1px solid #E5E7EB !important;
+}
+.ss-article .ss-related h2,
+.ss-related h2 {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  margin: 0 0 24px !important;
+  color: #0F0F1A !important;
+  text-transform: uppercase !important;
+  letter-spacing: .04em !important;
+}
+.ss-article .ss-related__grid,
+.ss-related__grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 20px !important;
+}
+.ss-article .ss-related-card,
+.ss-related-card {
+  display: block !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  transition: transform .15s, box-shadow .15s !important;
+  text-decoration: none !important;
+  background: #ffffff !important;
+}
+.ss-article .ss-related-card:hover,
+.ss-related-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(15,15,26,.10) !important;
+}
+.ss-article .ss-related-card__image,
+.ss-related-card__image {
+  aspect-ratio: 4/3 !important;
+  background: #F7F8FA !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+.ss-article .ss-related-card__image img,
+.ss-related-card__image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+.ss-article .ss-related-card__body,
+.ss-related-card__body { padding: 16px !important; }
+.ss-article .ss-related-card__tag,
+.ss-related-card__tag {
+  font-size: 11px !important;
+  color: #1F5FD9 !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .1em !important;
+  margin-bottom: 6px !important;
+}
+.ss-article .ss-related-card__title,
+.ss-related-card__title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0F0F1A !important;
+  line-height: 1.35 !important;
+}
+
+
+/* =====================================================
+   18. MOBILE PRODUCT-CARD STACKING
+   ===================================================== */
+@media (max-width: 640px) {
+  .ss-article .ss-product-card,
+  .ss-product-card {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+  .ss-article .ss-product-card__image,
+  .ss-product-card__image {
+    flex: 0 0 80px !important;
+    width: 80px !important;
+    height: 80px !important;
+  }
+  .ss-article .ss-product-card__side,
+  .ss-product-card__side {
+    flex: 1 1 100% !important;
+    text-align: left !important;
+    border-top: 1px solid #E5E7EB !important;
+    padding-top: 12px !important;
+    min-width: 0 !important;
+  }
+  .ss-article .ss-product-card__price,
+  .ss-product-card__price {
+    display: inline-block !important;
+    margin-right: 16px !important;
+  }
+  .ss-article .ss-cta,
+  .ss-cta { padding: 28px 20px !important; }
+  .ss-article .ss-cta h3,
+  .ss-cta h3 { font-size: 22px !important; }
+}

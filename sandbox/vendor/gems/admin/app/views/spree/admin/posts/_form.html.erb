@@ -11,9 +11,46 @@
                 action: 'slug-form#updateUrlFromName'
               } %>
 
-        <%= f.spree_rich_text_area :content,
-              help_bubble: 'Add a summary of the post',
-              data: { seo_form_target: 'sourceDescriptionInput' } %>
+        <%# ── Content field with Visual / HTML toggle ─────────────────────── %>
+        <div class="form-group" data-controller="html-toggle" id="content-editor-group">
+          <div class="flex items-center justify-between mb-1">
+            <label class="form-label mb-0">
+              <%= Spree.t(:content) %>
+            </label>
+            <%# Toggle switch %>
+            <div class="flex items-center gap-2 text-sm font-medium text-gray-600">
+              <span data-html-toggle-target="visualLabel">Visual</span>
+              <label class="relative inline-flex items-center cursor-pointer" title="Switch to HTML mode">
+                <input type="checkbox"
+                       class="sr-only peer"
+                       data-html-toggle-target="toggle"
+                       data-action="change->html-toggle#switch">
+                <div class="w-10 h-5 bg-gray-200 peer-checked:bg-blue-600 rounded-full peer
+                            after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                            after:bg-white after:rounded-full after:h-4 after:w-4
+                            after:transition-all peer-checked:after:translate-x-5"></div>
+              </label>
+              <span data-html-toggle-target="htmlLabel" class="text-gray-400">HTML</span>
+            </div>
+          </div>
+
+          <%# Trix rich text editor (shown by default) %>
+          <div data-html-toggle-target="richPane">
+            <%= f.spree_rich_text_area :content,
+                  label: false,
+                  data: { seo_form_target: 'sourceDescriptionInput', html_toggle_target: 'richEditor' } %>
+          </div>
+
+          <%# Raw HTML textarea (hidden by default) %>
+          <div data-html-toggle-target="htmlPane" class="hidden">
+            <textarea data-html-toggle-target="htmlArea"
+                      rows="20"
+                      class="w-full font-mono text-sm border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter raw HTML here…"
+                      style="resize: vertical;"></textarea>
+          </div>
+        </div>
+        <%# ── End content toggle ─────────────────────────────────────────── %>
 
         <%= f.spree_rich_text_area :excerpt,
               help_bubble: 'Add a summary of the post',
@@ -52,3 +89,73 @@
           placeholder: 'Add a title and content to see how this post might appear in a search engine listing' %>
   </div>
 </div>
+
+<%# Stimulus controller: syncs Trix ↔ HTML textarea ──────────────────────── %>
+<script type="module">
+import { Controller } from "https://cdn.skypack.dev/@hotwired/stimulus"
+
+// html-toggle controller
+// Switches the content editor between Visual (Trix) and raw HTML modes.
+// On switch to HTML: extracts innerHTML from Trix's content div → textarea.
+// On switch to Visual: sets Trix editor HTML from textarea.
+class HtmlToggleController extends Controller {
+  static targets = ["toggle", "richPane", "htmlPane", "richEditor", "htmlArea", "visualLabel", "htmlLabel"]
+
+  connect() {
+    // Restore last mode on page load
+    const isHtml = sessionStorage.getItem('blog_html_mode') === '1'
+    if (isHtml) {
+      this.toggleTarget.checked = true
+      this._activateHtmlMode()
+    }
+  }
+
+  switch() {
+    if (this.toggleTarget.checked) {
+      this._activateHtmlMode()
+      sessionStorage.setItem('blog_html_mode', '1')
+    } else {
+      this._activateVisualMode()
+      sessionStorage.setItem('blog_html_mode', '0')
+    }
+  }
+
+  _activateHtmlMode() {
+    // Copy Trix content → textarea
+    const trixEl = this.element.querySelector('trix-editor')
+    if (trixEl) {
+      this.htmlAreaTarget.value = trixEl.innerHTML
+    }
+    this.richPaneTarget.classList.add('hidden')
+    this.htmlPaneTarget.classList.remove('hidden')
+    this.visualLabelTarget.classList.remove('text-gray-600')
+    this.visualLabelTarget.classList.add('text-gray-400')
+    this.htmlLabelTarget.classList.remove('text-gray-400')
+    this.htmlLabelTarget.classList.add('text-blue-600', 'font-semibold')
+  }
+
+  _activateVisualMode() {
+    // Copy textarea → Trix
+    const trixEl = this.element.querySelector('trix-editor')
+    if (trixEl && trixEl.editor) {
+      const html = this.htmlAreaTarget.value
+      trixEl.editor.loadHTML(html)
+    }
+    this.htmlPaneTarget.classList.add('hidden')
+    this.richPaneTarget.classList.remove('hidden')
+    this.htmlLabelTarget.classList.remove('blue-600', 'font-semibold')
+    this.htmlLabelTarget.classList.add('text-gray-400')
+    this.visualLabelTarget.classList.remove('text-gray-400')
+    this.visualLabelTarget.classList.add('text-gray-600')
+  }
+}
+
+// Register with Spree Admin's Stimulus application
+// (it exposes window.Stimulus in the admin panel)
+const waitForStimulus = setInterval(() => {
+  if (window.Stimulus) {
+    clearInterval(waitForStimulus)
+    window.Stimulus.register("html-toggle", HtmlToggleController)
+  }
+}, 50)
+</script>
