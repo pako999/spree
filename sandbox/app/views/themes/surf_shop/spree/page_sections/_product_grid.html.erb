@@ -40,12 +40,17 @@
   <div style="<%= section_styles(section) %>">
     <div class="page-container">
       <% if products.any? %>
+        <%# Dedupe by id — multi-taxon products were rendering 2-3× on category
+            pages because the Spree finder's .distinct gets undone by the
+            chained .includes for eager loading. Hash-based dedup is O(n) and
+            preserves first-occurrence order. %>
+        <% unique_products = products.each_with_object({}) { |p, h| h[p.id] ||= p }.values %>
         <div class="grid gap-y-8 gap-x-4 grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 mb-7" id="products">
-          <%= render 'spree/shared/products', products: products %>
+          <%= render 'spree/shared/products', products: unique_products %>
         </div>
 
         <%= render 'spree/products/show_more_button' %>
-        <%= render('spree/products/json_ld_list', products: products) unless turbo_frame_request? %>
+        <%= render('spree/products/json_ld_list', products: unique_products) unless turbo_frame_request? %>
       <% else %>
         <div class="grid">
           <div class="text-center py-10">
