@@ -55,12 +55,19 @@ done
 
 echo "Cache warm-up done: $warmed OK, $failed failed"
 
-# Regenerate sitemap after every deploy
-echo "Regenerating sitemap..."
-CONTAINER=$(ssh ubuntu@51.195.110.240 "docker ps --filter name=sandbox-web --format '{{.Names}}' | head -1" 2>/dev/null)
+SERVER="46.224.5.25"
+CONTAINER=$(ssh -o StrictHostKeyChecking=no ubuntu@$SERVER "docker ps --filter name=sandbox-web --format '{{.Names}}' | head -1" 2>/dev/null)
+
 if [ -n "$CONTAINER" ]; then
-  ssh ubuntu@51.195.110.240 "docker exec $CONTAINER bin/rails sitemap:refresh 2>&1 | tail -3"
+  # Clear Rails fragment cache so view/footer/header changes show up
+  # immediately. Without this, cached fragments from the previous deploy
+  # keep being served until they naturally expire.
+  echo "Clearing Rails cache..."
+  ssh -o StrictHostKeyChecking=no ubuntu@$SERVER "docker exec $CONTAINER bundle exec rails runner 'Rails.cache.clear'" 2>&1 | tail -3
+
+  echo "Regenerating sitemap..."
+  ssh -o StrictHostKeyChecking=no ubuntu@$SERVER "docker exec $CONTAINER bin/rails sitemap:refresh 2>&1 | tail -3"
   echo "Sitemap regenerated."
 else
-  echo "WARN: Could not find running web container for sitemap refresh"
+  echo "WARN: Could not find running web container for cache clear + sitemap refresh"
 fi
