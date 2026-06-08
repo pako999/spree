@@ -51,39 +51,24 @@ module Spree
       }
     end
 
-    # Override: dedupe products across multi-taxon JOINs.
-    #
-    # Spree's products finder joins spree_products_taxons to filter by taxon.
-    # A product in multiple matching taxons (e.g. kiteboards + twin-tip + brand)
-    # yields multiple rows. The finder's .distinct doesn't survive once
-    # .includes(storefront_products_includes) gets re-applied here.
-    #
-    # We pluck IDs first (Ruby-side .uniq preserves order), then re-query
-    # by ID so eager-loading and pagination operate on a clean set.
+    # Override: push zero-stock products to bottom of category listings.
+    # We let the parent build the full query, then wrap it to prepend stock sort.
     def storefront_products
       return @storefront_products if @storefront_products
 
       finder_params = default_products_finder_params
       finder_params[:sort_by] ||= @taxon&.sort_order || 'manual'
 
-      ordered_ids = storefront_products_finder
-                      .new(scope: storefront_products_scope, params: finder_params)
-                      .execute
-                      .pluck(:id)
-                      .uniq
-
-      products = if ordered_ids.any?
-                   Spree::Product.where(id: ordered_ids)
-                                 .in_order_of(:id, ordered_ids)
-                                 .includes(storefront_products_includes)
-                                 .preload_associations_lazily
-                 else
-                   Spree::Product.none
-                 end
+      products = storefront_products_finder
+                   .new(scope: storefront_products_scope, params: finder_params)
+                   .execute
+                   .includes(storefront_products_includes)
+                   .preload_associations_lazily
 
       default_per_page = Spree::Storefront::Config[:products_per_page]
       per_page = params[:per_page].present? ? params[:per_page].to_i : default_per_page
       @storefront_products = paginate_collection(products, limit: per_page)
+
     end
 
     private
