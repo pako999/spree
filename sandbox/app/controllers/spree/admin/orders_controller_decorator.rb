@@ -30,8 +30,10 @@ module Spree
       private
 
       # Called when the payment gateway rejects the void because the payment
-      # is already captured. We still cancel the order + shipments, skip the
-      # payment void, and tell the admin to issue a manual refund.
+      # is already captured. We still cancel the order + shipments via direct
+      # column updates (bypassing state-machine callbacks that would try to
+      # void payments a second time), and tell the admin a manual refund
+      # may still be needed.
       def handle_gateway_error_on_cancel(error)
         Rails.logger.warn "[OrdersControllerDecorator] GatewayError on cancel " \
                           "for #{@order&.number}: #{error.message}"
@@ -40,19 +42,16 @@ module Spree
 
         begin
           @order.transaction do
-            # Mark canceller + timestamp
             @order.update_columns(
+              state: 'canceled',
               canceler_id: try_spree_current_user&.id,
-              canceled_at: Time.current
+              canceled_at: Time.current,
+              updated_at: Time.current
             )
 
-            # Transition order state machine (skips after_cancel callbacks
-            # that would try to void payments)
-            @order.cancel! if @order.may_cancel?
-
-            # Cancel all shipments manually
             @order.shipments.each do |shipment|
-              shipment.cancel! if shipment.respond_to?(:may_cancel?) && shipment.may_cancel?
+              next if shipment.state == 'shipped' || shipment.state == 'canceled'
+              shipment.update_columns(state: 'canceled', updated_at: Time.current)
             rescue => se
               Rails.logger.warn "[OrdersControllerDecorator] Could not cancel shipment #{shipment.number}: #{se.message}"
             end
@@ -67,7 +66,7 @@ module Spree
           flash[:warning] = "Order #{@order.number} has been cancelled. " \
             "⚠️ The Saferpay payment could not be voided automatically " \
             "because it has already been captured. " \
-            "Please issue a manual refund from the Payments tab."
+            "If you have not already refunded the customer, please issue a manual refund from the Payments tab."
         else
           flash[:error] = "Could not cancel the order. " \
             "Saferpay error: #{error.message}. " \
